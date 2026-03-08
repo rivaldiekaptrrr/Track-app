@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">TrackIt</string>
+    <string name="add_transaction">Tambah Transaksi</string>
+    <string name="edit_transaction">Edit Transaksi</string>
+    <string name="delete_transaction">Hapus Transaksi</string>
+    <string name="save">Simpan</string>
+    <string name="cancel">Batal</string>
+    <string name="amount">Nominal</string>
+    <string name="description">Deskripsi</string>
+    <string name="category">Kategori</string>
+    <string name="date">Tanggal</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="statistics">Statistik</string>
+    <string name="settings">Pengaturan</string>
+    <string name="total_spent">Total Pengeluaran</string>
+    <string name="budget_remaining">Sisa Anggaran</string>
+    <string name="recent_transactions">Transaksi Terbaru</string>
+    <string name="scan_receipt">Pindai Struk</string>
+    <string name="export_pdf">Ekspor PDF</string>
+    <string name="budget_limit">Batas Anggaran</string>
+    <string name="biometric_title">Autentikasi Diperlukan</string>
+    <string name="biometric_subtitle">Gunakan sidik jari atau face unlock untuk masuk</string>
+    <string name="biometric_negative">Batal</string>
+    <string name="no_transactions">Belum ada transaksi</string>
+    <string name="delete_confirm">Yakin ingin menghapus transaksi ini?</string>
+    <string name="budget_alert_title">Peringatan Anggaran!</string>
+    <string name="budget_alert_message">Pengeluaran Anda telah melebihi 80%% dari batas anggaran bulan ini.</string>
+    <string name="recurring_transaction">Transaksi Berulang</string>
+    <string name="monthly">Bulanan</string>
+    <string name="weekly">Mingguan</string>
+    <string name="daily">Harian</string>
+</resources>
