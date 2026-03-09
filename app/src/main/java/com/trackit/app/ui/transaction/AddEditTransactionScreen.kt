@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.DateUtils
+import com.trackit.app.util.NumberUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +47,10 @@ fun AddEditTransactionScreen(
     // Set OCR amount if available
     LaunchedEffect(ocrAmount) {
         ocrAmount?.let { viewModel.setAmountFromOcr(it) }
+    }
+
+    val formattedAmount = remember(formState.amount) {
+        NumberUtils.formatWithThousandSeparators(formState.amount)
     }
 
     // Navigate back on save
@@ -106,7 +111,7 @@ fun AddEditTransactionScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         OutlinedTextField(
-                            value = formState.amount,
+                            value = formattedAmount,
                             onValueChange = { viewModel.updateAmount(it) },
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

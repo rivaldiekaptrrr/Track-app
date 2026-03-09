@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.util.concurrent.Executors
@@ -185,20 +186,21 @@ fun ScanReceiptScreen(
 
                                                 recognizer.process(image)
                                                     .addOnSuccessListener { visionText ->
-                                                        val amount = extractLargestAmount(visionText.text)
+                                                        val result = extractTotalAmount(visionText)
                                                         imageProxy.close()
 
-                                                        if (amount != null) {
-                                                            onAmountDetected(amount)
-                                                        } else {
-                                                            isProcessing = false
-                                                            statusMessage = "Tidak dapat mendeteksi nominal. Coba lagi."
+                                                        when (result) {
+                                                            is OcrResult.Success -> onAmountDetected(result.amount)
+                                                            is OcrResult.Error -> {
+                                                                isProcessing = false
+                                                                statusMessage = result.reason
+                                                            }
                                                         }
                                                     }
                                                     .addOnFailureListener {
                                                         imageProxy.close()
                                                         isProcessing = false
-                                                        statusMessage = "Gagal memproses. Coba lagi."
+                                                        statusMessage = "Error OCR: ${it.message}"
                                                     }
                                             } else {
                                                 imageProxy.close()
@@ -260,21 +262,216 @@ fun ScanReceiptScreen(
     }
 }
 
-/**
- * Extracts the largest numeric value from OCR text.
- * This is a heuristic approach — typically the total is the largest number on a receipt.
- */
-private fun extractLargestAmount(text: String): Double? {
-    val numberPattern = Regex("""[\d.,]+""")
-    val matches = numberPattern.findAll(text)
+private const val MIN_AMOUNT = 1000.0
+private const val MAX_AMOUNT = 500_000_000.0
 
-    return matches
-        .map { match ->
-            match.value
-                .replace(".", "")
-                .replace(",", ".")
-                .toDoubleOrNull() ?: 0.0
+private sealed class OcrResult {
+    data class Success(val amount: Double) : OcrResult()
+    data class Error(val reason: String) : OcrResult()
+}
+
+/**
+ * Extracts the total payment amount from OCR text.
+ * Uses multi-pass approach with keyword search and position awareness.
+ */
+private fun extractTotalAmount(visionText: Text): OcrResult {
+    val keywordPriority = mapOf(
+        "GRAND TOTAL" to 300,
+        "GRANDTOTAL" to 290,
+        "TOTAL" to 200,
+        "JUMLAH" to 180,
+        "PAYMENT DUE" to 170,
+        "AMOUNT DUE" to 160,
+        "SUBTOTAL" to 150,
+        "TAGIHAN" to 140,
+        "BAYAR" to 130,
+        "NETTO" to 120,
+        "SALDO" to 110
+    )
+
+    val candidateAmounts = mutableListOf<Pair<Double, Int>>()
+    var hasKeyword = false
+    var hasNumber = false
+
+    for (block in visionText.textBlocks) {
+        for (line in block.lines) {
+            val lineText = line.text
+            val upperLine = lineText.uppercase()
+
+            val matchedKeyword = keywordPriority.entries
+                .filter { (keyword, _) -> upperLine.contains(keyword) }
+                .maxByOrNull { it.value }
+
+            if (matchedKeyword != null) {
+                hasKeyword = true
+                val amountAfterKeyword = extractAmountAfterKeyword(lineText, matchedKeyword.key)
+                if (amountAfterKeyword != null) {
+                    hasNumber = true
+                    if (amountAfterKeyword in MIN_AMOUNT..MAX_AMOUNT) {
+                        candidateAmounts.add(amountAfterKeyword to matchedKeyword.value)
+                    }
+                }
+            } else if (keywordPriority.keys.any { upperLine.contains(it) }) {
+                hasKeyword = true
+            }
         }
-        .filter { it > 0 }
-        .maxOrNull()
+    }
+
+    if (candidateAmounts.isNotEmpty()) {
+        return OcrResult.Success(candidateAmounts.maxByOrNull { it.second }!!.first)
+    }
+
+    for (block in visionText.textBlocks) {
+        for (line in block.lines) {
+            val lineText = line.text
+            val upperLine = lineText.uppercase()
+
+            if (upperLine.contains("TOTAL") || upperLine.contains("JUMLAH")) {
+                hasKeyword = true
+                val amounts = extractAmountsFromLineRobust(lineText)
+                for (amount in amounts) {
+                    hasNumber = true
+                    if (amount in MIN_AMOUNT..MAX_AMOUNT) {
+                        candidateAmounts.add(amount to 50)
+                    }
+                }
+            }
+        }
+    }
+
+    if (candidateAmounts.isNotEmpty()) {
+        return OcrResult.Success(candidateAmounts.maxByOrNull { it.second }!!.first)
+    }
+
+    val allAmounts = mutableListOf<Double>()
+    for (block in visionText.textBlocks) {
+        for (line in block.lines) {
+            val amounts = extractAmountsFromLineRobust(line.text)
+            if (amounts.isNotEmpty()) {
+                hasNumber = true
+            }
+            allAmounts.addAll(amounts)
+        }
+    }
+
+    val validAmounts = allAmounts.filter { it in MIN_AMOUNT..MAX_AMOUNT }
+    if (validAmounts.isNotEmpty()) {
+        return OcrResult.Success(validAmounts.maxOrNull()!!)
+    }
+
+    return when {
+        !hasKeyword -> OcrResult.Error("Tidak ada keyword TOTAL/JUMLAH")
+        !hasNumber -> OcrResult.Error("Tidak ada angka di struk")
+        else -> OcrResult.Error("Format tidak valid (gunakan format: 150.000)")
+    }
+}
+
+private fun extractAmountAfterKeyword(line: String, keyword: String): Double? {
+    val upperLine = line.uppercase()
+    val upperKeyword = keyword.uppercase()
+    
+    val keywordIndex = upperLine.indexOf(upperKeyword)
+    if (keywordIndex == -1) return null
+
+    val afterKeyword = line.substring(keywordIndex + keyword.length)
+    
+    val numberPattern = Regex("""[\d][\d,\.\s]*[\d]""")
+    val match = numberPattern.find(afterKeyword)
+    
+    val value = match?.value ?: return null
+    val digitsOnly = value.filter { it.isDigit() }
+    
+    if (digitsOnly.length > 12) return null
+    if (!isValidIndonesianCurrency(value)) return null
+    
+    val amount = cleanNumber(value).toDoubleOrNull() ?: return null
+    
+    return if (amount in MIN_AMOUNT..MAX_AMOUNT) amount else null
+}
+
+private fun extractAmountsFromLineRobust(line: String): List<Double> {
+    val amounts = mutableListOf<Double>()
+
+    val numberWithSeparator = Regex("""[\d]+[.,\s][\d]+""").findAll(line)
+    for (match in numberWithSeparator) {
+        val originalValue = match.value
+        if (!isValidIndonesianCurrency(originalValue)) continue
+        
+        val cleaned = cleanNumber(originalValue)
+        cleaned.toDoubleOrNull()?.let { 
+            if (it in MIN_AMOUNT..MAX_AMOUNT) amounts.add(it) 
+        }
+    }
+
+    return amounts.distinct()
+}
+
+private fun isValidIndonesianCurrency(value: String): Boolean {
+    val trimmed = value.trim()
+    
+    if (!trimmed.contains('.') && !trimmed.contains(',')) {
+        return false
+    }
+    
+    val parts = when {
+        trimmed.contains('.') && trimmed.contains(',') -> {
+            if (trimmed.lastIndexOf(',') > trimmed.lastIndexOf('.')) {
+                trimmed.replace(".", "").split(",")
+            } else {
+                trimmed.replace(",", "").split(".")
+            }
+        }
+        trimmed.contains('.') -> trimmed.split(".")
+        trimmed.contains(',') -> trimmed.split(",")
+        else -> return false
+    }
+    
+    if (parts.size != 2) return false
+    
+    val decimalPart = parts[1]
+    if (decimalPart.length != 3) return false
+    
+    val decimalValue = decimalPart.toIntOrNull() ?: return false
+    
+    return decimalValue == 0 || decimalValue == 500
+}
+
+private fun cleanNumber(value: String): String {
+    var cleaned = value.trim()
+
+    if (cleaned.endsWith("-") || cleaned.endsWith(".")) {
+        cleaned = cleaned.dropLast(1)
+    }
+
+    val hasComma = cleaned.contains(',')
+    val hasDot = cleaned.contains('.')
+
+    when {
+        hasComma && hasDot -> {
+            val lastCommaIndex = cleaned.lastIndexOf(',')
+            val lastDotIndex = cleaned.lastIndexOf('.')
+            if (lastCommaIndex > lastDotIndex) {
+                cleaned = cleaned.replace(".", "").replace(",", ".")
+            } else {
+                cleaned = cleaned.replace(",", "")
+            }
+        }
+        hasDot -> {
+            val parts = cleaned.split(".")
+            if (parts.size == 2 && parts[1].length == 3) {
+                cleaned = cleaned.replace(".", "")
+            } else {
+                cleaned = cleaned.replace(",", "")
+            }
+        }
+        hasComma -> {
+            cleaned = cleaned.replace(",", ".")
+        }
+    }
+
+    return cleaned
+}
+
+private fun isValidAmount(amount: Double): Boolean {
+    return amount in 1000.0..500_000_000.0
 }

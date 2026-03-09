@@ -8,6 +8,7 @@ import com.trackit.app.data.local.entity.TransactionEntity
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.DateUtils
+import com.trackit.app.util.NumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -74,7 +75,12 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun updateAmount(amount: String) {
-        _formState.update { it.copy(amount = amount.filter { c -> c.isDigit() || c == '.' }) }
+        val rawDigits = amount.filter { it.isDigit() }
+        _formState.update { it.copy(amount = rawDigits) }
+    }
+
+    fun getFormattedAmount(): String {
+        return NumberUtils.formatWithThousandSeparators(_formState.value.amount)
     }
 
     fun updateDescription(description: String) {
