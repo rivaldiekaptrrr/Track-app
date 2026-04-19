@@ -108,27 +108,43 @@ object VoiceParser {
     }
 
     /**
+     * Extract amount from Rupiah-formatted text produced by Google STT.
+     * Handles: "Rp.50.000", "Rp50.000", "Rp 50.000", "Rp1.500.000",
+     *          "Rp. 50.000", "Rp.50,000", "Rp50000", etc.
+     */
+    private fun extractRupiahFormat(text: String): Long? {
+        // Pattern: "rp" optionally followed by "." and/or spaces, then digits with dot/comma thousand separators
+        val rupiahPattern = Regex("""rp\.?\s*(\d{1,3}(?:[.,]\d{3})*)""")
+        val match = rupiahPattern.find(text) ?: return null
+        val numberStr = match.groupValues[1].replace(".", "").replace(",", "")
+        return numberStr.toLongOrNull()
+    }
+
+    /**
      * Extract monetary amount from text using multiple strategies.
      * Strategy priority: Slang → Numeric with multiplier → Compound (X juta Y ribu) → Word numbers → Plain number
      */
     private fun extractAmount(text: String): Long? {
-        // Strategy 0: Check for slang terms first (last match wins for override logic)
+        // Strategy 0: Rupiah format from STT (e.g., "Rp.50.000", "Rp50.000")
+        val rupiahAmount = extractRupiahFormat(text)
+
+        // Strategy 1: Check for slang terms ("gocap", "cepek", etc.)
         val slangAmount = extractSlangAmount(text)
 
-        // Strategy 1: Compound pattern "X juta Y ribu" or "X juta Y ratus ribu"
+        // Strategy 2: Compound pattern "X juta Y ribu" or "X juta Y ratus ribu"
         val compoundAmount = extractCompoundAmount(text)
 
-        // Strategy 2: Numeric with multiplier: "50 ribu", "1,5 juta", "50ribu"
+        // Strategy 3: Numeric with multiplier: "50 ribu", "1,5 juta", "50ribu"
         val numericAmount = extractNumericAmount(text)
 
-        // Strategy 3: Word numbers: "lima puluh ribu", "seratus ribu"
+        // Strategy 4: Word numbers: "lima puluh ribu", "seratus ribu"
         val wordAmount = extractWordAmount(text)
 
-        // Strategy 4: Plain number (just digits)
+        // Strategy 5: Plain number (just digits)
         val plainAmount = extractPlainNumber(text)
 
-        // Priority: slang > compound > numeric > word > plain
-        return slangAmount ?: compoundAmount ?: numericAmount ?: wordAmount ?: plainAmount
+        // Priority: rupiah format > slang > compound > numeric > word > plain
+        return rupiahAmount ?: slangAmount ?: compoundAmount ?: numericAmount ?: wordAmount ?: plainAmount
     }
 
     private fun extractSlangAmount(text: String): Long? {
