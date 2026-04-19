@@ -26,7 +26,8 @@ data class TransactionFormState(
     val isEditing: Boolean = false,
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val unrecognizedVoiceText: String? = null
 )
 
 @HiltViewModel
@@ -110,11 +111,16 @@ class TransactionViewModel @Inject constructor(
                     it.name.equals(name, ignoreCase = true)
                 }?.id
             }
+            
+            // Simpan teks suara asli jika kategori tidak terdeteksi
+            val unrecognized = if (matchedCategoryId == null && description != null) description else null
+
             state.copy(
                 amount = amount.toString(),
                 description = description ?: state.description,
                 selectedCategoryId = matchedCategoryId ?: state.selectedCategoryId,
-                date = dateMillis ?: state.date
+                date = dateMillis ?: state.date,
+                unrecognizedVoiceText = unrecognized
             )
         }
     }
@@ -153,7 +159,32 @@ class TransactionViewModel @Inject constructor(
                     transactionRepository.insert(transaction)
                 }
 
-                _formState.update { it.copy(isSaving = false, savedSuccessfully = true) }
+                // Machine Learning Natural: Pelajari kata kunci baru dari ucapan
+                if (state.unrecognizedVoiceText != null) {
+                    val selectedCategory = state.categories.find { it.id == state.selectedCategoryId }
+                    if (selectedCategory != null) {
+                        // Bersihkan teks: hapus angka dan satuan uang (ribu, juta, rp, dll) untuk mengambil kata bendanya saja
+                        val keywordToLearn = state.unrecognizedVoiceText
+                            .replace(Regex("\\d+"), "")
+                            .replace(Regex("(?i)\\b(ribu|rb|rebu|juta|jt|ratus|belas|puluh|rp|rupiah|gocap|cepek|seceng|noban|goban)\\b"), "")
+                            .replace(Regex("[.,]"), "")
+                            .trim()
+
+                        if (keywordToLearn.isNotBlank()) {
+                            val currentKeywords = selectedCategory.customKeywords.split(",").map { it.trim().lowercase() }
+                            if (!currentKeywords.contains(keywordToLearn.lowercase())) {
+                                val newKeywords = if (selectedCategory.customKeywords.isBlank()) {
+                                    keywordToLearn
+                                } else {
+                                    "${selectedCategory.customKeywords}, $keywordToLearn"
+                                }
+                                categoryRepository.update(selectedCategory.copy(customKeywords = newKeywords))
+                            }
+                        }
+                    }
+                }
+
+                _formState.update { it.copy(isSaving = false, savedSuccessfully = true, unrecognizedVoiceText = null) }
             } catch (e: Exception) {
                 _formState.update { it.copy(isSaving = false, errorMessage = e.message) }
             }

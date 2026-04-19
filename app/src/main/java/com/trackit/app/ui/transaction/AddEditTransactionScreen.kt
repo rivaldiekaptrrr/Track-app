@@ -97,8 +97,14 @@ fun AddEditTransactionScreen(
                         dateMillis = parseResult.dateMillis
                     )
                     showHighlight = true
-                    scope.launch {
-                        snackbarHostState.showSnackbar("✓ Terdeteksi: $spokenText")
+                    
+                    // Auto-save jika kategori berhasil terdeteksi
+                    if (parseResult.categoryName != null) {
+                        viewModel.saveTransaction()
+                    } else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("✓ Terdeteksi: $spokenText. Silakan pilih kategori.")
+                        }
                     }
                 } else {
                     Toast.makeText(context, "Nominal tidak terdeteksi, coba ucapkan lagi", Toast.LENGTH_SHORT).show()
@@ -154,9 +160,11 @@ fun AddEditTransactionScreen(
     // Navigate back on save
     LaunchedEffect(formState.savedSuccessfully) {
         if (formState.savedSuccessfully) {
-            if (isTtsEnabled) {
+            if (isTtsEnabled && tts != null) {
                 val categoryName = formState.categories.find { it.id == formState.selectedCategoryId }?.name ?: ""
                 tts?.speak("Tersimpan, pengeluaran $categoryName ${formState.amount} rupiah", TextToSpeech.QUEUE_FLUSH, null, null)
+                // Beri jeda 2 detik agar TTS selesai bicara sebelum halaman ditutup
+                delay(2000)
             }
             onNavigateBack()
         }
