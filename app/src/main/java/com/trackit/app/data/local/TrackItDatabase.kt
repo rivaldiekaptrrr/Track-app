@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         BudgetSettingEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -45,6 +45,12 @@ abstract class TrackItDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE categories ADD COLUMN type TEXT NOT NULL DEFAULT 'EXPENSE'")
                 db.execSQL("ALTER TABLE transactions ADD COLUMN type TEXT NOT NULL DEFAULT 'EXPENSE'")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN isHidden INTEGER NOT NULL DEFAULT 0")
             }
         }
 

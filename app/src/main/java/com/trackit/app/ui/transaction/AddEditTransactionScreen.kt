@@ -167,7 +167,8 @@ fun AddEditTransactionScreen(
         if (formState.savedSuccessfully) {
             if (isTtsEnabled && tts != null) {
                 val categoryName = formState.categories.find { it.id == formState.selectedCategoryId }?.name ?: ""
-                val textToSpeak = "Tersimpan, pengeluaran $categoryName ${formState.amount} rupiah"
+                val typeText = if (formState.type == "INCOME") "pemasukan" else "pengeluaran"
+                val textToSpeak = "Tersimpan, $typeText $categoryName ${formState.amount} rupiah"
                 
                 // Menunggu TTS selesai bicara (maksimal 5 detik agar tidak hang)
                 withTimeoutOrNull(5000) {
@@ -369,7 +370,9 @@ fun AddEditTransactionScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val filteredCategories = formState.categories.filter { it.type == formState.type }
+                val filteredCategories = formState.categories.filter { 
+                    it.type == formState.type && (!it.isHidden || it.id == formState.selectedCategoryId)
+                }
                 items(filteredCategories) { category ->
                     CategoryChip(
                         category = category,

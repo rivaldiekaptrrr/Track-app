@@ -46,4 +46,10 @@ class TransactionRepository @Inject constructor(
 
     suspend fun getById(id: Long): TransactionEntity? =
         transactionDao.getById(id)
+
+    suspend fun updateTransactionsCategory(oldCategoryId: Long, newCategoryId: Long) =
+        transactionDao.updateTransactionsCategory(oldCategoryId, newCategoryId)
+
+    suspend fun countTransactionsByCategory(categoryId: Long): Int =
+        transactionDao.countTransactionsByCategory(categoryId)
 }

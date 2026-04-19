@@ -14,5 +14,7 @@ data class CategoryEntity(
     @ColumnInfo(defaultValue = "")
     val customKeywords: String = "", // Comma-separated custom keywords for voice matching
     @ColumnInfo(defaultValue = "EXPENSE")
-    val type: String = "EXPENSE" // "EXPENSE" or "INCOME"
+    val type: String = "EXPENSE", // "EXPENSE" or "INCOME"
+    @ColumnInfo(defaultValue = "0")
+    val isHidden: Boolean = false // Fitur Visibilitas
 )

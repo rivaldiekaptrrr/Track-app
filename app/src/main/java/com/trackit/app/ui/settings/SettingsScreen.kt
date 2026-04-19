@@ -104,12 +104,12 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Kata Kunci Kategori",
+                                "Manajemen Kategori",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                "Kelola kata kunci khusus untuk deteksi suara",
+                                "Tambah, edit, dan hapus kategori transaksi",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

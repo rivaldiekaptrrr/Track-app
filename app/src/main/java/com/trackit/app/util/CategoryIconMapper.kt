@@ -16,6 +16,16 @@ object CategoryIconMapper {
             "local_hospital" -> Icons.Default.LocalHospital
             "school" -> Icons.Default.School
             "more_horiz" -> Icons.Default.MoreHoriz
+            "payments" -> Icons.Default.Payments
+            "card_giftcard" -> Icons.Default.CardGiftcard
+            "trending_up" -> Icons.Default.TrendingUp
+            "add_circle" -> Icons.Default.AddCircle
+            "pets" -> Icons.Default.Pets
+            "fitness_center" -> Icons.Default.FitnessCenter
+            "home" -> Icons.Default.Home
+            "flight" -> Icons.Default.Flight
+            "child_care" -> Icons.Default.ChildCare
+            "build" -> Icons.Default.Build
             else -> Icons.Default.Category
         }
     }

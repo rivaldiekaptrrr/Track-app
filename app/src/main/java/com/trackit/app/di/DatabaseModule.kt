@@ -25,7 +25,7 @@ object DatabaseModule {
             TrackItDatabase::class.java,
             "trackit_database"
         )
-        .addMigrations(TrackItDatabase.MIGRATION_1_2, TrackItDatabase.MIGRATION_2_3)
+        .addMigrations(TrackItDatabase.MIGRATION_1_2, TrackItDatabase.MIGRATION_2_3, TrackItDatabase.MIGRATION_3_4)
         .build()
     }
 
