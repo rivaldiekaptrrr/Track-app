@@ -3,6 +3,7 @@ package com.trackit.app.ui.settings
 import android.content.Context
 import android.graphics.pdf.PdfDocument
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
