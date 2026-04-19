@@ -12,5 +12,7 @@ data class CategoryEntity(
     val iconName: String,
     val colorHex: String,
     @ColumnInfo(defaultValue = "")
-    val customKeywords: String = ""  // Comma-separated custom keywords for voice matching
+    val customKeywords: String = "", // Comma-separated custom keywords for voice matching
+    @ColumnInfo(defaultValue = "EXPENSE")
+    val type: String = "EXPENSE" // "EXPENSE" or "INCOME"
 )

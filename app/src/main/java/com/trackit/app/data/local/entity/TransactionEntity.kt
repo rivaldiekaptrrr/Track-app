@@ -27,5 +27,7 @@ data class TransactionEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val isRecurring: Boolean = false,
     val recurringType: String? = null, // "DAILY", "WEEKLY", "MONTHLY"
-    val recurringDayOfMonth: Int? = null
+    val recurringDayOfMonth: Int? = null,
+    @ColumnInfo(defaultValue = "EXPENSE")
+    val type: String = "EXPENSE" // "EXPENSE" or "INCOME"
 )

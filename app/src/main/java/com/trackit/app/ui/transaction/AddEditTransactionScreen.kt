@@ -42,6 +42,10 @@ import com.trackit.app.util.NumberUtils
 import com.trackit.app.util.VoiceParser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
+import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,7 +98,8 @@ fun AddEditTransactionScreen(
                         amount = parseResult.amount ?: 0L,
                         description = parseResult.description,
                         categoryName = parseResult.categoryName,
-                        dateMillis = parseResult.dateMillis
+                        dateMillis = parseResult.dateMillis,
+                        type = parseResult.type
                     )
                     showHighlight = true
                     
@@ -162,9 +167,23 @@ fun AddEditTransactionScreen(
         if (formState.savedSuccessfully) {
             if (isTtsEnabled && tts != null) {
                 val categoryName = formState.categories.find { it.id == formState.selectedCategoryId }?.name ?: ""
-                tts?.speak("Tersimpan, pengeluaran $categoryName ${formState.amount} rupiah", TextToSpeech.QUEUE_FLUSH, null, null)
-                // Beri jeda 2 detik agar TTS selesai bicara sebelum halaman ditutup
-                delay(2000)
+                val textToSpeak = "Tersimpan, pengeluaran $categoryName ${formState.amount} rupiah"
+                
+                // Menunggu TTS selesai bicara (maksimal 5 detik agar tidak hang)
+                withTimeoutOrNull(5000) {
+                    suspendCancellableCoroutine { continuation ->
+                        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                            override fun onStart(utteranceId: String?) {}
+                            override fun onDone(utteranceId: String?) {
+                                if (continuation.isActive) continuation.resume(Unit)
+                            }
+                            override fun onError(utteranceId: String?) {
+                                if (continuation.isActive) continuation.resume(Unit)
+                            }
+                        })
+                        tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SAVE_SUCCESS")
+                    }
+                }
             }
             onNavigateBack()
         }
@@ -199,11 +218,34 @@ fun AddEditTransactionScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // Type Selection
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                SegmentedButton(
+                    selected = formState.type == "EXPENSE",
+                    onClick = { viewModel.updateType("EXPENSE") },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                ) {
+                    Text("Pengeluaran")
+                }
+                SegmentedButton(
+                    selected = formState.type == "INCOME",
+                    onClick = { viewModel.updateType("INCOME") },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                ) {
+                    Text("Pemasukan")
+                }
+            }
+
             // Amount Input with Camera Icon
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    containerColor = if (formState.type == "INCOME") 
+                        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                    else 
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -327,7 +369,8 @@ fun AddEditTransactionScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(formState.categories) { category ->
+                val filteredCategories = formState.categories.filter { it.type == formState.type }
+                items(filteredCategories) { category ->
                     CategoryChip(
                         category = category,
                         isSelected = formState.selectedCategoryId == category.id,

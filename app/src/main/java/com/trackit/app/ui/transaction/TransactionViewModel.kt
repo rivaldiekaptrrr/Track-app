@@ -22,6 +22,7 @@ data class TransactionFormState(
     val date: Long = DateUtils.todayMillis(),
     val isRecurring: Boolean = false,
     val recurringType: String? = null,
+    val type: String = "EXPENSE",
     val categories: List<CategoryEntity> = emptyList(),
     val isEditing: Boolean = false,
     val isSaving: Boolean = false,
@@ -68,6 +69,7 @@ class TransactionViewModel @Inject constructor(
                         date = tx.date,
                         isRecurring = tx.isRecurring,
                         recurringType = tx.recurringType,
+                        type = tx.type,
                         isEditing = true
                     )
                 }
@@ -89,7 +91,13 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun updateCategory(categoryId: Long) {
-        _formState.update { it.copy(selectedCategoryId = categoryId) }
+        val category = _formState.value.categories.find { it.id == categoryId }
+        val type = category?.type ?: _formState.value.type
+        _formState.update { it.copy(selectedCategoryId = categoryId, type = type) }
+    }
+
+    fun updateType(type: String) {
+        _formState.update { it.copy(type = type, selectedCategoryId = null) }
     }
 
     fun updateDate(dateMillis: Long) {
@@ -104,7 +112,7 @@ class TransactionViewModel @Inject constructor(
         _formState.update { it.copy(recurringType = type) }
     }
 
-    fun setFromVoice(amount: Long, description: String?, categoryName: String?, dateMillis: Long?) {
+    fun setFromVoice(amount: Long, description: String?, categoryName: String?, dateMillis: Long?, type: String = "EXPENSE") {
         _formState.update { state ->
             val matchedCategoryId = categoryName?.let { name ->
                 state.categories.find {
@@ -120,6 +128,7 @@ class TransactionViewModel @Inject constructor(
                 description = description ?: state.description,
                 selectedCategoryId = matchedCategoryId ?: state.selectedCategoryId,
                 date = dateMillis ?: state.date,
+                type = type,
                 unrecognizedVoiceText = unrecognized
             )
         }
@@ -150,7 +159,8 @@ class TransactionViewModel @Inject constructor(
                     categoryId = state.selectedCategoryId,
                     date = state.date,
                     isRecurring = state.isRecurring,
-                    recurringType = state.recurringType
+                    recurringType = state.recurringType,
+                    type = state.type
                 )
 
                 if (state.isEditing) {

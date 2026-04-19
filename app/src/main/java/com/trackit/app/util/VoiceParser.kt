@@ -11,6 +11,7 @@ data class VoiceParseResult(
     val categoryName: String?,   // Matched category name (e.g., "Makanan")
     val description: String,     // Raw text / description
     val dateMillis: Long?,       // Parsed date (null = today)
+    val type: String,            // "INCOME" or "EXPENSE"
     val isValid: Boolean         // Whether at least the amount was extracted
 )
 
@@ -48,7 +49,7 @@ object VoiceParser {
         ),
         "Belanja" to listOf(
             "belanja", "baju", "celana", "sepatu", "tas", "online", "shopee",
-            "tokopedia", "lazada", "beli", "fashion", "pakaian", "kosmetik", "skincare"
+            "tokopedia", "lazada", "fashion", "pakaian", "kosmetik", "skincare"
         ),
         "Kesehatan" to listOf(
             "obat", "dokter", "rumah sakit", "apotek", "farmasi", "vitamin",
@@ -94,6 +95,10 @@ object VoiceParser {
 
         // Detect category
         val categoryName = detectCategory(normalizedText, categories)
+        val matchedCategory = categories.find { it.name == categoryName }
+
+        // Detect type (Income vs Expense)
+        val type = detectType(normalizedText, matchedCategory)
 
         // Detect date
         val dateMillis = detectDate(normalizedText)
@@ -103,6 +108,7 @@ object VoiceParser {
             categoryName = categoryName,
             description = text.trim(),
             dateMillis = dateMillis,
+            type = type,
             isValid = amount != null && amount > 0
         )
     }
@@ -382,5 +388,27 @@ object VoiceParser {
             }
             else -> null
         }
+    }
+
+    /**
+     * Detect transaction type (Income/Expense).
+     * Priority: 1. Matched category type, 2. Spoken keywords, 3. Default to Expense
+     */
+    private fun detectType(text: String, category: CategoryEntity?): String {
+        // 1. Follow category type if category is detected
+        if (category != null) {
+            return category.type
+        }
+        
+        // 2. Keyword detection for income
+        val incomeKeywords = listOf("dapat", "terima", "masuk", "gaji", "bonus", "untung", "laba", "dikasih")
+        for (keyword in incomeKeywords) {
+            if (text.contains(keyword)) {
+                return "INCOME"
+            }
+        }
+        
+        // Default is expense
+        return "EXPENSE"
     }
 }

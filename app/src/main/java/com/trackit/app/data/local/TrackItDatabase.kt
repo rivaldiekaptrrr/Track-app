@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         BudgetSettingEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -41,15 +41,29 @@ abstract class TrackItDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN type TEXT NOT NULL DEFAULT 'EXPENSE'")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN type TEXT NOT NULL DEFAULT 'EXPENSE'")
+            }
+        }
+
         fun getDefaultCategories(): List<CategoryEntity> = listOf(
-            CategoryEntity(name = "Makanan", iconName = "restaurant", colorHex = "#E8963B"),
-            CategoryEntity(name = "Transportasi", iconName = "directions_car", colorHex = "#3D6373"),
-            CategoryEntity(name = "Hiburan", iconName = "movie", colorHex = "#C24D6E"),
-            CategoryEntity(name = "Tagihan", iconName = "receipt_long", colorHex = "#7B61D9"),
-            CategoryEntity(name = "Belanja", iconName = "shopping_bag", colorHex = "#1B6B4F"),
-            CategoryEntity(name = "Kesehatan", iconName = "local_hospital", colorHex = "#4EADAD"),
-            CategoryEntity(name = "Pendidikan", iconName = "school", colorHex = "#D4A843"),
-            CategoryEntity(name = "Lainnya", iconName = "more_horiz", colorHex = "#8B6BB5"),
+            // Expense Categories
+            CategoryEntity(name = "Makanan", iconName = "restaurant", colorHex = "#E8963B", type = "EXPENSE"),
+            CategoryEntity(name = "Transportasi", iconName = "directions_car", colorHex = "#3D6373", type = "EXPENSE"),
+            CategoryEntity(name = "Hiburan", iconName = "movie", colorHex = "#C24D6E", type = "EXPENSE"),
+            CategoryEntity(name = "Tagihan", iconName = "receipt_long", colorHex = "#7B61D9", type = "EXPENSE"),
+            CategoryEntity(name = "Belanja", iconName = "shopping_bag", colorHex = "#1B6B4F", type = "EXPENSE"),
+            CategoryEntity(name = "Kesehatan", iconName = "local_hospital", colorHex = "#4EADAD", type = "EXPENSE"),
+            CategoryEntity(name = "Pendidikan", iconName = "school", colorHex = "#D4A843", type = "EXPENSE"),
+            CategoryEntity(name = "Lainnya", iconName = "more_horiz", colorHex = "#8B6BB5", type = "EXPENSE"),
+            
+            // Income Categories
+            CategoryEntity(name = "Gaji", iconName = "payments", colorHex = "#2E7D32", type = "INCOME"),
+            CategoryEntity(name = "Bonus", iconName = "card_giftcard", colorHex = "#F57F17", type = "INCOME"),
+            CategoryEntity(name = "Investasi", iconName = "trending_up", colorHex = "#1565C0", type = "INCOME"),
+            CategoryEntity(name = "Lainnya Masuk", iconName = "add_circle", colorHex = "#00838F", type = "INCOME")
         )
     }
 }
