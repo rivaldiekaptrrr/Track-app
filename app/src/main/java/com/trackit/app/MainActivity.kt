@@ -109,7 +109,7 @@ class MainActivity : FragmentActivity() {
         val biometricManager = BiometricManager.from(this)
         return biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
-            BiometricManager.Authenticators.BIOMETRIC_WEAK
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
         ) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
@@ -140,11 +140,10 @@ class MainActivity : FragmentActivity() {
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Autentikasi Diperlukan")
-            .setSubtitle("Gunakan sidik jari atau face unlock untuk masuk ke TrackIt")
-            .setNegativeButtonText("Batal")
+            .setSubtitle("Gunakan sidik jari, face unlock, atau sandi HP untuk masuk")
             .setAllowedAuthenticators(
                 BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                BiometricManager.Authenticators.BIOMETRIC_WEAK
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
             )
             .build()
 

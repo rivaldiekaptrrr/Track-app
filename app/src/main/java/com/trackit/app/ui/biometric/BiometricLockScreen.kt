@@ -70,7 +70,7 @@ fun BiometricLockScreen(
             }
 
             Text(
-                "Sentuh sensor sidik jari\natau gunakan face unlock untuk masuk",
+                "Sentuh sensor sidik jari, face unlock,\natau gunakan sandi HP untuk masuk",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
