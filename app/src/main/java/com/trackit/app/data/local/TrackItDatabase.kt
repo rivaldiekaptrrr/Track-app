@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.trackit.app.data.local.dao.BudgetSettingDao
 import com.trackit.app.data.local.dao.CategoryDao
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         BudgetSettingEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -31,6 +32,15 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun budgetSettingDao(): BudgetSettingDao
 
     companion object {
+        /**
+         * Migration from version 1 to 2: Add customKeywords column to categories table.
+         */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN customKeywords TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getDefaultCategories(): List<CategoryEntity> = listOf(
             CategoryEntity(name = "Makanan", iconName = "restaurant", colorHex = "#E8963B"),
             CategoryEntity(name = "Transportasi", iconName = "directions_car", colorHex = "#3D6373"),

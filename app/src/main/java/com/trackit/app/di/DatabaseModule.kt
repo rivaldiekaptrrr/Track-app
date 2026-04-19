@@ -24,7 +24,9 @@ object DatabaseModule {
             context,
             TrackItDatabase::class.java,
             "trackit_database"
-        ).build()
+        )
+        .addMigrations(TrackItDatabase.MIGRATION_1_2)
+        .build()
     }
 
     @Provides

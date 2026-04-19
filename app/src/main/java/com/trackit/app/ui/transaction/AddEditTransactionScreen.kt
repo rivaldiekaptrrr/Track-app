@@ -25,17 +25,29 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.DateUtils
 import com.trackit.app.util.NumberUtils
+import com.trackit.app.util.VoiceParser
+import kotlinx.coroutines.delay
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditTransactionScreen(
-    ocrAmount: Double? = null,
+    startVoice: Boolean = false,
     onNavigateBack: () -> Unit,
-    onOpenCamera: () -> Unit,
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     val formState by viewModel.formState.collectAsStateWithLifecycle()
@@ -44,23 +56,113 @@ fun AddEditTransactionScreen(
         initialSelectedDateMillis = formState.date
     )
 
-    // Set OCR amount if available
-    LaunchedEffect(ocrAmount) {
-        ocrAmount?.let { viewModel.setAmountFromOcr(it) }
+    val context = LocalContext.current
+    val view = LocalView.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    
+    var isListening by remember { mutableStateOf(false) }
+    var showHighlight by remember { mutableStateOf(false) }
+
+    // TTS Setup
+    val preferencesManager = remember { com.trackit.app.data.local.PreferencesManager(context) }
+    val isTtsEnabled by preferencesManager.isTtsEnabled.collectAsState(initial = true)
+    
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    DisposableEffect(context) {
+        val textToSpeech = TextToSpeech(context.applicationContext) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale("id", "ID")
+            }
+        }
+        tts = textToSpeech
+        onDispose { textToSpeech.shutdown() }
+    }
+
+    val speechLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        isListening = false
+        view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val matches = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = matches?.firstOrNull()
+            if (spokenText != null) {
+                val parseResult = VoiceParser.parse(spokenText, formState.categories)
+                if (parseResult.isValid) {
+                    viewModel.setFromVoice(
+                        amount = parseResult.amount ?: 0L,
+                        description = parseResult.description,
+                        categoryName = parseResult.categoryName,
+                        dateMillis = parseResult.dateMillis
+                    )
+                    showHighlight = true
+                    scope.launch {
+                        snackbarHostState.showSnackbar("✓ Terdeteksi: $spokenText")
+                    }
+                } else {
+                    Toast.makeText(context, "Nominal tidak terdeteksi, coba ucapkan lagi", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else if (result.resultCode != Activity.RESULT_CANCELED) {
+            Toast.makeText(context, "Suara tidak terdengar, coba lagi", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            isListening = true
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            try {
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, "id-ID")
+                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Ucapkan pengeluaran Anda, contoh: beli sayur 50 ribu")
+                }
+                speechLauncher.launch(intent)
+            } catch (e: Exception) {
+                isListening = false
+                Toast.makeText(context, "Fitur suara tidak didukung di perangkat ini", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "Izin mikrofon diperlukan untuk fitur suara", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(startVoice) {
+        if (startVoice && !formState.isEditing) {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     val formattedAmount = remember(formState.amount) {
         NumberUtils.formatWithThousandSeparators(formState.amount)
     }
 
+    LaunchedEffect(showHighlight) {
+        if (showHighlight) {
+            delay(1000)
+            showHighlight = false
+        }
+    }
+
+    val highlightColor by animateColorAsState(
+        targetValue = if (showHighlight) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        label = "highlight_anim"
+    )
+
     // Navigate back on save
     LaunchedEffect(formState.savedSuccessfully) {
         if (formState.savedSuccessfully) {
+            if (isTtsEnabled) {
+                val categoryName = formState.categories.find { it.id == formState.selectedCategoryId }?.name ?: ""
+                tts?.speak("Tersimpan, pengeluaran $categoryName ${formState.amount} rupiah", TextToSpeech.QUEUE_FLUSH, null, null)
+            }
             onNavigateBack()
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -121,17 +223,33 @@ fun AddEditTransactionScreen(
                             ),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = highlightColor,
+                                unfocusedContainerColor = highlightColor,
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                             )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        FilledTonalIconButton(onClick = onOpenCamera) {
+                        FilledTonalIconButton(
+                            onClick = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) },
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = if (isListening) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
                             Icon(
-                                Icons.Default.CameraAlt,
-                                contentDescription = "Pindai Struk"
+                                if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
+                                contentDescription = "Catat dengan Suara",
+                                tint = if (isListening) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
+                    }
+                    if (isListening) {
+                        Text(
+                            "Mendengarkan...",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 4.dp).align(Alignment.End)
+                        )
                     }
                 }
             }
@@ -144,7 +262,11 @@ fun AddEditTransactionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
                 shape = RoundedCornerShape(12.dp),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = highlightColor,
+                    unfocusedContainerColor = highlightColor
+                )
             )
 
             // Date Picker

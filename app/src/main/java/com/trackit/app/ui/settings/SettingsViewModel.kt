@@ -10,13 +10,17 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val monthlyBudget: String = "",
+    val isTtsEnabled: Boolean = true,
     val savedSuccessfully: Boolean = false,
     val errorMessage: String? = null
 )
 
+import com.trackit.app.data.local.PreferencesManager
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -24,6 +28,15 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadBudget()
+        loadTtsPreference()
+    }
+
+    private fun loadTtsPreference() {
+        viewModelScope.launch {
+            preferencesManager.isTtsEnabled.collect { isEnabled ->
+                _uiState.update { it.copy(isTtsEnabled = isEnabled) }
+            }
+        }
     }
 
     private fun loadBudget() {
@@ -61,5 +74,11 @@ class SettingsViewModel @Inject constructor(
 
     fun clearSuccess() {
         _uiState.update { it.copy(savedSuccessfully = false) }
+    }
+
+    fun toggleTts(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setTtsEnabled(enabled)
+        }
     }
 }

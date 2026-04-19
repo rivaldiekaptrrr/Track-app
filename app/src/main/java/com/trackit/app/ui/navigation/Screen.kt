@@ -2,13 +2,9 @@ package com.trackit.app.ui.navigation
 
 sealed class Screen(val route: String) {
     data object Dashboard : Screen("dashboard")
-    data object AddTransaction : Screen("add_transaction?ocrAmount={ocrAmount}") {
-        fun createRoute(ocrAmount: Double? = null): String {
-            return if (ocrAmount != null) {
-                "add_transaction?ocrAmount=$ocrAmount"
-            } else {
-                "add_transaction"
-            }
+    data object AddTransaction : Screen("add_transaction?startVoice={startVoice}") {
+        fun createRoute(startVoice: Boolean = false): String {
+            return "add_transaction?startVoice=$startVoice"
         }
     }
     data object EditTransaction : Screen("edit_transaction/{transactionId}") {
@@ -18,5 +14,5 @@ sealed class Screen(val route: String) {
     }
     data object Chart : Screen("chart")
     data object Settings : Screen("settings")
-    data object ScanReceipt : Screen("scan_receipt")
+    data object CustomKeywords : Screen("custom_keywords")
 }

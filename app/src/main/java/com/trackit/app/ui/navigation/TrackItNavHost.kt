@@ -8,18 +8,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.trackit.app.ui.chart.ChartScreen
 import com.trackit.app.ui.dashboard.DashboardScreen
-import com.trackit.app.ui.scan.ScanReceiptScreen
+import com.trackit.app.ui.settings.CustomKeywordScreen
 import com.trackit.app.ui.settings.SettingsScreen
 import com.trackit.app.ui.transaction.AddEditTransactionScreen
 
 @Composable
 fun TrackItNavHost(
     navController: NavHostController,
+    startDestination: String = Screen.Dashboard.route,
     onExportPdf: () -> Unit
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Dashboard.route
+        startDestination = startDestination
     ) {
         composable(Screen.Dashboard.route) {
             DashboardScreen(
@@ -41,23 +42,16 @@ fun TrackItNavHost(
         composable(
             route = Screen.AddTransaction.route,
             arguments = listOf(
-                navArgument("ocrAmount") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
+                navArgument("startVoice") {
+                    type = NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) { backStackEntry ->
-            val ocrAmountArg = backStackEntry.arguments?.getString("ocrAmount")?.toDoubleOrNull()
-            // Also check savedStateHandle (set when returning from ScanReceipt)
-            val savedOcrAmount = backStackEntry.savedStateHandle.get<Double>("ocrAmount")
-            val finalOcrAmount = savedOcrAmount ?: ocrAmountArg
+            val startVoice = backStackEntry.arguments?.getBoolean("startVoice") ?: false
             AddEditTransactionScreen(
-                ocrAmount = finalOcrAmount,
-                onNavigateBack = { navController.popBackStack() },
-                onOpenCamera = {
-                    navController.navigate(Screen.ScanReceipt.route)
-                }
+                startVoice = startVoice,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -68,10 +62,7 @@ fun TrackItNavHost(
             )
         ) {
             AddEditTransactionScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onOpenCamera = {
-                    navController.navigate(Screen.ScanReceipt.route)
-                }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -84,20 +75,16 @@ fun TrackItNavHost(
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onExportPdf = onExportPdf
+                onExportPdf = onExportPdf,
+                onNavigateToCustomKeywords = {
+                    navController.navigate(Screen.CustomKeywords.route)
+                }
             )
         }
 
-        composable(Screen.ScanReceipt.route) {
-            ScanReceiptScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onAmountDetected = { amount ->
-                    // Navigate back to add transaction with detected amount
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("ocrAmount", amount)
-                    navController.popBackStack()
-                }
+        composable(Screen.CustomKeywords.route) {
+            CustomKeywordScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

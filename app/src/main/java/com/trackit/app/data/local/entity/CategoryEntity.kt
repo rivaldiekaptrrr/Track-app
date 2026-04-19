@@ -1,5 +1,6 @@
 package com.trackit.app.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -9,5 +10,7 @@ data class CategoryEntity(
     val id: Long = 0,
     val name: String,
     val iconName: String,
-    val colorHex: String
+    val colorHex: String,
+    @ColumnInfo(defaultValue = "")
+    val customKeywords: String = ""  // Comma-separated custom keywords for voice matching
 )

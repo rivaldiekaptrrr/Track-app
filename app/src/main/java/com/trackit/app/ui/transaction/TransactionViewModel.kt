@@ -103,8 +103,20 @@ class TransactionViewModel @Inject constructor(
         _formState.update { it.copy(recurringType = type) }
     }
 
-    fun setAmountFromOcr(amount: Double) {
-        _formState.update { it.copy(amount = amount.toLong().toString()) }
+    fun setFromVoice(amount: Long, description: String?, categoryName: String?, dateMillis: Long?) {
+        _formState.update { state ->
+            val matchedCategoryId = categoryName?.let { name ->
+                state.categories.find {
+                    it.name.equals(name, ignoreCase = true)
+                }?.id
+            }
+            state.copy(
+                amount = amount.toString(),
+                description = description ?: state.description,
+                selectedCategoryId = matchedCategoryId ?: state.selectedCategoryId,
+                date = dateMillis ?: state.date
+            )
+        }
     }
 
     fun saveTransaction() {

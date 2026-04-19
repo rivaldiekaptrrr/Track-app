@@ -20,6 +20,7 @@ import com.trackit.app.data.local.entity.BudgetSettingEntity
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.ui.biometric.BiometricLockScreen
+import com.trackit.app.ui.navigation.Screen
 import com.trackit.app.ui.navigation.TrackItNavHost
 import com.trackit.app.ui.theme.TrackItTheme
 import com.trackit.app.util.CurrencyUtils
@@ -72,8 +73,12 @@ class MainActivity : FragmentActivity() {
 
                     if (isAuthenticated) {
                         val navController = rememberNavController()
+                        val startVoice = intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)
+                        val startDest = if (startVoice) Screen.AddTransaction.createRoute(startVoice = true) else Screen.Dashboard.route
+                        
                         TrackItNavHost(
                             navController = navController,
+                            startDestination = startDest,
                             onExportPdf = { exportPdf() }
                         )
                     } else {
