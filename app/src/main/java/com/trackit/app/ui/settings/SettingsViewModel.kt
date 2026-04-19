@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.trackit.app.data.local.PreferencesManager
 
 data class SettingsUiState(
     val monthlyBudget: String = "",
@@ -14,8 +15,6 @@ data class SettingsUiState(
     val savedSuccessfully: Boolean = false,
     val errorMessage: String? = null
 )
-
-import com.trackit.app.data.local.PreferencesManager
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
