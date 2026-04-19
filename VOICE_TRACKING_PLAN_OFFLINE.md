@@ -53,6 +53,7 @@ Setelah diproses, form transaksi otomatis terisi. Pengguna tetap bisa mereview/m
 | File | Fungsi |
 |------|--------|
 | `util/VoiceParser.kt` | Regex parser untuk mengekstrak nominal, kategori, dan deskripsi dari teks Bahasa Indonesia |
+| `ui/settings/CustomKeywordScreen.kt` | Layar UI baru untuk pengguna menambah/menghapus keyword custom per kategori |
 
 ---
 
@@ -145,6 +146,13 @@ Parser harus menangani berbagai format angka Bahasa Indonesia:
 - `puluh` = suffix ×10, `ratus` = suffix ×100
 - `seratus` = 100, `seribu` = 1000
 
+**Pengenalan Bahasa Gaul / Slang Angka (Auto-Correction):**
+- `gocap`/`selawe` = 50.000 / 25.000
+- `cepek`/`gopek` = 100.000 / 500
+- `seceng`/`ceng` = 1.000
+- `noban`/`goban` = 20.000 / 50.000
+- **Override Logic:** Jika pengguna menyebut >1 angka berdekatan (typo sebut: "lima puluh... eh dua puluh ribu"), parser akan mengambil angka **terakhir** yang valid ("dua puluh ribu").
+
 #### 4.3 Logika Deteksi Kategori (Dictionary Matching)
 
 Mapping keyword → nama kategori **harus sesuai dengan data di `TrackItDatabase.getDefaultCategories()`**:
@@ -160,15 +168,44 @@ Mapping keyword → nama kategori **harus sesuai dengan data di `TrackItDatabase
 | **Pendidikan** | buku, sekolah, kuliah, kursus, les, spp, ukt, semester, tuition, seminar |
 | **Lainnya** | *(fallback jika tidak ada keyword yang cocok)* |
 
-**Aturan Prioritas:** Jika ada >1 kategori cocok, ambil yang keyword-nya muncul paling awal di kalimat.
+> **Fitur Custom Keyword:** Selain keyword default di atas, `VoiceParser` juga akan membaca daftar keyword tambahan (Custom Keywords) yang disimpan pengguna di dalam Database/DataStore, sehingga parser bisa terus belajar.
+
+**Aturan Prioritas:** Jika ada >1 kategori cocok, ambil yang keyword-nya muncul paling awal di kalimat. Prioritaskan Custom Keyword buatan pengguna dibandingkan Default Keyword.
 
 #### 4.4 Logika Deskripsi
 - Deskripsi = seluruh kalimat mentah hasil speech recognition.
 - Contoh: ucapan "beli sayur di pasar 50 ribu" → deskripsi = "beli sayur di pasar 50 ribu"
 
+#### 4.5 Deteksi Tanggal Pintar (Time-Travel Parsing)
+- Cari keyword waktu dalam teks:
+  - `"kemarin"` → Set parameter `date` ke H-1.
+  - `"kemarin lusa"` → Set parameter `date` ke H-2.
+  - Jika tidak ada keyword waktu → Set ke hari ini (default).
+
 ---
 
-### Tahap 5: Update Navigation (`Screen.kt` & `TrackItNavHost.kt`)
+### Tahap 5: Fitur Kelola Kata Kunci (Menu Settings)
+
+Agar aplikasi semakin pintar dan adaptif terhadap gaya bahasa pengguna, kita tambahkan menu untuk mengatur kata kunci (*keyword*) manual:
+
+#### 5.1 Update Database (Room / DataStore)
+- Modifikasi `CategoryEntity.kt` dengan menambahkan field baru: `val customKeywords: String = ""` (berisi keyword dipisah koma, contoh: `"kos,kontrakan,pdam"`).
+- Buat *Preferences DataStore* untuk menyimpan opsi **"Aktifkan Respon Suara (TTS)"** (boolean, default: true).
+- Update `TrackItDatabase` version menjadi 2 dan buatkan logika *Migration* agar data lama tidak hilang.
+
+#### 5.2 Layar UI Baru (`CustomKeywordScreen.kt` & Settings)
+- Buat halaman baru yang dapat diakses dari halaman Pengaturan (`SettingsScreen`).
+- Tampilkan daftar kategori. Jika sebuah kategori diklik, muncul dialog untuk memasukkan kata-kata (keywords) baru.
+- Contoh interaksi: Pengguna memilih kategori **Tagihan**, lalu mengetik kata **"kos"** dan menyimpannya. Mulai saat itu, jika pengguna merekam suara "bayar kos", sistem akan langsung memetakannya ke **Tagihan**.
+- **Di Halaman Settings Utama:** Tambahkan *Switch/Toggle* untuk mengaktifkan/menonaktifkan fitur **Respon Suara (TTS)**.
+- **Pintasan Offline:** Tambahkan satu baris tombol informasi *"Download Paket Suara Offline"*. Tombol ini men-trigger Intent `ACTION_VOICE_INPUT_SETTINGS` agar pengguna diarahkan ke pengaturan OS untuk mengunduh paket Bahasa Indonesia.
+
+#### 5.3 Update VoiceParser
+- Saat `VoiceParser` dipanggil di `ViewModel`, ambil juga daftar lengkap `CategoryEntity` (yang sudah memiliki data `customKeywords`). Gabungkan keyword bawaan (*hardcoded*) dengan `customKeywords` milik pengguna sebelum melakukan deteksi.
+
+---
+
+### Tahap 6: Update Navigation (`Screen.kt` & `TrackItNavHost.kt`)
 
 #### 5.1 `Screen.kt`
 ```diff
@@ -186,14 +223,14 @@ Ubah parameter route `ocrAmount` → hapus karena voice result tidak lagi lewat 
 
 ---
 
-### Tahap 6: Update ViewModel (`TransactionViewModel.kt`)
+### Tahap 7: Update ViewModel (`TransactionViewModel.kt`)
 
 ```diff
 - fun setAmountFromOcr(amount: Double) {
 -     _formState.update { it.copy(amount = amount.toLong().toString()) }
 - }
 
-+ fun setFromVoice(amount: Long, description: String?, categoryName: String?) {
++ fun setFromVoice(amount: Long, description: String?, categoryName: String?, dateMillis: Long?) {
 +     _formState.update { state ->
 +         val matchedCategoryId = categoryName?.let { name ->
 +             state.categories.find {
@@ -203,7 +240,8 @@ Ubah parameter route `ocrAmount` → hapus karena voice result tidak lagi lewat 
 +         state.copy(
 +             amount = amount.toString(),
 +             description = description ?: state.description,
-+             selectedCategoryId = matchedCategoryId ?: state.selectedCategoryId
++             selectedCategoryId = matchedCategoryId ?: state.selectedCategoryId,
++             date = dateMillis ?: state.date
 +         )
 +     }
 + }
@@ -213,7 +251,7 @@ Ubah parameter route `ocrAmount` → hapus karena voice result tidak lagi lewat 
 
 ---
 
-### Tahap 7: Update UI (`AddEditTransactionScreen.kt`)
+### Tahap 8: Update UI (`AddEditTransactionScreen.kt`)
 
 #### 7.1 Hapus Parameter Lama
 ```diff
@@ -225,7 +263,7 @@ Ubah parameter route `ocrAmount` → hapus karena voice result tidak lagi lewat 
   )
 ```
 
-#### 7.2 Tambah Speech Recognizer Logic
+#### 7.2 Tambah Speech Recognizer & TTS Logic
 Di dalam Composable, tambahkan:
 1. **Permission Launcher** untuk `RECORD_AUDIO` menggunakan `rememberLauncherForActivityResult`.
 2. **Speech Intent Launcher** menggunakan `ActivityResultContracts.StartActivityForResult()` yang memicu `Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)` dengan:
@@ -233,6 +271,8 @@ Di dalam Composable, tambahkan:
    - `EXTRA_LANGUAGE_MODEL` = `LANGUAGE_MODEL_FREE_FORM`
    - `EXTRA_PROMPT` = `"Ucapkan pengeluaran Anda, contoh: beli sayur 50 ribu"`
 3. **State `isListening`** untuk menandakan apakah sedang merekam atau tidak.
+4. **Haptic Feedback:** Gunakan `LocalView.current.performHapticFeedback` untuk memberikan getaran singkat (*audio cue*) saat *mic* mulai dan selesai.
+5. **Text-To-Speech (TTS):** Inisiasi `TextToSpeech` instance. Jika hasil sukses dan opsi TTS di *Settings* aktif, panggil `tts.speak("Transaksi tersimpan", TextToSpeech.QUEUE_FLUSH, null, null)`.
 
 #### 7.3 Ganti Ikon Kamera → Mikrofon
 ```diff
@@ -248,27 +288,46 @@ Di dalam Composable, tambahkan:
 + }
 ```
 
-#### 7.4 Animasi Visual Saat Merekam
+#### 7.4 Animasi Visual Saat Merekam (Efek Magic)
 - Saat `isListening = true`:
   - Warna ikon mikrofon berubah jadi **merah** (animasi `animateColorAsState`).
   - Teks status muncul di bawah tombol: *"Mendengarkan..."*
 - Saat hasil suara diterima:
   - Tampilkan **Snackbar** singkat: *"✓ Terdeteksi: beli sayur 50 ribu"*
+  - Berikan animasi **Visual Highlight** (warna background *TextField* nominal & deskripsi berkedip hijau lembut selama 1 detik) untuk menandakan mana data yang diubah oleh AI secara otomatis.
 
 #### 7.5 Flow Hasil Voice
 ```
 Tombol Mikrofon ditekan
+  → Haptic feedback (getar)
   → Cek permission RECORD_AUDIO (minta jika belum)
   → Launch SpeechRecognizer Intent
-  → Terima hasil teks (String)
+  → Terima hasil teks (String) & haptic feedback selesai
   → Panggil VoiceParser.parse(teks)
-  → Panggil viewModel.setFromVoice(result.amount, result.description, result.categoryName)
-  → Form otomatis terisi (Nominal + Deskripsi + Kategori terseleksi)
+  → Panggil viewModel.setFromVoice(result.amount, result.description, result.categoryName, result.dateMillis)
+  → Form otomatis terisi dengan efek Visual Highlight hijau
+  → TTS mengucapkan: "Tersimpan, pengeluaran [kategori] [nominal] rupiah" (jika setting aktif).
 ```
 
 ---
 
-### Tahap 8: Error Handling & Edge Cases
+### Tahap 9: Akses Kilat (App Shortcut & Quick Settings Tile)
+
+Untuk memberikan UX *Enterprise-level*, kita memungkinkan pengguna mencatat suara tanpa membuka aplikasi:
+
+#### 9.1 App Shortcut (Home Screen)
+- Buat file `res/xml/shortcuts.xml`.
+- Tambahkan shortcut statis: *"Catat dengan Suara"* yang men-trigger intent langsung ke halaman `AddEditTransactionScreen` dengan flag khusus `START_VOICE_IMMEDIATELY = true`.
+- Daftarkan `shortcuts.xml` di `AndroidManifest.xml` pada elemen `<activity>`.
+
+#### 9.2 Quick Settings Tile (Notification Bar)
+- Buat *Service* baru `VoiceTileService` yang mengekstend `TileService`.
+- Daftarkan di `AndroidManifest.xml` dengan permission `BIND_QUICK_SETTINGS_TILE`.
+- Saat tile di-klik pengguna dari bar atas, *service* ini akan meluncurkan `MainActivity` yang langsung membuka *dialog/bottom sheet* transparan untuk merekam suara secara instan tanpa mengganggu layar utama.
+
+---
+
+### Tahap 10: Error Handling & Edge Cases
 
 | Skenario | Penanganan |
 |----------|------------|
@@ -281,7 +340,7 @@ Tombol Mikrofon ditekan
 
 ---
 
-### Tahap 9: Pembersihan Akhir
+### Tahap 11: Pembersihan Akhir
 
 1. Hapus `LaunchedEffect(ocrAmount)` di `AddEditTransactionScreen.kt` (baris 48-50).
 2. Pastikan tidak ada *import* yang mengarah ke file/class yang sudah dihapus (ScanReceiptScreen, CameraX, ML Kit).
