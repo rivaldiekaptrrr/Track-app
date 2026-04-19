@@ -341,18 +341,20 @@ object VoiceParser {
                 .filter { it.isNotEmpty() }
 
             for (keyword in customKeywords) {
-                val pos = text.indexOf(keyword)
-                if (pos >= 0) {
-                    matches.add(Match(categoryName, pos, isCustom = true))
+                val regex = Regex("\\b${Regex.escape(keyword)}\\b")
+                val match = regex.find(text)
+                if (match != null) {
+                    matches.add(Match(categoryName, match.range.first, isCustom = true))
                 }
             }
 
             // Check default keywords
             val defaults = defaultKeywords[categoryName] ?: emptyList()
             for (keyword in defaults) {
-                val pos = text.indexOf(keyword)
-                if (pos >= 0) {
-                    matches.add(Match(categoryName, pos, isCustom = false))
+                val regex = Regex("\\b${Regex.escape(keyword)}\\b")
+                val match = regex.find(text)
+                if (match != null) {
+                    matches.add(Match(categoryName, match.range.first, isCustom = false))
                 }
             }
         }
