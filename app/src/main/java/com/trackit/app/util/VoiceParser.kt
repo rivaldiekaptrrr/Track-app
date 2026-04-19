@@ -119,8 +119,8 @@ object VoiceParser {
      *          "Rp. 50.000", "Rp.50,000", "Rp50000", etc.
      */
     private fun extractRupiahFormat(text: String): Long? {
-        // Pattern: "rp" optionally followed by "." and/or spaces, then digits with dot/comma thousand separators
-        val rupiahPattern = Regex("""rp\.?\s*(\d{1,3}(?:[.,]\d{3})*)""")
+        // Pattern: "rp" or "rupiah" optionally followed by "." and/or spaces, then digits with dot/comma thousand separators
+        val rupiahPattern = Regex("""(?:rp|rupiah)\.?\s*(\d{1,3}(?:[.,]\d{3})*)""")
         val match = rupiahPattern.find(text) ?: return null
         val numberStr = match.groupValues[1].replace(".", "").replace(",", "")
         return numberStr.toLongOrNull()
@@ -291,11 +291,14 @@ object VoiceParser {
     }
 
     private fun extractPlainNumber(text: String): Long? {
-        // Find standalone numbers (not followed by multiplier keywords)
-        val plainPattern = Regex("""(?<!\d)(\d{3,})(?!\d)""")
+        // Find standalone numbers, including formats with thousand separators (e.g., 350.000 or 50,000)
+        val plainPattern = Regex("""(?<!\d)(\d{1,3}(?:[.,]\d{3})*)(?!\d)""")
         val matches = plainPattern.findAll(text).toList()
         // Take the last match (override logic)
-        return matches.lastOrNull()?.groupValues?.get(1)?.toLongOrNull()
+        val lastMatchStr = matches.lastOrNull()?.groupValues?.get(1) ?: return null
+        // Clean out dots and commas before parsing
+        val numberStr = lastMatchStr.replace(".", "").replace(",", "")
+        return numberStr.toLongOrNull()
     }
 
     private fun parseDecimal(value: String): Double {
