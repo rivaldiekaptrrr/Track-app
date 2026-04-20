@@ -1,6 +1,10 @@
 package com.trackit.app
 
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
+import android.net.Uri
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricManager
@@ -104,17 +108,33 @@ class MainActivity : FragmentActivity() {
                                 text = { Text("Kami menemukan file cadangan transaksi lama Anda di folder Documents. Apakah Anda ingin memulihkannya?") },
                                 confirmButton = {
                                     Button(onClick = {
-                                        BackupManager.isRestoring = true
-                                        BackupManager.restoreFromAutoBackup(this@MainActivity)
-                                        showRestoreDialog = false
-                                        
-                                        val pm = packageManager
-                                        val restartIntent = pm.getLaunchIntentForPackage(packageName)
-                                        val mainIntent = android.content.Intent.makeRestartActivityTask(restartIntent!!.component)
-                                        startActivity(mainIntent)
-                                        Runtime.getRuntime().exit(0)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                                            try {
+                                                val intent = android.content.Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                                                intent.data = Uri.parse("package:$packageName")
+                                                startActivity(intent)
+                                            } catch (e: Exception) {
+                                                val intent = android.content.Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                                                startActivity(intent)
+                                            }
+                                        } else {
+                                            BackupManager.isRestoring = true
+                                            BackupManager.restoreFromAutoBackup(this@MainActivity)
+                                            showRestoreDialog = false
+                                            
+                                            val pm = packageManager
+                                            val restartIntent = pm.getLaunchIntentForPackage(packageName)
+                                            val mainIntent = android.content.Intent.makeRestartActivityTask(restartIntent!!.component)
+                                            startActivity(mainIntent)
+                                            Runtime.getRuntime().exit(0)
+                                        }
                                     }) {
-                                        Text("Ya, Pulihkan")
+                                        Text(
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) 
+                                                "Beri Izin Akses" 
+                                            else 
+                                                "Ya, Pulihkan"
+                                        )
                                     }
                                 },
                                 dismissButton = {
