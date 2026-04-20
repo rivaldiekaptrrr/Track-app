@@ -410,11 +410,15 @@ private fun TransactionItem(
 
             // Amount
             Column(horizontalAlignment = Alignment.End) {
+                val isIncome = tx.type == "INCOME"
+                val sign = if (isIncome) "+" else "-"
+                val amountColor = if (isIncome) Color(0xFF81C784) else MaterialTheme.colorScheme.error
+
                 Text(
-                    text = "- ${CurrencyUtils.formatRupiah(tx.amount)}",
+                    text = "$sign ${CurrencyUtils.formatRupiah(tx.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.error
+                    color = amountColor
                 )
             }
 
