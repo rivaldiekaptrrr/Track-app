@@ -15,6 +15,8 @@ import android.os.Environment
 
 object BackupManager {
 
+    var isRestoring = false
+
     private const val DATABASE_NAME = "trackit_database"
     private const val BACKUP_FOLDER = "TrackIt"
     private const val AUTO_BACKUP_FILE = "autobackup.db"
@@ -68,6 +70,7 @@ object BackupManager {
     }
 
     fun autoBackup(context: Context) {
+        if (isRestoring) return
         try {
             val dbFile = context.getDatabasePath(DATABASE_NAME)
             if (!dbFile.exists()) return

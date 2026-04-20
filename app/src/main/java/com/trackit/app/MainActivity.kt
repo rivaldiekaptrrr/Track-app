@@ -104,11 +104,15 @@ class MainActivity : FragmentActivity() {
                                 text = { Text("Kami menemukan file cadangan transaksi lama Anda di folder Documents. Apakah Anda ingin memulihkannya?") },
                                 confirmButton = {
                                     Button(onClick = {
+                                        BackupManager.isRestoring = true
                                         BackupManager.restoreFromAutoBackup(this@MainActivity)
                                         showRestoreDialog = false
-                                        // Restart activity to reload data
-                                        finish()
-                                        startActivity(intent)
+                                        
+                                        val pm = packageManager
+                                        val restartIntent = pm.getLaunchIntentForPackage(packageName)
+                                        val mainIntent = android.content.Intent.makeRestartActivityTask(restartIntent!!.component)
+                                        startActivity(mainIntent)
+                                        Runtime.getRuntime().exit(0)
                                     }) {
                                         Text("Ya, Pulihkan")
                                     }
