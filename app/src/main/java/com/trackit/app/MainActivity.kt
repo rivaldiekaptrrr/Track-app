@@ -23,6 +23,7 @@ import com.trackit.app.ui.biometric.BiometricLockScreen
 import com.trackit.app.ui.navigation.Screen
 import com.trackit.app.ui.navigation.TrackItNavHost
 import com.trackit.app.ui.theme.TrackItTheme
+import com.trackit.app.util.BackupManager
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
 import com.trackit.app.util.PdfExporter
@@ -57,6 +58,14 @@ class MainActivity : FragmentActivity() {
         // Schedule periodic workers
         scheduleWorkers()
 
+        var showRestoreDialog by mutableStateOf(false)
+        lifecycleScope.launch {
+            val transactions = transactionRepository.getAllTransactions().first()
+            if (transactions.isEmpty() && BackupManager.getAutoBackupFile() != null) {
+                showRestoreDialog = true
+            }
+        }
+
         setContent {
             TrackItTheme {
                 Surface(
@@ -83,6 +92,30 @@ class MainActivity : FragmentActivity() {
                             onExportPdf = { exportPdf() },
                             onExportCsv = { exportCsv() }
                         )
+
+                        if (showRestoreDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showRestoreDialog = false },
+                                title = { Text("Cadangan Lokal Ditemukan") },
+                                text = { Text("Kami menemukan file cadangan transaksi lama Anda di folder Documents. Apakah Anda ingin memulihkannya?") },
+                                confirmButton = {
+                                    Button(onClick = {
+                                        BackupManager.restoreFromAutoBackup(this@MainActivity)
+                                        showRestoreDialog = false
+                                        // Restart activity to reload data
+                                        finish()
+                                        startActivity(intent)
+                                    }) {
+                                        Text("Ya, Pulihkan")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showRestoreDialog = false }) {
+                                        Text("Abaikan")
+                                    }
+                                }
+                            )
+                        }
                     } else {
                         BiometricLockScreen(
                             onAuthenticate = {
@@ -245,5 +278,11 @@ class MainActivity : FragmentActivity() {
                 monthYear = monthYear
             )
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Always perform auto-backup when app goes to background
+        BackupManager.autoBackup(this)
     }
 }
