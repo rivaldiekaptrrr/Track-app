@@ -223,6 +223,8 @@ class MainActivity : FragmentActivity() {
                 totalSpent = totalSpent
             )
         }
+    }
+    
     private fun exportCsv() {
         lifecycleScope.launch {
             val startOfMonth = DateUtils.getStartOfMonth()
