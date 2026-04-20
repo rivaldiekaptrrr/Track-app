@@ -109,6 +109,7 @@ class MainActivity : FragmentActivity() {
         val biometricManager = BiometricManager.from(this)
         return biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
             BiometricManager.Authenticators.DEVICE_CREDENTIAL
         ) == BiometricManager.BIOMETRIC_SUCCESS
     }
@@ -143,6 +144,7 @@ class MainActivity : FragmentActivity() {
             .setSubtitle("Gunakan sidik jari, face unlock, atau sandi HP untuk masuk")
             .setAllowedAuthenticators(
                 BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
                 BiometricManager.Authenticators.DEVICE_CREDENTIAL
             )
             .build()
