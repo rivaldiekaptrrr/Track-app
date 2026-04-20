@@ -48,10 +48,16 @@ object PdfExporter {
             color = android.graphics.Color.parseColor("#555555")
         }
 
-        val amountPaint = Paint().apply {
+        val expenseAmountPaint = Paint().apply {
             textSize = 12f
             isFakeBoldText = true
-            color = android.graphics.Color.parseColor("#C24D6E")
+            color = android.graphics.Color.parseColor("#C24D6E") // Merah untuk pengeluaran
+        }
+
+        val incomeAmountPaint = Paint().apply {
+            textSize = 12f
+            isFakeBoldText = true
+            color = android.graphics.Color.parseColor("#2E7D32") // Hijau untuk pemasukan
         }
 
         val linePaint = Paint().apply {
@@ -73,14 +79,20 @@ object PdfExporter {
         currentPage = initialPage
         canvas = initialCanvas
 
+        val totalIncome = transactions.filter { it.type == "INCOME" }.sumOf { it.amount }
+        val totalExpense = transactions.filter { it.type == "EXPENSE" }.sumOf { it.amount }
+
         // Title
-        canvas.drawText("TrackIt - Laporan Pengeluaran", leftMargin, yPosition, titlePaint)
+        canvas.drawText("TrackIt - Laporan Keuangan", leftMargin, yPosition, titlePaint)
         yPosition += 30f
 
         canvas.drawText("Periode: $monthYear", leftMargin, yPosition, headerPaint)
         yPosition += 20f
 
-        canvas.drawText("Total: ${CurrencyUtils.formatRupiah(totalSpent)}", leftMargin, yPosition, headerPaint)
+        canvas.drawText("Pemasukan: +${CurrencyUtils.formatRupiah(totalIncome)}", leftMargin, yPosition, headerPaint)
+        yPosition += 20f
+        
+        canvas.drawText("Pengeluaran: -${CurrencyUtils.formatRupiah(totalExpense)}", leftMargin, yPosition, headerPaint)
         yPosition += 30f
 
         // Table Header
@@ -115,7 +127,12 @@ object PdfExporter {
             canvas.drawText(dateStr, leftMargin, yPosition, textPaint)
             canvas.drawText(categoryName, leftMargin + 100, yPosition, textPaint)
             canvas.drawText(desc, leftMargin + 220, yPosition, textPaint)
-            canvas.drawText(CurrencyUtils.formatRupiah(transaction.amount), leftMargin + 400, yPosition, amountPaint)
+            
+            if (transaction.type == "INCOME") {
+                canvas.drawText("+" + CurrencyUtils.formatRupiah(transaction.amount), leftMargin + 400, yPosition, incomeAmountPaint)
+            } else {
+                canvas.drawText("-" + CurrencyUtils.formatRupiah(transaction.amount), leftMargin + 400, yPosition, expenseAmountPaint)
+            }
 
             yPosition += lineHeight
         }
