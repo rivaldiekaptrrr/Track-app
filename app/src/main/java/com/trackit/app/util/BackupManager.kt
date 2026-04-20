@@ -12,13 +12,6 @@ import java.io.FileOutputStream
 import java.nio.channels.FileChannel
 
 import android.os.Environment
-import android.widget.Toast
-import androidx.core.content.FileProvider
-import com.trackit.app.data.local.TrackItDatabase
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.nio.channels.FileChannel
 
 object BackupManager {
 
