@@ -16,7 +16,8 @@ import com.trackit.app.ui.transaction.AddEditTransactionScreen
 fun TrackItNavHost(
     navController: NavHostController,
     startDestination: String = Screen.Dashboard.route,
-    onExportPdf: () -> Unit
+    onExportPdf: () -> Unit,
+    onExportCsv: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -76,6 +77,7 @@ fun TrackItNavHost(
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onExportPdf = onExportPdf,
+                onExportCsv = onExportCsv,
                 onNavigateToCustomKeywords = {
                     navController.navigate(Screen.CustomKeywords.route)
                 }

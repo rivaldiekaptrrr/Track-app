@@ -26,6 +26,7 @@ import com.trackit.app.ui.theme.TrackItTheme
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
 import com.trackit.app.util.PdfExporter
+import com.trackit.app.util.CsvExporter
 import com.trackit.app.worker.BudgetCheckWorker
 import com.trackit.app.worker.RecurringTransactionWorker
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,7 +80,8 @@ class MainActivity : FragmentActivity() {
                         TrackItNavHost(
                             navController = navController,
                             startDestination = startDest,
-                            onExportPdf = { exportPdf() }
+                            onExportPdf = { exportPdf() },
+                            onExportCsv = { exportCsv() }
                         )
                     } else {
                         BiometricLockScreen(
@@ -219,6 +221,26 @@ class MainActivity : FragmentActivity() {
                 categories = categoryMap,
                 monthYear = monthYear,
                 totalSpent = totalSpent
+            )
+        }
+    private fun exportCsv() {
+        lifecycleScope.launch {
+            val startOfMonth = DateUtils.getStartOfMonth()
+            val endOfMonth = DateUtils.getEndOfMonth()
+            val monthYear = DateUtils.formatMonthYear(System.currentTimeMillis())
+
+            val transactions = transactionRepository
+                .getTransactionsByMonth(startOfMonth, endOfMonth)
+                .first()
+
+            val categories = categoryRepository.getAllCategories().first()
+            val categoryMap = categories.associateBy { it.id }
+
+            CsvExporter.exportMonthlyReport(
+                context = this@MainActivity,
+                transactions = transactions,
+                categories = categoryMap,
+                monthYear = monthYear
             )
         }
     }

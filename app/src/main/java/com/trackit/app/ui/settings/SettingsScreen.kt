@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onExportPdf: () -> Unit,
+    onExportCsv: () -> Unit,
     onNavigateToCustomKeywords: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -291,19 +292,34 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Ekspor daftar transaksi bulan ini ke format PDF untuk dibagikan atau dicetak.",
+                        "Ekspor daftar transaksi bulan ini ke format PDF atau Excel (CSV) untuk dibagikan atau direkap ulang.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedButton(
-                        onClick = onExportPdf,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.FileDownload, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Ekspor PDF Bulan Ini")
+                        OutlinedButton(
+                            onClick = onExportPdf,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("PDF")
+                        }
+
+                        OutlinedButton(
+                            onClick = onExportCsv,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.TableChart, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Excel")
+                        }
                     }
                 }
             }
