@@ -25,6 +25,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.shadow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +46,7 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
+    val haptic = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
@@ -63,7 +73,10 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onAddTransaction,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onAddTransaction()
+                },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("Tambah") },
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -128,8 +141,14 @@ fun DashboardScreen(
                     ) { txWithCategory ->
                         TransactionItem(
                             transactionWithCategory = txWithCategory,
-                            onClick = { onEditTransaction(txWithCategory.transaction.id) },
-                            onDelete = { showDeleteDialog = txWithCategory.transaction.id }
+                            onClick = { 
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onEditTransaction(txWithCategory.transaction.id) 
+                            },
+                            onDelete = { 
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showDeleteDialog = txWithCategory.transaction.id 
+                            }
                         )
                     }
                 }
@@ -172,8 +191,15 @@ private fun SummarySection(
     budgetRemaining: Double
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                spotColor = MaterialTheme.colorScheme.primary
+            ),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
@@ -182,54 +208,106 @@ private fun SummarySection(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
                         )
-                    ),
-                    shape = RoundedCornerShape(20.dp)
+                    )
                 )
+                .drawWithContent {
+                    drawContent()
+                    // Glassmorphism effect overlay
+                    drawRect(
+                        color = Color.White.copy(alpha = 0.05f),
+                        blendMode = BlendMode.Overlay
+                    )
+                }
                 .padding(24.dp)
         ) {
             Column {
-                Text(
-                    "Total Pengeluaran Bulan Ini",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    CurrencyUtils.formatRupiah(totalSpent),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                if (monthlyBudget > 0) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    val progress = (totalSpent / monthlyBudget).toFloat().coerceIn(0f, 1f)
-                    LinearProgressIndicator(
-                        progress = progress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = if (progress > 0.8f) Color(0xFFFF6B6B) else Color.White,
-                        trackColor = Color.White.copy(alpha = 0.3f)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            "Total Pengeluaran",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White.copy(alpha = 0.7f),
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            CurrencyUtils.formatRupiah(totalSpent),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.Wallet,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.2f),
+                        modifier = Modifier.size(48.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                if (monthlyBudget > 0) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    val progress = (totalSpent / monthlyBudget).toFloat().coerceIn(0f, 1f)
+                    
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        LinearProgressIndicator(
+                            progress = 1f,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(CircleShape),
+                            color = Color.White.copy(alpha = 0.2f),
+                            trackColor = Color.Transparent
+                        )
+                        LinearProgressIndicator(
+                            progress = progress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(CircleShape),
+                            color = if (progress > 0.8f) Color(0xFFFF5252) else Color.White,
+                            trackColor = Color.Transparent
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            "Sisa: ${CurrencyUtils.formatRupiah(budgetRemaining)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                        Text(
-                            "Anggaran: ${CurrencyUtils.formatRupiah(monthlyBudget)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
+                        Column {
+                            Text(
+                                "SISA SALDO",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                CurrencyUtils.formatRupiah(budgetRemaining),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "ANGGARAN",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                CurrencyUtils.formatRupiah(monthlyBudget),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -331,25 +409,48 @@ private fun EmptyState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(vertical = 64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.ReceiptLong,
-            contentDescription = null,
-            modifier = Modifier.size(72.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Savings,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
-            "Belum ada transaksi",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            "Mulai Catat Keuanganmu",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "Tekan tombol + untuk menambah transaksi pertama Anda",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            "Gunakan tombol suara untuk mencatat pengeluaran\ndengan cepat dan mudah.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(32.dp))
+        OutlinedButton(
+            onClick = { /* Could trigger voice but FAB handles it */ },
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Default.Mic, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Coba Ucapkan Sesuatu")
+        }
     }
 }

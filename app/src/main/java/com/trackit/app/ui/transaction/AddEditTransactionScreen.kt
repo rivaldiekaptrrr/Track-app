@@ -23,6 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.Manifest
@@ -63,6 +67,7 @@ fun AddEditTransactionScreen(
 
     val context = LocalContext.current
     val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     
@@ -102,6 +107,7 @@ fun AddEditTransactionScreen(
                         type = parseResult.type
                     )
                     showHighlight = true
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     
                     // Auto-save jika kategori berhasil terdeteksi
                     if (parseResult.categoryName != null) {
@@ -112,10 +118,12 @@ fun AddEditTransactionScreen(
                         }
                     }
                 } else {
-                    Toast.makeText(context, "Nominal tidak terdeteksi, coba ucapkan lagi", Toast.LENGTH_SHORT).show()
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    Toast.makeText(context, "Nominal tidak terdeteksi, coba lagi", Toast.LENGTH_SHORT).show()
                 }
             }
         } else if (result.resultCode != Activity.RESULT_CANCELED) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             Toast.makeText(context, "Suara tidak terdengar, coba lagi", Toast.LENGTH_SHORT).show()
         }
     }
@@ -123,7 +131,7 @@ fun AddEditTransactionScreen(
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             isListening = true
-            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             try {
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -306,6 +314,37 @@ fun AddEditTransactionScreen(
                 }
             }
 
+            // Voice Education Marquee
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Lightbulb,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Tips: \"Beli nasi goreng 25 ribu\" • \"Dapat gaji 5 juta\" • \"Kemarin bayar listrik 200 ribu\" • \"Gocap buat parkir\" ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1,
+                        modifier = Modifier.basicMarquee(
+                            iterations = Int.MAX_VALUE,
+                            delayMillis = 0,
+                            initialDelayMillis = 0
+                        )
+                    )
+                }
+            }
+
             // Description
             OutlinedTextField(
                 value = formState.description,
@@ -446,7 +485,10 @@ fun AddEditTransactionScreen(
 
             // Save Button
             Button(
-                onClick = { viewModel.saveTransaction() },
+                onClick = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.saveTransaction() 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
