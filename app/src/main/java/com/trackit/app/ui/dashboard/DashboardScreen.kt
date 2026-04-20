@@ -101,10 +101,10 @@ fun DashboardScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Summary Cards
                 item {
                     SummarySection(
                         totalSpent = uiState.totalSpent,
+                        totalIncome = uiState.totalIncome,
                         monthlyBudget = uiState.monthlyBudget,
                         budgetRemaining = uiState.budgetRemaining
                     )
@@ -187,9 +187,11 @@ fun DashboardScreen(
 @Composable
 private fun SummarySection(
     totalSpent: Double,
+    totalIncome: Double,
     monthlyBudget: Double,
     budgetRemaining: Double
 ) {
+    val saldoAktif = totalIncome - totalSpent
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -231,25 +233,50 @@ private fun SummarySection(
                 ) {
                     Column {
                         Text(
-                            "Total Pengeluaran",
+                            "Saldo Aktif",
                             style = MaterialTheme.typography.labelLarge,
                             color = Color.White.copy(alpha = 0.7f),
                             letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            CurrencyUtils.formatRupiah(totalSpent),
+                            CurrencyUtils.formatRupiah(saldoAktif),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
                         )
                     }
                     Icon(
-                        imageVector = Icons.Default.Wallet,
+                        imageVector = Icons.Default.AccountBalanceWallet,
                         contentDescription = null,
                         tint = Color.White.copy(alpha = 0.2f),
                         modifier = Modifier.size(48.dp)
                     )
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.ArrowDownward, contentDescription = null, tint = Color(0xFF81C784), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Pemasukan", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(CurrencyUtils.formatRupiah(totalIncome), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = Color(0xFFE57373), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Pengeluaran", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(CurrencyUtils.formatRupiah(totalSpent), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
                 }
                 
                 if (monthlyBudget > 0) {

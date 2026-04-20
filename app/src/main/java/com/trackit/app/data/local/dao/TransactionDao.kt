@@ -40,13 +40,19 @@ interface TransactionDao {
 
     @Query("""
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE'
     """)
     fun getTotalSpentInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double>
 
     @Query("""
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'INCOME'
+    """)
+    fun getTotalIncomeInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double>
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE'
     """)
     suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long): Double
 

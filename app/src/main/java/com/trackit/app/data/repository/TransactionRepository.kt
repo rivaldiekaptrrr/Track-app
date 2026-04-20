@@ -23,6 +23,9 @@ class TransactionRepository @Inject constructor(
     fun getTotalSpentInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double> =
         transactionDao.getTotalSpentInMonth(startOfMonth, endOfMonth)
 
+    fun getTotalIncomeInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double> =
+        transactionDao.getTotalIncomeInMonth(startOfMonth, endOfMonth)
+
     suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long): Double =
         transactionDao.getTotalSpentInMonthSync(startOfMonth, endOfMonth)
 

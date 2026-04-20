@@ -15,6 +15,7 @@ import javax.inject.Inject
 
 data class DashboardUiState(
     val totalSpent: Double = 0.0,
+    val totalIncome: Double = 0.0,
     val monthlyBudget: Double = 0.0,
     val budgetRemaining: Double = 0.0,
     val recentTransactions: List<TransactionWithCategory> = emptyList(),
@@ -47,15 +48,17 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 transactionRepository.getTotalSpentInMonth(startOfMonth, endOfMonth),
+                transactionRepository.getTotalIncomeInMonth(startOfMonth, endOfMonth),
                 budgetRepository.getBudgetSetting(),
                 transactionRepository.getRecentTransactions(10),
                 categoryRepository.getAllCategories()
-            ) { totalSpent, budgetSetting, transactions, categories ->
+            ) { totalSpent, totalIncome, budgetSetting, transactions, categories ->
                 val categoryMap = categories.associateBy { it.id }
                 val budget = budgetSetting?.monthlyBudget ?: 0.0
 
                 DashboardUiState(
                     totalSpent = totalSpent,
+                    totalIncome = totalIncome,
                     monthlyBudget = budget,
                     budgetRemaining = if (budget > 0) budget - totalSpent else 0.0,
                     recentTransactions = transactions.map { tx ->
