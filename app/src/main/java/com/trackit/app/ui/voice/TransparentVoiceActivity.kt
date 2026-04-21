@@ -70,23 +70,25 @@ class TransparentVoiceActivity : ComponentActivity() {
             
             val parseResult = VoiceParser.parse(spokenText, categories)
             
-            if (parseResult.amount > 0) {
+            if (parseResult.isValid && parseResult.amount != null) {
                 // Berhasil parse
+                val matchedCategory = categories.find { it.name.equals(parseResult.categoryName, ignoreCase = true) }
+
                 val entity = TransactionEntity(
-                    amount = parseResult.amount,
+                    amount = parseResult.amount.toDouble(),
                     description = parseResult.description,
-                    categoryId = parseResult.categoryId,
-                    date = System.currentTimeMillis(),
+                    categoryId = matchedCategory?.id,
+                    date = parseResult.dateMillis ?: System.currentTimeMillis(),
                     profileId = profileId,
-                    type = "EXPENSE"
+                    type = parseResult.type
                 )
                 
-                transactionRepository.insertTransaction(entity)
+                transactionRepository.insert(entity)
                 
-                val catName = categories.find { it.id == parseResult.categoryId }?.name ?: "Lainnya"
+                val catName = matchedCategory?.name ?: "Lainnya"
                 Toast.makeText(
                     this@TransparentVoiceActivity, 
-                    "Berhasil dicatat: $catName - ${CurrencyUtils.formatRupiah(parseResult.amount)}", 
+                    "Berhasil dicatat: $catName - ${CurrencyUtils.formatRupiah(entity.amount)}", 
                     Toast.LENGTH_LONG
                 ).show()
             } else {
