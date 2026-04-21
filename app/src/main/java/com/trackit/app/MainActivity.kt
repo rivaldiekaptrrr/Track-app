@@ -51,6 +51,9 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var categoryRepository: CategoryRepository
     @Inject lateinit var database: com.trackit.app.data.local.TrackItDatabase
 
+    private var isAuthenticated by mutableStateOf(false)
+    private var isBiometricAvailable by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -80,11 +83,10 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var isAuthenticated by remember { mutableStateOf(false) }
                     var biometricError by remember { mutableStateOf<String?>(null) }
-                    val biometricAvailable = remember { checkBiometricAvailability() }
+                    isBiometricAvailable = remember { checkBiometricAvailability() }
 
-                    if (!biometricAvailable) {
+                    if (!isBiometricAvailable) {
                         // Skip biometric if not available
                         isAuthenticated = true
                     }
@@ -312,5 +314,10 @@ class MainActivity : FragmentActivity() {
         super.onStop()
         // Always perform auto-backup when app goes to background
         BackupManager.autoBackup(this)
+        
+        // Lock the app when it goes to background
+        if (isBiometricAvailable) {
+            isAuthenticated = false
+        }
     }
 }
