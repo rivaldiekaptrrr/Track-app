@@ -65,5 +65,18 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+        <!-- Voice Widget Provider -->
+        <receiver
+            android:name=".widget.VoiceWidgetProvider"
+            android:exported="true"
+            android:label="TrackIt Mic">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/voice_widget_info" />
+        </receiver>
+        
     </application>
 </manifest>

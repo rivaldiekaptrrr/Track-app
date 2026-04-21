@@ -59,6 +59,10 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        if (intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)) {
+            isAuthenticated = true
+        }
 
         // FR 3.2 - Privacy Screen: Hide content in Recent Apps
         window.setFlags(
@@ -96,8 +100,8 @@ class MainActivity : FragmentActivity() {
                     }
 
                     if (isAuthenticated) {
-                        val navController = rememberNavController()
                         val startVoice = intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)
+                        val navController = rememberNavController()
                         val startDest = if (startVoice) Screen.AddTransaction.createRoute(startVoice = true) else Screen.Dashboard.route
                         
                         TrackItNavHost(
