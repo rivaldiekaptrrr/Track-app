@@ -7,6 +7,7 @@ import android.service.quicksettings.TileService
 import com.trackit.app.MainActivity
 
 class VoiceTileService : TileService() {
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         super.onClick()
 
@@ -25,7 +26,6 @@ class VoiceTileService : TileService() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startActivityAndCollapse(pendingIntent)
         } else {
-            @SuppressLint("StartActivityAndCollapseDeprecated")
             @Suppress("DEPRECATION")
             startActivityAndCollapse(intent)
         }
