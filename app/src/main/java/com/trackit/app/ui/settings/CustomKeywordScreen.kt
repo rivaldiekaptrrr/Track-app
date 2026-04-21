@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -99,14 +101,12 @@ class CategoryManagementViewModel @Inject constructor(
 val availableColors = listOf(
     "#E8963B", "#3D6373", "#C24D6E", "#7B61D9", "#1B6B4F", 
     "#4EADAD", "#D4A843", "#8B6BB5", "#2E7D32", "#F57F17", 
-    "#1565C0", "#00838F", "#D32F2F", "#607D8B", "#795548"
+    "#1565C0", "#00838F", "#D32F2F", "#607D8B", "#795548",
+    "#FB8C00", "#F4511E", "#00ACC1", "#3949AB", "#8E24AA",
+    "#D81B60", "#7CB342", "#C0CA33", "#546E7A", "#6D4C41"
 )
 
-val availableIcons = listOf(
-    "restaurant", "directions_car", "movie", "receipt_long", "shopping_bag", 
-    "local_hospital", "school", "payments", "card_giftcard", "trending_up", 
-    "add_circle", "pets", "fitness_center", "home", "flight", "child_care", "build", "more_horiz"
-)
+// We now use CategoryIconMapper.getAllIcons() directly
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -362,25 +362,34 @@ fun CategoryFormDialog(
 
                 // Icon Picker
                 Text("Ikon", style = MaterialTheme.typography.labelMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(availableIcons) { iconName ->
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (selectedIcon == iconName) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceVariant
+                Box(modifier = Modifier.height(130.dp)) {
+                    val allIcons = CategoryIconMapper.getAllIcons()
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(allIcons.size) { index ->
+                            val iconName = allIcons[index]
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (selectedIcon == iconName) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .clickable { selectedIcon = iconName },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(iconName),
+                                    contentDescription = null,
+                                    tint = if (selectedIcon == iconName) MaterialTheme.colorScheme.onPrimaryContainer
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                .clickable { selectedIcon = iconName },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = CategoryIconMapper.getIcon(iconName),
-                                contentDescription = null,
-                                tint = if (selectedIcon == iconName) MaterialTheme.colorScheme.onPrimaryContainer
-                                       else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            }
                         }
                     }
                 }
