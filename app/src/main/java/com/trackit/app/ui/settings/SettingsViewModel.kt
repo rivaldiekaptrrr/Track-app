@@ -2,20 +2,25 @@ package com.trackit.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trackit.app.data.local.PreferencesManager
+import com.trackit.app.data.local.entity.ProfileEntity
 import com.trackit.app.data.repository.BudgetRepository
+import com.trackit.app.data.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.trackit.app.data.local.PreferencesManager
 
 data class SettingsUiState(
     val monthlyBudget: String = "",
     val isTtsEnabled: Boolean = true,
     val savedSuccessfully: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val activeProfileId: Long = 1L
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
@@ -26,8 +31,8 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
-        loadBudget()
         loadTtsPreference()
+        loadBudgetForActiveProfile()
     }
 
     private fun loadTtsPreference() {
@@ -38,13 +43,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun loadBudget() {
+    private fun loadBudgetForActiveProfile() {
         viewModelScope.launch {
-            budgetRepository.getBudgetSetting().collect { setting ->
+            preferencesManager.activeProfileId.flatMapLatest { profileId ->
+                _uiState.update { it.copy(activeProfileId = profileId) }
+                budgetRepository.getBudgetSetting(profileId)
+            }.collect { setting ->
                 _uiState.update {
-                    it.copy(
-                        monthlyBudget = setting?.monthlyBudget?.toLong()?.toString() ?: ""
-                    )
+                    it.copy(monthlyBudget = setting?.monthlyBudget?.toLong()?.toString() ?: "")
                 }
             }
         }
@@ -63,7 +69,7 @@ class SettingsViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                budgetRepository.saveBudget(amount)
+                budgetRepository.saveBudget(_uiState.value.activeProfileId, amount)
                 _uiState.update { it.copy(savedSuccessfully = true, errorMessage = null) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = e.message) }

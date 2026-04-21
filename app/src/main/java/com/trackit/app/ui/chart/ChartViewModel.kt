@@ -2,12 +2,14 @@ package com.trackit.app.ui.chart
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.dao.CategorySpending
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,10 +26,12 @@ data class CategoryChartData(
     val percentage: Float
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ChartViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChartUiState())
@@ -42,24 +46,26 @@ class ChartViewModel @Inject constructor(
 
     private fun loadChartData() {
         viewModelScope.launch {
-            combine(
-                transactionRepository.getSpendingByCategory(startOfMonth, endOfMonth),
-                categoryRepository.getAllCategories()
-            ) { spending, categories ->
-                val categoryMap = categories.associateBy { it.id }
-                val total = spending.sumOf { it.total }
+            preferencesManager.activeProfileId.flatMapLatest { profileId ->
+                combine(
+                    transactionRepository.getSpendingByCategory(startOfMonth, endOfMonth, profileId),
+                    categoryRepository.getAllCategories(profileId)
+                ) { spending, categories ->
+                    val categoryMap = categories.associateBy { it.id }
+                    val total = spending.sumOf { it.total }
 
-                ChartUiState(
-                    spendingByCategory = spending.map { cs ->
-                        CategoryChartData(
-                            category = cs.categoryId?.let { categoryMap[it] },
-                            amount = cs.total,
-                            percentage = if (total > 0) (cs.total / total * 100).toFloat() else 0f
-                        )
-                    }.sortedByDescending { it.amount },
-                    totalSpent = total,
-                    isLoading = false
-                )
+                    ChartUiState(
+                        spendingByCategory = spending.map { cs ->
+                            CategoryChartData(
+                                category = cs.categoryId?.let { categoryMap[it] },
+                                amount = cs.total,
+                                percentage = if (total > 0) (cs.total / total * 100).toFloat() else 0f
+                            )
+                        }.sortedByDescending { it.amount },
+                        totalSpent = total,
+                        isLoading = false
+                    )
+                }
             }.collect { state ->
                 _uiState.value = state
             }

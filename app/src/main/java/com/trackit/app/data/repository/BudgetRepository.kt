@@ -10,18 +10,18 @@ import javax.inject.Singleton
 class BudgetRepository @Inject constructor(
     private val budgetSettingDao: BudgetSettingDao
 ) {
-    fun getBudgetSetting(): Flow<BudgetSettingEntity?> =
-        budgetSettingDao.getBudgetSetting()
+    fun getBudgetSetting(profileId: Long): Flow<BudgetSettingEntity?> =
+        budgetSettingDao.getBudgetSetting(profileId)
 
-    suspend fun getBudgetSettingSync(): BudgetSettingEntity? =
-        budgetSettingDao.getBudgetSettingSync()
+    suspend fun getBudgetSettingSync(profileId: Long): BudgetSettingEntity? =
+        budgetSettingDao.getBudgetSettingSync(profileId)
 
-    suspend fun saveBudget(budget: Double) {
-        val existing = budgetSettingDao.getBudgetSettingSync()
+    suspend fun saveBudget(profileId: Long, budget: Double) {
+        val existing = budgetSettingDao.getBudgetSettingSync(profileId)
         if (existing != null) {
-            budgetSettingDao.updateBudget(budget)
+            budgetSettingDao.updateBudget(profileId, budget)
         } else {
-            budgetSettingDao.insert(BudgetSettingEntity(monthlyBudget = budget))
+            budgetSettingDao.insert(BudgetSettingEntity(profileId = profileId, monthlyBudget = budget))
         }
     }
 }

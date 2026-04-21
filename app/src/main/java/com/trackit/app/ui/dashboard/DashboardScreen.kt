@@ -42,21 +42,109 @@ fun DashboardScreen(
     onEditTransaction: (Long) -> Unit,
     onNavigateToChart: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToProfiles: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
+    var showProfileMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "TrackIt",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    // Profile chip in title area
+                    val profile = uiState.activeProfile
+                    if (profile != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { showProfileMenu = true }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(CategoryIconMapper.parseColor(profile.colorHex)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(profile.iconName),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                profile.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = "Ganti Profil",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        // Profile quick-switch dropdown
+                        DropdownMenu(
+                            expanded = showProfileMenu,
+                            onDismissRequest = { showProfileMenu = false }
+                        ) {
+                            uiState.allProfiles.forEach { p ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .clip(CircleShape)
+                                                    .background(CategoryIconMapper.parseColor(p.colorHex)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = CategoryIconMapper.getIcon(p.iconName),
+                                                    contentDescription = null,
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                p.name,
+                                                fontWeight = if (p.id == uiState.activeProfile?.id) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                            if (p.id == uiState.activeProfile?.id) {
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        viewModel.switchProfile(p.id)
+                                        showProfileMenu = false
+                                    }
+                                )
+                            }
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Kelola Profil") },
+                                leadingIcon = { Icon(Icons.Default.ManageAccounts, contentDescription = null) },
+                                onClick = {
+                                    showProfileMenu = false
+                                    onNavigateToProfiles()
+                                }
+                            )
+                        }
+                    } else {
+                        Text(
+                            "TrackIt",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToChart) {

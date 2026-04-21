@@ -10,12 +10,12 @@ interface BudgetSettingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(setting: BudgetSettingEntity)
 
-    @Query("SELECT * FROM budget_settings WHERE id = 1")
-    fun getBudgetSetting(): Flow<BudgetSettingEntity?>
+    @Query("SELECT * FROM budget_settings WHERE profileId = :profileId")
+    fun getBudgetSetting(profileId: Long): Flow<BudgetSettingEntity?>
 
-    @Query("SELECT * FROM budget_settings WHERE id = 1")
-    suspend fun getBudgetSettingSync(): BudgetSettingEntity?
+    @Query("SELECT * FROM budget_settings WHERE profileId = :profileId")
+    suspend fun getBudgetSettingSync(profileId: Long): BudgetSettingEntity?
 
-    @Query("UPDATE budget_settings SET monthlyBudget = :budget WHERE id = 1")
-    suspend fun updateBudget(budget: Double)
+    @Query("UPDATE budget_settings SET monthlyBudget = :budget WHERE profileId = :profileId")
+    suspend fun updateBudget(profileId: Long, budget: Double)
 }

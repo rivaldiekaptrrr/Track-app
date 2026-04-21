@@ -34,15 +34,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
+import com.trackit.app.data.local.PreferencesManager
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CategoryManagementViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
+    
+    private val _activeProfileId = MutableStateFlow(1L)
+    val activeProfileId: StateFlow<Long> = _activeProfileId.asStateFlow()
 
     init {
         loadCategories()
@@ -50,7 +58,10 @@ class CategoryManagementViewModel @Inject constructor(
 
     private fun loadCategories() {
         viewModelScope.launch {
-            categoryRepository.getAllCategories().collect { list ->
+            preferencesManager.activeProfileId.flatMapLatest { profileId ->
+                _activeProfileId.value = profileId
+                categoryRepository.getAllCategories(profileId)
+            }.collect { list ->
                 _categories.value = list
             }
         }
@@ -117,6 +128,7 @@ fun CustomKeywordScreen(
     val categories by viewModel.categories.collectAsState()
     val showMigrationDialogFor by viewModel.showMigrationDialogFor.collectAsState()
     val transactionCountToMigrate by viewModel.transactionCountToMigrate.collectAsState()
+    val activeProfileId by viewModel.activeProfileId.collectAsState()
     
     var selectedTab by remember { mutableStateOf("EXPENSE") }
     var selectedCategory by remember { mutableStateOf<CategoryEntity?>(null) }
@@ -140,7 +152,7 @@ fun CustomKeywordScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                selectedCategory = CategoryEntity(name = "", iconName = "restaurant", colorHex = "#E8963B", type = selectedTab)
+                selectedCategory = CategoryEntity(name = "", iconName = "restaurant", colorHex = "#E8963B", type = selectedTab, profileId = activeProfileId)
                 showDialog = true
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Kategori")

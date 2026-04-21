@@ -6,6 +6,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "budget_settings")
 data class BudgetSettingEntity(
     @PrimaryKey
-    val id: Int = 1, // singleton row
+    val profileId: Long = 1,
     val monthlyBudget: Double = 0.0
 )

@@ -16,5 +16,7 @@ data class CategoryEntity(
     @ColumnInfo(defaultValue = "EXPENSE")
     val type: String = "EXPENSE", // "EXPENSE" or "INCOME"
     @ColumnInfo(defaultValue = "0")
-    val isHidden: Boolean = false // Fitur Visibilitas
+    val isHidden: Boolean = false, // Fitur Visibilitas
+    @ColumnInfo(defaultValue = "1")
+    val profileId: Long = 1
 )

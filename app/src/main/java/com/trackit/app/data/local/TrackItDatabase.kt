@@ -20,9 +20,10 @@ import kotlinx.coroutines.launch
     entities = [
         TransactionEntity::class,
         CategoryEntity::class,
-        BudgetSettingEntity::class
+        BudgetSettingEntity::class,
+        com.trackit.app.data.local.entity.ProfileEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -30,6 +31,7 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun categoryDao(): CategoryDao
     abstract fun budgetSettingDao(): BudgetSettingDao
+    abstract fun profileDao(): com.trackit.app.data.local.dao.ProfileDao
 
     companion object {
         /**
@@ -51,6 +53,40 @@ abstract class TrackItDatabase : RoomDatabase() {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE categories ADD COLUMN isHidden INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create profiles table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `profiles` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `name` TEXT NOT NULL, 
+                        `iconName` TEXT NOT NULL, 
+                        `colorHex` TEXT NOT NULL, 
+                        `createdAt` INTEGER NOT NULL
+                    )
+                """)
+                
+                // Add default profile
+                val time = System.currentTimeMillis()
+                db.execSQL("INSERT INTO profiles (id, name, iconName, colorHex, createdAt) VALUES (1, 'Pribadi', 'person', '#1565C0', $time)")
+
+                // Add profileId to existing tables and map existing data to Profile 1
+                db.execSQL("ALTER TABLE categories ADD COLUMN profileId INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN profileId INTEGER NOT NULL DEFAULT 1")
+                
+                // Recreate budget_settings table to change primary key from id to profileId
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `budget_settings_new` (
+                        `profileId` INTEGER PRIMARY KEY NOT NULL, 
+                        `monthlyBudget` REAL NOT NULL
+                    )
+                """)
+                db.execSQL("INSERT INTO budget_settings_new (profileId, monthlyBudget) SELECT 1, monthlyBudget FROM budget_settings")
+                db.execSQL("DROP TABLE budget_settings")
+                db.execSQL("ALTER TABLE budget_settings_new RENAME TO budget_settings")
             }
         }
 

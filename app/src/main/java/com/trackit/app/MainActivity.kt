@@ -38,6 +38,7 @@ import com.trackit.app.util.PdfExporter
 import com.trackit.app.util.CsvExporter
 import com.trackit.app.worker.BudgetCheckWorker
 import com.trackit.app.worker.RecurringTransactionWorker
+import com.trackit.app.data.repository.ProfileRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -50,6 +51,8 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var categoryRepository: CategoryRepository
     @Inject lateinit var database: com.trackit.app.data.local.TrackItDatabase
+    @Inject lateinit var profileRepository: ProfileRepository
+    @Inject lateinit var preferencesManager: com.trackit.app.data.local.PreferencesManager
 
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
@@ -71,7 +74,8 @@ class MainActivity : FragmentActivity() {
 
         var showRestoreDialog by mutableStateOf(false)
         lifecycleScope.launch {
-            val transactions = transactionRepository.getAllTransactions().first()
+            val activeProfileId = preferencesManager.activeProfileId.first()
+            val transactions = transactionRepository.getAllTransactions(activeProfileId).first()
             if (transactions.isEmpty() && BackupManager.getAutoBackupFile() != null) {
                 showRestoreDialog = true
             }
@@ -219,11 +223,31 @@ class MainActivity : FragmentActivity() {
 
     private fun seedCategories() {
         lifecycleScope.launch {
+            val profileDao = database.profileDao()
             val categoryDao = database.categoryDao()
-            if (categoryDao.getCount() == 0) {
-                categoryDao.insertAll(TrackItDatabase.getDefaultCategories())
-                // Also seed default budget setting
-                database.budgetSettingDao().insert(BudgetSettingEntity(monthlyBudget = 0.0))
+            
+            // Ensure at least one profile exists
+            if (profileDao.getCount() == 0) {
+                val profileId = profileDao.insert(
+                    com.trackit.app.data.local.entity.ProfileEntity(
+                        name = "Pribadi",
+                        iconName = "person",
+                        colorHex = "#1565C0"
+                    )
+                )
+                // Set it as active
+                preferencesManager.setActiveProfileId(profileId)
+                // Seed default categories for this profile
+                val defaultCategories = TrackItDatabase.getDefaultCategories().map { it.copy(profileId = profileId) }
+                categoryDao.insertAll(defaultCategories)
+                // Seed default budget
+                database.budgetSettingDao().insert(
+                    com.trackit.app.data.local.entity.BudgetSettingEntity(profileId = profileId, monthlyBudget = 0.0)
+                )
+            } else if (categoryDao.getCount() == 0) {
+                // Legacy: profile exists but no categories - seed for profile 1
+                val defaultCategories = TrackItDatabase.getDefaultCategories()
+                categoryDao.insertAll(defaultCategories)
             }
         }
     }
@@ -264,19 +288,20 @@ class MainActivity : FragmentActivity() {
 
     private fun exportPdf() {
         lifecycleScope.launch {
+            val activeProfileId = preferencesManager.activeProfileId.first()
             val startOfMonth = DateUtils.getStartOfMonth()
             val endOfMonth = DateUtils.getEndOfMonth()
             val monthYear = DateUtils.formatMonthYear(System.currentTimeMillis())
 
             val transactions = transactionRepository
-                .getTransactionsByMonth(startOfMonth, endOfMonth)
+                .getTransactionsByMonth(startOfMonth, endOfMonth, activeProfileId)
                 .first()
 
-            val categories = categoryRepository.getAllCategories().first()
+            val categories = categoryRepository.getAllCategories(activeProfileId).first()
             val categoryMap = categories.associateBy { it.id }
 
             val totalSpent = transactionRepository
-                .getTotalSpentInMonthSync(startOfMonth, endOfMonth)
+                .getTotalSpentInMonthSync(startOfMonth, endOfMonth, activeProfileId)
 
             PdfExporter.exportMonthlyReport(
                 context = this@MainActivity,
@@ -290,15 +315,16 @@ class MainActivity : FragmentActivity() {
     
     private fun exportCsv() {
         lifecycleScope.launch {
+            val activeProfileId = preferencesManager.activeProfileId.first()
             val startOfMonth = DateUtils.getStartOfMonth()
             val endOfMonth = DateUtils.getEndOfMonth()
             val monthYear = DateUtils.formatMonthYear(System.currentTimeMillis())
 
             val transactions = transactionRepository
-                .getTransactionsByMonth(startOfMonth, endOfMonth)
+                .getTransactionsByMonth(startOfMonth, endOfMonth, activeProfileId)
                 .first()
 
-            val categories = categoryRepository.getAllCategories().first()
+            val categories = categoryRepository.getAllCategories(activeProfileId).first()
             val categoryMap = categories.associateBy { it.id }
 
             CsvExporter.exportMonthlyReport(

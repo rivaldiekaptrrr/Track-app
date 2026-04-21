@@ -10,8 +10,8 @@ import javax.inject.Singleton
 class CategoryRepository @Inject constructor(
     private val categoryDao: CategoryDao
 ) {
-    fun getAllCategories(): Flow<List<CategoryEntity>> =
-        categoryDao.getAllCategories()
+    fun getAllCategories(profileId: Long): Flow<List<CategoryEntity>> =
+        categoryDao.getAllCategories(profileId)
 
     suspend fun getById(id: Long): CategoryEntity? =
         categoryDao.getById(id)
@@ -30,4 +30,7 @@ class CategoryRepository @Inject constructor(
 
     suspend fun getCount(): Int =
         categoryDao.getCount()
+
+    suspend fun getCountForProfile(profileId: Long): Int =
+        categoryDao.getCountForProfile(profileId)
 }

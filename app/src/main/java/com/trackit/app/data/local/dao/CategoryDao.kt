@@ -19,12 +19,15 @@ interface CategoryDao {
     @Delete
     suspend fun delete(category: CategoryEntity)
 
-    @Query("SELECT * FROM categories ORDER BY name ASC")
-    fun getAllCategories(): Flow<List<CategoryEntity>>
+    @Query("SELECT * FROM categories WHERE profileId = :profileId ORDER BY name ASC")
+    fun getAllCategories(profileId: Long): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun getById(id: Long): CategoryEntity?
 
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun getCount(): Int
+
+    @Query("SELECT COUNT(*) FROM categories WHERE profileId = :profileId")
+    suspend fun getCountForProfile(profileId: Long): Int
 }

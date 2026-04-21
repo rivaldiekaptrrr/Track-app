@@ -20,16 +20,28 @@ class PreferencesManager @Inject constructor(
 ) {
     companion object {
         val TTS_ENABLED = booleanPreferencesKey("tts_enabled")
+        val ACTIVE_PROFILE_ID = androidx.datastore.preferences.core.longPreferencesKey("active_profile_id")
     }
 
     val isTtsEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[TTS_ENABLED] ?: true // Default is true
         }
+        
+    val activeProfileId: Flow<Long> = context.dataStore.data
+        .map { preferences ->
+            preferences[ACTIVE_PROFILE_ID] ?: 1L // Default to profile ID 1
+        }
 
     suspend fun setTtsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[TTS_ENABLED] = enabled
+        }
+    }
+    
+    suspend fun setActiveProfileId(profileId: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[ACTIVE_PROFILE_ID] = profileId
         }
     }
 }

@@ -3,6 +3,7 @@ package com.trackit.app.ui.transaction
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.TransactionEntity
 import com.trackit.app.data.repository.CategoryRepository
@@ -10,6 +11,7 @@ import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.DateUtils
 import com.trackit.app.util.NumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,13 +30,16 @@ data class TransactionFormState(
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
     val errorMessage: String? = null,
-    val unrecognizedVoiceText: String? = null
+    val unrecognizedVoiceText: String? = null,
+    val activeProfileId: Long = 1L
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
+    private val preferencesManager: PreferencesManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -44,13 +49,16 @@ class TransactionViewModel @Inject constructor(
     val formState: StateFlow<TransactionFormState> = _formState.asStateFlow()
 
     init {
-        loadCategories()
+        loadActiveProfileAndCategories()
         transactionId?.let { loadTransaction(it) }
     }
 
-    private fun loadCategories() {
+    private fun loadActiveProfileAndCategories() {
         viewModelScope.launch {
-            categoryRepository.getAllCategories().collect { categories ->
+            preferencesManager.activeProfileId.flatMapLatest { profileId ->
+                _formState.update { it.copy(activeProfileId = profileId) }
+                categoryRepository.getAllCategories(profileId)
+            }.collect { categories ->
                 _formState.update { it.copy(categories = categories) }
             }
         }
@@ -120,7 +128,6 @@ class TransactionViewModel @Inject constructor(
                 }?.id
             }
             
-            // Simpan teks suara asli jika kategori tidak terdeteksi
             val unrecognized = if (matchedCategoryId == null && description != null) description else null
 
             state.copy(
@@ -160,7 +167,8 @@ class TransactionViewModel @Inject constructor(
                     date = state.date,
                     isRecurring = state.isRecurring,
                     recurringType = state.recurringType,
-                    type = state.type
+                    type = state.type,
+                    profileId = state.activeProfileId
                 )
 
                 if (state.isEditing) {
@@ -173,7 +181,6 @@ class TransactionViewModel @Inject constructor(
                 if (state.unrecognizedVoiceText != null) {
                     val selectedCategory = state.categories.find { it.id == state.selectedCategoryId }
                     if (selectedCategory != null) {
-                        // Bersihkan teks: hapus angka dan satuan uang (ribu, juta, rp, dll) untuk mengambil kata bendanya saja
                         val keywordToLearn = state.unrecognizedVoiceText
                             .replace(Regex("\\d+"), "")
                             .replace(Regex("(?i)\\b(ribu|rb|rebu|juta|jt|ratus|belas|puluh|rp|rupiah|gocap|cepek|seceng|noban|goban)\\b"), "")

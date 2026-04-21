@@ -28,51 +28,52 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE categoryId = :categoryId")
     suspend fun countTransactionsByCategory(categoryId: Long): Int
 
-    @Query("SELECT * FROM transactions ORDER BY date DESC")
-    fun getAllTransactions(): Flow<List<TransactionEntity>>
+    @Query("SELECT * FROM transactions WHERE profileId = :profileId ORDER BY date DESC")
+    fun getAllTransactions(profileId: Long): Flow<List<TransactionEntity>>
 
     @Query("""
         SELECT * FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth 
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND profileId = :profileId
         ORDER BY date DESC
     """)
-    fun getTransactionsByMonth(startOfMonth: Long, endOfMonth: Long): Flow<List<TransactionEntity>>
+    fun getTransactionsByMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<TransactionEntity>>
 
     @Query("""
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE'
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE' AND profileId = :profileId
     """)
-    fun getTotalSpentInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double>
+    fun getTotalSpentInMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<Double>
 
     @Query("""
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'INCOME'
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'INCOME' AND profileId = :profileId
     """)
-    fun getTotalIncomeInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double>
+    fun getTotalIncomeInMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<Double>
 
     @Query("""
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE'
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE' AND profileId = :profileId
     """)
-    suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long): Double
+    suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long, profileId: Long): Double
 
     @Query("""
         SELECT categoryId, COALESCE(SUM(amount), 0.0) as total 
         FROM transactions 
-        WHERE date >= :startOfMonth AND date < :endOfMonth 
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND profileId = :profileId
         GROUP BY categoryId
     """)
-    fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long): Flow<List<CategorySpending>>
+    fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<CategorySpending>>
 
-    @Query("SELECT * FROM transactions WHERE isRecurring = 1")
-    suspend fun getRecurringTransactions(): List<TransactionEntity>
+    @Query("SELECT * FROM transactions WHERE isRecurring = 1 AND profileId = :profileId")
+    suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity>
 
     @Query("""
         SELECT * FROM transactions 
+        WHERE profileId = :profileId
         ORDER BY date DESC 
         LIMIT :limit
     """)
-    fun getRecentTransactions(limit: Int = 10): Flow<List<TransactionEntity>>
+    fun getRecentTransactions(profileId: Long, limit: Int = 10): Flow<List<TransactionEntity>>
 }
 
 data class CategorySpending(

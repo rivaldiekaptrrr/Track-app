@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.trackit.app.ui.chart.ChartScreen
 import com.trackit.app.ui.dashboard.DashboardScreen
+import com.trackit.app.ui.profile.ProfileManagementScreen
 import com.trackit.app.ui.settings.CustomKeywordScreen
 import com.trackit.app.ui.settings.SettingsScreen
 import com.trackit.app.ui.transaction.AddEditTransactionScreen
@@ -36,6 +37,9 @@ fun TrackItNavHost(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToProfiles = {
+                    navController.navigate(Screen.ProfileManagement.route)
                 }
             )
         }
@@ -86,6 +90,12 @@ fun TrackItNavHost(
 
         composable(Screen.CustomKeywords.route) {
             CustomKeywordScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.ProfileManagement.route) {
+            ProfileManagementScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

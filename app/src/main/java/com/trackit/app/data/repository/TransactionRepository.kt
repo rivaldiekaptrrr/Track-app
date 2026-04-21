@@ -11,29 +11,29 @@ import javax.inject.Singleton
 class TransactionRepository @Inject constructor(
     private val transactionDao: TransactionDao
 ) {
-    fun getAllTransactions(): Flow<List<TransactionEntity>> =
-        transactionDao.getAllTransactions()
+    fun getAllTransactions(profileId: Long): Flow<List<TransactionEntity>> =
+        transactionDao.getAllTransactions(profileId)
 
-    fun getRecentTransactions(limit: Int = 10): Flow<List<TransactionEntity>> =
-        transactionDao.getRecentTransactions(limit)
+    fun getRecentTransactions(profileId: Long, limit: Int = 10): Flow<List<TransactionEntity>> =
+        transactionDao.getRecentTransactions(profileId, limit)
 
-    fun getTransactionsByMonth(startOfMonth: Long, endOfMonth: Long): Flow<List<TransactionEntity>> =
-        transactionDao.getTransactionsByMonth(startOfMonth, endOfMonth)
+    fun getTransactionsByMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<TransactionEntity>> =
+        transactionDao.getTransactionsByMonth(startOfMonth, endOfMonth, profileId)
 
-    fun getTotalSpentInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double> =
-        transactionDao.getTotalSpentInMonth(startOfMonth, endOfMonth)
+    fun getTotalSpentInMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<Double> =
+        transactionDao.getTotalSpentInMonth(startOfMonth, endOfMonth, profileId)
 
-    fun getTotalIncomeInMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double> =
-        transactionDao.getTotalIncomeInMonth(startOfMonth, endOfMonth)
+    fun getTotalIncomeInMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<Double> =
+        transactionDao.getTotalIncomeInMonth(startOfMonth, endOfMonth, profileId)
 
-    suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long): Double =
-        transactionDao.getTotalSpentInMonthSync(startOfMonth, endOfMonth)
+    suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long, profileId: Long): Double =
+        transactionDao.getTotalSpentInMonthSync(startOfMonth, endOfMonth, profileId)
 
-    fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long): Flow<List<CategorySpending>> =
-        transactionDao.getSpendingByCategory(startOfMonth, endOfMonth)
+    fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<CategorySpending>> =
+        transactionDao.getSpendingByCategory(startOfMonth, endOfMonth, profileId)
 
-    suspend fun getRecurringTransactions(): List<TransactionEntity> =
-        transactionDao.getRecurringTransactions()
+    suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity> =
+        transactionDao.getRecurringTransactions(profileId)
 
     suspend fun insert(transaction: TransactionEntity): Long =
         transactionDao.insert(transaction)

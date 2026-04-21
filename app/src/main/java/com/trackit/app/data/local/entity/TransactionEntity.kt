@@ -30,5 +30,7 @@ data class TransactionEntity(
     val recurringType: String? = null, // "DAILY", "WEEKLY", "MONTHLY"
     val recurringDayOfMonth: Int? = null,
     @ColumnInfo(defaultValue = "EXPENSE")
-    val type: String = "EXPENSE" // "EXPENSE" or "INCOME"
+    val type: String = "EXPENSE", // "EXPENSE" or "INCOME"
+    @ColumnInfo(defaultValue = "1")
+    val profileId: Long = 1
 )

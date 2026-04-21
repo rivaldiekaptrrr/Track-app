@@ -4,18 +4,21 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.entity.TransactionEntity
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.DateUtils
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 import java.util.Calendar
 
 @HiltWorker
 class RecurringTransactionWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val preferencesManager: PreferencesManager
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -24,7 +27,8 @@ class RecurringTransactionWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val recurringTransactions = transactionRepository.getRecurringTransactions()
+            val activeProfileId = preferencesManager.activeProfileId.first()
+            val recurringTransactions = transactionRepository.getRecurringTransactions(activeProfileId)
             val today = Calendar.getInstance()
             val todayMillis = DateUtils.todayMillis()
 
@@ -47,7 +51,8 @@ class RecurringTransactionWorker @AssistedInject constructor(
                         categoryId = template.categoryId,
                         date = todayMillis,
                         isRecurring = false, // The created instance is not recurring itself
-                        recurringType = null
+                        recurringType = null,
+                        profileId = activeProfileId
                     )
                     transactionRepository.insert(newTransaction)
                 }

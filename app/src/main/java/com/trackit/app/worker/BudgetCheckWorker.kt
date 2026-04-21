@@ -9,19 +9,22 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.trackit.app.R
+import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.repository.BudgetRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 
 @HiltWorker
 class BudgetCheckWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val transactionRepository: TransactionRepository,
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    private val preferencesManager: PreferencesManager
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -32,14 +35,15 @@ class BudgetCheckWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val budgetSetting = budgetRepository.getBudgetSettingSync()
+            val activeProfileId = preferencesManager.activeProfileId.first()
+            val budgetSetting = budgetRepository.getBudgetSettingSync(activeProfileId)
             val budget = budgetSetting?.monthlyBudget ?: return Result.success()
 
             if (budget <= 0) return Result.success()
 
             val startOfMonth = DateUtils.getStartOfMonth()
             val endOfMonth = DateUtils.getEndOfMonth()
-            val totalSpent = transactionRepository.getTotalSpentInMonthSync(startOfMonth, endOfMonth)
+            val totalSpent = transactionRepository.getTotalSpentInMonthSync(startOfMonth, endOfMonth, activeProfileId)
 
             val percentage = totalSpent / budget
 
