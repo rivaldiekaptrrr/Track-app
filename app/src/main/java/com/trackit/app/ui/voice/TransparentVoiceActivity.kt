@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.entity.TransactionEntity
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class TransparentVoiceActivity : AppCompatActivity() {
+class TransparentVoiceActivity : ComponentActivity() {
 
     @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var categoryRepository: CategoryRepository
