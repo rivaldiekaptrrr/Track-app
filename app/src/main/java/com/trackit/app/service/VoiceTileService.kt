@@ -21,6 +21,10 @@ class VoiceTileService : TileService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        startActivityAndCollapse(pendingIntent)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startActivityAndCollapse(pendingIntent)
+        } else {
+            startActivity(pendingIntent.intentSender)
+        }
     }
 }
