@@ -3,6 +3,8 @@ package com.trackit.app.ui.voice
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
@@ -16,6 +18,7 @@ import com.trackit.app.util.VoiceParser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -24,6 +27,9 @@ class TransparentVoiceActivity : ComponentActivity() {
     @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var categoryRepository: CategoryRepository
     @Inject lateinit var preferencesManager: PreferencesManager
+    
+    private var tts: TextToSpeech? = null
+    private var isTtsReady = false
     
     private val speechRecognizerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -37,16 +43,33 @@ class TransparentVoiceActivity : ComponentActivity() {
                 processVoiceInput(spokenText)
             } else {
                 Toast.makeText(this, "Suara tidak terdengar jelas", Toast.LENGTH_SHORT).show()
-                finish()
+                finishActivityCleanly()
             }
         } else {
             // Canceled or failed
-            finish()
+            finishActivityCleanly()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize TTS
+        tts = TextToSpeech(applicationContext) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale("id", "ID")
+                isTtsReady = true
+                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) {
+                        finishActivityCleanly()
+                    }
+                    override fun onError(utteranceId: String?) {
+                        finishActivityCleanly()
+                    }
+                })
+            }
+        }
         
         // Langsung jalankan pop up voice recognizer
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -59,7 +82,7 @@ class TransparentVoiceActivity : ComponentActivity() {
             speechRecognizerLauncher.launch(intent)
         } catch (e: Exception) {
             Toast.makeText(this, "Fitur suara tidak didukung di perangkat ini", Toast.LENGTH_SHORT).show()
-            finish()
+            finishActivityCleanly()
         }
     }
 
@@ -86,21 +109,35 @@ class TransparentVoiceActivity : ComponentActivity() {
                 transactionRepository.insert(entity)
                 
                 val catName = matchedCategory?.name ?: "Lainnya"
-                Toast.makeText(
-                    this@TransparentVoiceActivity, 
-                    "Berhasil dicatat: $catName - ${CurrencyUtils.formatRupiah(entity.amount)}", 
-                    Toast.LENGTH_LONG
-                ).show()
+                val textToSpeak = "Tercatat, $catName, ${CurrencyUtils.formatRupiah(entity.amount)}"
+                Toast.makeText(this@TransparentVoiceActivity, textToSpeak, Toast.LENGTH_LONG).show()
+                
+                val isTtsEnabled = preferencesManager.isTtsEnabled.first()
+                if (isTtsEnabled && isTtsReady && tts != null) {
+                    tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SAVE_SUCCESS")
+                } else {
+                    finishActivityCleanly()
+                }
             } else {
                 Toast.makeText(
                     this@TransparentVoiceActivity, 
                     "Gagal memahami nominal. Ucapan: '$spokenText'", 
                     Toast.LENGTH_LONG
                 ).show()
+                finishActivityCleanly()
             }
-            
+        }
+    }
+    
+    private fun finishActivityCleanly() {
+        runOnUiThread {
             finish()
         }
+    }
+
+    override fun onDestroy() {
+        tts?.shutdown()
+        super.onDestroy()
     }
     
     // Jangan izinkan transisi animasi saat menutup atau membuka
