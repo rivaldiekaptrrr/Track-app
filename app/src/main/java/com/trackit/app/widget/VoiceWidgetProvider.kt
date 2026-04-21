@@ -6,8 +6,8 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
-import com.trackit.app.MainActivity
 import com.trackit.app.R
+import com.trackit.app.ui.voice.TransparentVoiceActivity
 
 class VoiceWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -20,9 +20,8 @@ class VoiceWidgetProvider : AppWidgetProvider() {
         fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_voice)
             
-            // Intent to launch MainActivity and trigger voice
-            val intent = Intent(context, MainActivity::class.java).apply {
-                putExtra("START_VOICE_IMMEDIATELY", true)
+            // Intent to launch TransparentVoiceActivity
+            val intent = Intent(context, TransparentVoiceActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
             

@@ -32,6 +32,11 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <activity
+            android:name=".ui.voice.TransparentVoiceActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Transparent" />
+
         <!-- Quick Settings Tile for Voice Recording -->
         <service
             android:name=".service.VoiceTileService"
