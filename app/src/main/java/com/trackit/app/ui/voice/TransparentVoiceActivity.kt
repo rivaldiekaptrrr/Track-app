@@ -10,6 +10,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.trackit.app.data.local.PreferencesManager
@@ -104,10 +107,6 @@ class TransparentVoiceActivity : ComponentActivity() {
             }
         }
         
-        lifecycleScope.launch {
-            profileId = preferencesManager.activeProfileId.first()
-        }
-        
         setContent {
             // Menggunakan MaterialTheme bawaan Compose agar tidak merusak status bar transparansi
             MaterialTheme {
@@ -120,6 +119,8 @@ class TransparentVoiceActivity : ComponentActivity() {
                 if (showSelector && parseResult != null) {
                     CategorySelectionBottomSheet(
                         categories = categories.filter { it.type == parseResult!!.type && !it.isHidden },
+                        keyword = extractUnknownKeyword(parseResult!!.description),
+                        amount = CurrencyUtils.formatRupiah(parseResult!!.amount!!.toDouble()),
                         onCategorySelected = { category ->
                             handleCategorySelected(parseResult!!, category)
                         },
@@ -131,18 +132,24 @@ class TransparentVoiceActivity : ComponentActivity() {
             }
         }
         
-        // Langsung jalankan pop up voice recognizer
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "id-ID")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Ucapkan catatan pengeluaran, contoh: 'Beli kopi 20 ribu'")
-        }
-        
-        try {
-            speechRecognizerLauncher.launch(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Fitur suara tidak didukung di perangkat ini", Toast.LENGTH_SHORT).show()
-            finishActivityCleanly()
+        lifecycleScope.launch {
+            profileId = preferencesManager.activeProfileId.first()
+            
+            // Langsung jalankan pop up voice recognizer
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "id-ID")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Ucapkan catatan pengeluaran, contoh: 'Beli kopi 20 ribu'")
+            }
+            
+            runOnUiThread {
+                try {
+                    speechRecognizerLauncher.launch(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(this@TransparentVoiceActivity, "Fitur suara tidak didukung di perangkat ini", Toast.LENGTH_SHORT).show()
+                    finishActivityCleanly()
+                }
+            }
         }
     }
 
@@ -215,23 +222,21 @@ class TransparentVoiceActivity : ComponentActivity() {
         showCategorySelector.value = false
         
         lifecycleScope.launch {
-            // Auto-Learning: Tambahkan ke custom keywords
-            val keyword = extractUnknownKeyword(parseResult.description)
-            if (keyword.isNotEmpty()) {
-                val newKeywords = if (category.customKeywords.isEmpty()) {
-                    keyword
-                } else {
-                    val keywordsList = category.customKeywords.split(",").map { it.trim().lowercase() }
-                    if (!keywordsList.contains(keyword.lowercase())) {
-                        "${category.customKeywords}, $keyword"
-                    } else {
-                        category.customKeywords
-                    }
-                }
+            val rawKeyword = extractUnknownKeyword(parseResult.description)
+            
+            if (rawKeyword.isNotEmpty()) {
+                val newWords = rawKeyword.split(" ").map { it.trim() }.filter { it.length > 2 }
+                val existingList = if (category.customKeywords.isEmpty()) emptyList() else category.customKeywords.split(",").map { it.trim().lowercase() }
                 
-                if (newKeywords != category.customKeywords) {
-                    val updatedCategory = category.copy(customKeywords = newKeywords)
-                    categoryRepository.update(updatedCategory)
+                val toAdd = newWords.filter { it.lowercase() !in existingList }
+                
+                if (toAdd.isNotEmpty()) {
+                    val newKeywords = if (existingList.isEmpty()) {
+                        toAdd.joinToString(", ")
+                    } else {
+                        category.customKeywords + ", " + toAdd.joinToString(", ")
+                    }
+                    categoryRepository.update(category.copy(customKeywords = newKeywords))
                 }
             }
             
@@ -255,14 +260,21 @@ class TransparentVoiceActivity : ComponentActivity() {
     }
 
     private fun extractUnknownKeyword(description: String): String {
-        val stopWords = listOf("beli", "bayar", "buat", "untuk", "harga", "ongkos", "biaya", "lagi", "yang")
-        var words = description.lowercase().split("\\s+".toRegex())
+        val stopWords = listOf("beli", "bayar", "buat", "untuk", "harga", "ongkos", "biaya", "lagi", "yang", "dan", "dari", "ke", "di", "belanja", "pengeluaran")
+        
+        // Memecah berdasarkan spasi, koma, dan titik agar angka seperti "30.000" 
+        // atau kata yang menempel tanda baca (misal "shampo,") terpisah dengan baik.
+        var words = description.lowercase().split(Regex("[\\s,.]+"))
+        
+        words = words.filter { it.isNotBlank() }
         words = words.filter { it !in stopWords }
         
-        val amountWords = listOf("ribu", "ratus", "juta", "gocap", "cepek", "gopek", "seceng", "noban", "goban", "selawe", "rupiah", "rp", "perak")
+        val amountWords = listOf("ribu", "ratus", "juta", "gocap", "cepek", "gopek", "seceng", "noban", "goban", "selawe", "rupiah", "rp", "perak", "jt", "rb", "rebu")
         words = words.filter { it !in amountWords }
         
-        words = words.filter { !it.matches("\\d+[.,]?\\d*".toRegex()) }
+        // Filter paling penting: Buang semua kata yang mengandung angka sama sekali.
+        // Ini akan membuang "30", "000", "rp30", "30k", dll.
+        words = words.filter { !it.contains(Regex("\\d")) }
         
         return words.joinToString(" ").trim()
     }
@@ -288,11 +300,19 @@ class TransparentVoiceActivity : ComponentActivity() {
 @Composable
 fun CategorySelectionBottomSheet(
     categories: List<CategoryEntity>,
+    keyword: String,
+    amount: String,
     onCategorySelected: (CategoryEntity) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var timeLeft by remember { mutableStateOf(7) }
+    val totalSeconds = 7
+    var timeLeft by remember { mutableStateOf(totalSeconds) }
+    val progress by animateFloatAsState(
+        targetValue = timeLeft / totalSeconds.toFloat(),
+        animationSpec = tween(durationMillis = 1000),
+        label = "timer_progress"
+    )
 
     LaunchedEffect(Unit) {
         while (timeLeft > 0) {
@@ -313,10 +333,24 @@ fun CategorySelectionBottomSheet(
                 .navigationBarsPadding()
         ) {
             Text(
-                text = "Pilih Kategori ($timeLeft detik)",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
+                text = "Pilih Kategori untuk:",
+                style = MaterialTheme.typography.labelMedium
             )
+            Text(
+                text = if (keyword.isNotEmpty()) "\"$keyword\" • $amount" else amount,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = if (timeLeft > 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
