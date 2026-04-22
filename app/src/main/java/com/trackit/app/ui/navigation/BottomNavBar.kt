@@ -194,26 +194,27 @@ fun TrackItBottomNavBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Beranda
+            // Left: Beranda, Statistik
             Row(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                val dest = bottomNavDestinations[0]
-                AnimatedNavItem(
-                    label = dest.label,
-                    activeIcon = dest.activeIcon,
-                    inactiveIcon = dest.inactiveIcon,
-                    isActive = isRouteActive(dest.route),
-                    activeColor = activeTextBlue,
-                    inactiveColor = inactiveGray,
-                    showBadge = budgetWarning
-                ) {
-                    if (!isRouteActive(dest.route)) {
-                        navController.navigate(dest.route) {
-                            popUpTo(Screen.Dashboard.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                bottomNavDestinations.take(2).forEach { dest ->
+                    AnimatedNavItem(
+                        label = dest.label,
+                        activeIcon = dest.activeIcon,
+                        inactiveIcon = dest.inactiveIcon,
+                        isActive = isRouteActive(dest.route),
+                        activeColor = activeTextBlue,
+                        inactiveColor = inactiveGray,
+                        showBadge = if (dest.route == Screen.Dashboard.route) budgetWarning else dest.showBadge
+                    ) {
+                        if (!isRouteActive(dest.route)) {
+                            navController.navigate(dest.route) {
+                                popUpTo(Screen.Dashboard.route) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 }
@@ -222,28 +223,27 @@ fun TrackItBottomNavBar(
             // Center space for Mic FAB
             Spacer(modifier = Modifier.width(72.dp))
 
-            // Right: Statistik, Pengaturan, Profil
+            // Right: Pengaturan, Profil
             Row(
-                modifier = Modifier.weight(2f),
+                modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Statistik & Pengaturan (index 1 dan 2)
-                bottomNavDestinations.drop(1).dropLast(1).forEach { dest ->
-                    AnimatedNavItem(
-                        label = dest.label,
-                        activeIcon = dest.activeIcon,
-                        inactiveIcon = dest.inactiveIcon,
-                        isActive = isRouteActive(dest.route),
-                        activeColor = activeTextBlue,
-                        inactiveColor = inactiveGray,
-                        showBadge = dest.showBadge
-                    ) {
-                        if (!isRouteActive(dest.route)) {
-                            navController.navigate(dest.route) {
-                                popUpTo(Screen.Dashboard.route) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                // Pengaturan (index 2)
+                val dest = bottomNavDestinations[2]
+                AnimatedNavItem(
+                    label = dest.label,
+                    activeIcon = dest.activeIcon,
+                    inactiveIcon = dest.inactiveIcon,
+                    isActive = isRouteActive(dest.route),
+                    activeColor = activeTextBlue,
+                    inactiveColor = inactiveGray,
+                    showBadge = dest.showBadge
+                ) {
+                    if (!isRouteActive(dest.route)) {
+                        navController.navigate(dest.route) {
+                            popUpTo(Screen.Dashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 }
