@@ -10,6 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +57,8 @@ val bottomNavDestinations = listOf(
 @Composable
 fun TrackItBottomNavBar(
     navController: NavController,
-    onMicClick: () -> Unit,
+    onAddClick: () -> Unit,
+    onMicLongClick: () -> Unit,
     allProfiles: List<ProfileEntity> = emptyList(),
     activeProfile: ProfileEntity? = null,
     onSwitchProfile: (Long) -> Unit = {}
@@ -326,6 +329,9 @@ fun TrackItBottomNavBar(
         }
 
         // Central Mic FAB overlapping the navbar
+        val fabInteractionSource = remember { MutableInteractionSource() }
+        val isPressed by fabInteractionSource.collectIsPressedAsState()
+        
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -336,21 +342,28 @@ fun TrackItBottomNavBar(
                 .background(ringLightBlue, CircleShape)
                 .padding(4.dp)
                 .background(accentPurple, CircleShape)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onMicClick()
-                },
+                .combinedClickable(
+                    interactionSource = fabInteractionSource,
+                    indication = null,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onAddClick()
+                    },
+                    onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onMicLongClick()
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Filled.Mic,
-                contentDescription = "Catat Suara",
-                tint = Color.White,
-                modifier = Modifier.size(30.dp)
-            )
+            Crossfade(targetState = isPressed, label = "fab_icon") { pressed ->
+                Icon(
+                    imageVector = if (pressed) Icons.Filled.Mic else Icons.Filled.Add,
+                    contentDescription = if (pressed) "Catat Suara" else "Tambah Transaksi",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
         }
     }
 }

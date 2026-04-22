@@ -50,7 +50,10 @@ fun TrackItNavHost(
             if (shouldShowNavBar) {
                 TrackItBottomNavBar(
                     navController = navController,
-                    onMicClick = {
+                    onAddClick = {
+                        navController.navigate(Screen.AddTransaction.createRoute(startVoice = false))
+                    },
+                    onMicLongClick = {
                         navController.navigate(Screen.AddTransaction.createRoute(startVoice = true))
                     },
                     allProfiles = dashboardUiState.allProfiles,
