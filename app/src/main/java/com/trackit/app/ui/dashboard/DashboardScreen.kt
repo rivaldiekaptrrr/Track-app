@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.shadow
 fun DashboardScreen(
     onAddTransaction: () -> Unit,
     onEditTransaction: (Long) -> Unit,
+    onNavigateToProfiles: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
