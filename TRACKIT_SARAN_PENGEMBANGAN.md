@@ -83,29 +83,7 @@ Dokumen ini memuat cetak biru (*blueprint*) 50 fitur dan *micro-interactions* ko
 50. **In-App Tutorial Floating Video:** Saat *User Flow* mandeg diam *(stuck di fitur rumit spt Setup Debt)*, Icon Robot kecil *(Helper)* muncul menampilkan PopUp GIF/animasi loop berukuran mungil sejenak cara mengeksekusi fiturnya.
 
 
-Ini adalah pertanyaan yang sangat visioner! Sangat penting untuk memikirkan edge cases (skenario di luar dugaan) seperti ini, terutama untuk aplikasi berbasis suara.
-
-Apa yang terjadi saat ini di sistem kita? Secara default, sistem VoiceParser yang sudah kita buat cukup aman. Jika Anda menyebutkan "Beli kabel 10 ribu" dan kata "kabel" tidak ada di kamus pintar (maupun di Pengaturan Kata Kunci Kustom), maka sistem akan secara otomatis memasukkannya ke dalam kategori "Lainnya" dengan nominal Rp 10.000 dan deskripsi "beli kabel".
-
-Meskipun aman dan tidak error, ini kurang interaktif. Jika pengguna terus-terusan mendapatkan kategori "Lainnya", aplikasi jadi terasa kurang pintar.
-
-Berikut adalah beberapa Saran Pendekatan (Solusi UI/UX) untuk menangani kasus tersebut di Widget Transparan:
-
-1. Munculkan Pop-up Kategori Singkat (Semi-Transparent) ⭐ Paling Direkomendasikan
-Cara Kerja: Jika kata tidak dikenali, layar Transparan jangan langsung ditutup. Munculkan sebuah kotak kecil melayang (BottomSheet atau Dialog) berisi tombol kategori (Makanan, Belanja, Transport, dll).
-UX: TTS akan berkata: "Kategori tidak dikenali. Pilih kategori untuk Kabel."
-Pengguna cukup ketuk satu ikon di layar, lalu data langsung tersimpan dan layar menutup. Ini sangat efisien tanpa harus masuk ke aplikasi full-screen.
-2. Notifikasi Interaktif (Actionable Notification)
-Cara Kerja: Tetap simpan paksa ke kategori "Lainnya" lalu tutup layarnya secara instan (agar interaksi di Home Screen tetap secepat kilat).
-UX: Namun, selain memunculkan Toast, aplikasi akan mengirimkan Notifikasi Android (yang muncul di atas layar/status bar) bertuliskan: "Kabel disimpan di Lainnya. Tarik untuk ubah kategori."
-Jika pengguna menekan notifikasi tersebut, aplikasi TrackIt akan terbuka langsung ke halaman Edit Transaksi tersebut.
-3. Asisten TTS yang Mendidik (Educational Feedback)
-Cara Kerja: Sama seperti sekarang (masuk ke "Lainnya" dan layar tertutup). Namun, kalimat respons mesin TTS-nya diubah agar lebih komunikatif.
-UX: TTS akan berbicara: "Tercatat 10 ribu. Kabel disimpan ke Lainnya. Anda bisa menambahkan kata Kabel ke kamus kategori di Pengaturan."
-Ini memberitahu pengguna bahwa aplikasi ini punya fitur Custom Keyword, mengedukasi mereka untuk menggunakannya.
-4. Interaksi Suara Lanjutan (Full Voice Assistant) 🔥 Sangat Keren tapi Kompleks
-Cara Kerja: Jika kategori tidak dikenali, biarkan layar transparan tetap terbuka dan mic otomatis menyala ulang untuk interaksi dua arah.
-UX:
-Sistem (TTS): "Kabel masuk kategori apa?"
-Pengguna (Bicara): "Peralatan Rumah"
-Sistem: "Baik, disimpan ke Peralatan Rumah." (Layar menutup).
+1. Fix Race Condition Aman: Peluncuran (launch) dialog Speech API kini berjalan secara berurutan menunggu profileId didapatkan dari memori, sehingga 100% dijamin bebas bug salah profil.
+2. BottomSheet Super Informatif: Header UI sekarang menampilkan dengan jelas kalimat seperti: Pilih Kategori untuk: "ssd komputer" • Rp 500.000
+3. Timer dengan Animasi Progress Bar: Teks angka 7 detik digantikan dengan sebuah LinearProgressIndicator elegan yang menyusut perlahan. Saat tersisa 3 detik, warnanya akan berubah menjadi merah sebagai alert visual.
+4. Pembelajaran Kata per Kata (Atomic Smart Dictionary): Jika sistem menangkap "ssd komputer", ia sekarang akan dipecah. Jika kata "komputer" sudah ada di database, sistem hanya akan menyisipkan kata "ssd" saja. Ini membuat kamus VoiceParser jauh lebih natural dan tidak redundan.
