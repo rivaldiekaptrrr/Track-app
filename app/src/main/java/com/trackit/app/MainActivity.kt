@@ -56,6 +56,7 @@ class MainActivity : FragmentActivity() {
 
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
+    private var isGoingToSystemSettings = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,6 +94,15 @@ class MainActivity : FragmentActivity() {
                 ) {
                     var biometricError by remember { mutableStateOf<String?>(null) }
                     isBiometricAvailable = remember { checkBiometricAvailability() }
+                    
+                    val bypassBiometric by preferencesManager.bypassBiometricOnce.collectAsState(initial = false)
+
+                    LaunchedEffect(bypassBiometric) {
+                        if (bypassBiometric) {
+                            isAuthenticated = true
+                            preferencesManager.setBypassBiometricOnce(false)
+                        }
+                    }
 
                     if (!isBiometricAvailable) {
                         // Skip biometric if not available
@@ -119,6 +129,10 @@ class MainActivity : FragmentActivity() {
                                 confirmButton = {
                                     Button(onClick = {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                                            isGoingToSystemSettings = true
+                                            lifecycleScope.launch {
+                                                preferencesManager.setPendingRestore(true)
+                                            }
                                             try {
                                                 val intent = android.content.Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                                                 intent.data = Uri.parse("package:$packageName")
@@ -128,6 +142,9 @@ class MainActivity : FragmentActivity() {
                                                 startActivity(intent)
                                             }
                                         } else {
+                                            lifecycleScope.launch {
+                                                preferencesManager.setBypassBiometricOnce(true)
+                                            }
                                             BackupManager.isRestoring = true
                                             BackupManager.restoreFromAutoBackup(this@MainActivity)
                                             showRestoreDialog = false
@@ -139,12 +156,7 @@ class MainActivity : FragmentActivity() {
                                             Runtime.getRuntime().exit(0)
                                         }
                                     }) {
-                                        Text(
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) 
-                                                "Beri Izin Akses" 
-                                            else 
-                                                "Ya, Pulihkan"
-                                        )
+                                        Text("Ya, Pulihkan")
                                     }
                                 },
                                 dismissButton = {
@@ -167,10 +179,12 @@ class MainActivity : FragmentActivity() {
 
                         // Auto-trigger biometric on first display
                         LaunchedEffect(Unit) {
-                            showBiometricPrompt(
-                                onSuccess = { isAuthenticated = true },
-                                onError = { biometricError = it }
-                            )
+                            if (!bypassBiometric) {
+                                showBiometricPrompt(
+                                    onSuccess = { isAuthenticated = true },
+                                    onError = { biometricError = it }
+                                )
+                            }
                         }
                     }
                 }
@@ -340,13 +354,35 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        isGoingToSystemSettings = false
+        
+        lifecycleScope.launch {
+            val pendingRestore = preferencesManager.pendingRestore.first()
+            if (pendingRestore && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+                preferencesManager.setPendingRestore(false)
+                preferencesManager.setBypassBiometricOnce(true)
+                
+                BackupManager.isRestoring = true
+                BackupManager.restoreFromAutoBackup(this@MainActivity)
+                
+                val pm = packageManager
+                val restartIntent = pm.getLaunchIntentForPackage(packageName)
+                val mainIntent = android.content.Intent.makeRestartActivityTask(restartIntent!!.component)
+                startActivity(mainIntent)
+                Runtime.getRuntime().exit(0)
+            }
+        }
+    }
+
     override fun onStop() {
         super.onStop()
         // Always perform auto-backup when app goes to background
         BackupManager.autoBackup(this)
         
-        // Lock the app when it goes to background
-        if (isBiometricAvailable) {
+        // Lock the app when it goes to background, unless going to settings
+        if (isBiometricAvailable && !isGoingToSystemSettings) {
             isAuthenticated = false
         }
     }
