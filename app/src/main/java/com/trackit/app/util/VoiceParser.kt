@@ -357,6 +357,13 @@ object VoiceParser {
                     matches.add(Match(categoryName, match.range.first, isCustom = false))
                 }
             }
+
+            // Implicitly check the category name itself as a default keyword
+            val categoryNameRegex = Regex("\\b${Regex.escape(categoryName.lowercase())}\\b")
+            val nameMatch = categoryNameRegex.find(text)
+            if (nameMatch != null) {
+                matches.add(Match(categoryName, nameMatch.range.first, isCustom = false))
+            }
         }
 
         if (matches.isEmpty()) return null
@@ -406,7 +413,7 @@ object VoiceParser {
         }
         
         // 2. Keyword detection for income
-        val incomeKeywords = listOf("dapat", "terima", "masuk", "gaji", "bonus", "untung", "laba", "dikasih")
+        val incomeKeywords = listOf("dapat", "mendapatkan", "terima", "menerima", "masuk", "pemasukan", "gaji", "bonus", "untung", "laba", "dikasih")
         for (keyword in incomeKeywords) {
             if (text.contains(keyword)) {
                 return "INCOME"

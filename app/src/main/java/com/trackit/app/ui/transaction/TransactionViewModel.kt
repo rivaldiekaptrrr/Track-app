@@ -184,7 +184,9 @@ class TransactionViewModel @Inject constructor(
                         val keywordToLearn = state.unrecognizedVoiceText
                             .replace(Regex("\\d+"), "")
                             .replace(Regex("(?i)\\b(ribu|rb|rebu|juta|jt|ratus|belas|puluh|rp|rupiah|gocap|cepek|seceng|noban|goban)\\b"), "")
+                            .replace(Regex("(?i)\\b(beli|membeli|bayar|membayar|dapat|mendapatkan|terima|menerima|buat|untuk)\\b"), "")
                             .replace(Regex("[.,]"), "")
+                            .replace(Regex("\\s+"), " ")
                             .trim()
 
                         if (keywordToLearn.isNotBlank()) {
