@@ -83,6 +83,28 @@ Dokumen ini memuat cetak biru (*blueprint*) 50 fitur dan *micro-interactions* ko
 50. **In-App Tutorial Floating Video:** Saat *User Flow* mandeg diam *(stuck di fitur rumit spt Setup Debt)*, Icon Robot kecil *(Helper)* muncul menampilkan PopUp GIF/animasi loop berukuran mungil sejenak cara mengeksekusi fiturnya.
 
 
+---
+
+## 🛠️ FASE 6: Standar Audit Keamanan & Kualitas Enterprise (NFR)
+*Fokus pada ketahanan (resilience), optimasi performa, keamanan data (security), dan arsitektur kode kelas dunia untuk memastikan aplikasi bebas crash dan siap disebarkan ke jutaan pengguna.*
+
+51. **Enkripsi File Backup & Database (SQLCipher):** Amankan file cadangan transaksi di storage eksternal menggunakan Android Keystore System dan gunakan SQLCipher pada Room DB untuk mencegah eksploitasi pencurian data pengguna.
+52. **Strict Mode Biometric (No Device PIN Fallback):** Sediakan opsi keamanan agar aplikasi hanya bisa diakses menggunakan sidik jari/wajah asli, dan menolak fallback ke PIN/Pola HP untuk menghindari intrusi oleh pihak ketiga yang mengetahui PIN HP pengguna.
+53. **Validasi Skema Migrasi Room (exportSchema = true):** Wajibkan eksport skema database ke dalam format JSON di repositori untuk mendeteksi *crash* fatal saat migrasi struktur tabel pada compile-time, bukan runtime.
+54. **Clean Architecture & Separation of Concerns (SoC):** Hindari peletakkan logika berat seperti pengeksporan PDF/CSV dan logika Worker di `MainActivity`. Pindahkan *business logic* ke `UseCase/Interactor` yang dipanggil melalui `ViewModel`.
+55. **Optimasi Waktu Cold Start (Baseline Profiles):** Sertakan Macrobenchmark Baseline Profiles untuk melakukan pre-kompilasi (AOT) kelas Jetpack Compose agar waktu startup pertama kali aplikasi menjadi 30-40% lebih cepat dan mulus.
+56. **Pengurangan Ukuran APK (isShrinkResources):** Aktifkan instruksi `isShrinkResources = true` di file *build.gradle.kts* bersamaan dengan R8/ProGuard untuk otomatis menyapu bersih asset dan layout mati, sehingga ukuran unduh aplikasi lebih efisien.
+57. **Manajemen *Race Condition* pada Auto-Backup:** Jangan letakkan eksekusi sinkronus backup langsung di dalam `onStop()`. Gunakan *Mutex*, Status Flag, atau selesaikan melaui *OneTimeWorkRequest* WorkManager yang terisolasi dari *interrupt* user.
+58. **Sistem Pemantauan Crash (Observability):** Integrasikan Firebase Crashlytics atau Sentry yang diperkuat dengan custom tree *Timber* untuk memonitor bug/galat SQLite secara live dari HP pengguna tanpa perlu menebak-nebak penyebabnya.
+59. **Keamanan Eksekusi *Combine Flows* (Type-Safety):** Hilangkan *array casting* yang berbahaya pada penggabungan `combine()` *Flows* (seperti `params[0] as Double`). Gunakan struktur *wrapper data-class* atau extension custom aman yang tidak membuat aplikasi force-close jika urutan pemanggilan tertukar.
+60. **Penanganan Error Aliran Data (Flow .catch):** Selalu berikan perlindungan asinkron `.catch { }` sebelum `.collect()` saat membaca stream dari *Room DB*. Sebuah exception pada SQLite tak akan serta-merta membunuh UI/Aplikasi (*Crash*), melainkan menyajikan tampilan *Error State* elegan.
+61. **Lokalisasi 100% (*String Resources* - i18n):** Pindahkan seluruh status *Hardcoded Text* (Contoh: `Text("Abaikan")`) ke dalam `res/values/strings.xml` yang memastikan kemudahan alih bahasa untuk basis pengguna di luar Indonesia di masa depan.
+62. **Kepatuhan Aksesibilitas bagi Disabilitas (a11y):** Sertakan atribut `contentDescription` dan penanda *semantics* secara disiplin di setiap komponen grafis & Icon tombol interaktif Jetpack Compose agar aplikasi ramah alat bantu baca (TalkBack).
+63. **Strategi Pengujian Tiga Lapis (*Testing Strat*):** Perkuat *Unit Testing* dengan *Paparazzi/Roborazzi (Screenshot Testing)* untuk mengunci inkonsistensi piksel UI, serta rancang *Automated Room Migration Test* untuk memproteksi migrasi database beresiko dari versi 1 ke 5.
+
+---
+
+**Catatan Perubahan (Changelog):**
 1. Fix Race Condition Aman: Peluncuran (launch) dialog Speech API kini berjalan secara berurutan menunggu profileId didapatkan dari memori, sehingga 100% dijamin bebas bug salah profil.
 2. BottomSheet Super Informatif: Header UI sekarang menampilkan dengan jelas kalimat seperti: Pilih Kategori untuk: "ssd komputer" • Rp 500.000
 3. Timer dengan Animasi Progress Bar: Teks angka 7 detik digantikan dengan sebuah LinearProgressIndicator elegan yang menyusut perlahan. Saat tersisa 3 detik, warnanya akan berubah menjadi merah sebagai alert visual.
