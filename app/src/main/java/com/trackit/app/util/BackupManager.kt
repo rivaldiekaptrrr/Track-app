@@ -104,6 +104,11 @@ object BackupManager {
         val backupFile = getAutoBackupFile() ?: return
         try {
             val dbFile = context.getDatabasePath(DATABASE_NAME)
+            
+            // Delete existing WAL and SHM files to ensure the new main DB file is used
+            File(dbFile.path + "-wal").delete()
+            File(dbFile.path + "-shm").delete()
+
             copyFile(backupFile, dbFile)
             
             // Restore WAL and SHM if exists

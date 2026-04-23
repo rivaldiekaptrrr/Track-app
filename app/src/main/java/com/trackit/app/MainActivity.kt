@@ -57,6 +57,7 @@ class MainActivity : FragmentActivity() {
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
     private var isGoingToSystemSettings = false
+    private var isSafeToAutoBackup = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +84,9 @@ class MainActivity : FragmentActivity() {
             val transactions = transactionRepository.getAllTransactions(activeProfileId).first()
             if (transactions.isEmpty() && BackupManager.getAutoBackupFile() != null) {
                 showRestoreDialog = true
+                isSafeToAutoBackup = false
+            } else {
+                isSafeToAutoBackup = true
             }
         }
 
@@ -130,6 +134,7 @@ class MainActivity : FragmentActivity() {
                                     Button(onClick = {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
                                             isGoingToSystemSettings = true
+                                            BackupManager.isRestoring = true
                                             lifecycleScope.launch {
                                                 preferencesManager.setPendingRestore(true)
                                             }
@@ -378,8 +383,10 @@ class MainActivity : FragmentActivity() {
 
     override fun onStop() {
         super.onStop()
-        // Always perform auto-backup when app goes to background
-        BackupManager.autoBackup(this)
+        // Only perform auto-backup when database is populated or safe
+        if (isSafeToAutoBackup && !BackupManager.isRestoring) {
+            BackupManager.autoBackup(this)
+        }
         
         // Lock the app when it goes to background, unless going to settings
         if (isBiometricAvailable && !isGoingToSystemSettings) {
