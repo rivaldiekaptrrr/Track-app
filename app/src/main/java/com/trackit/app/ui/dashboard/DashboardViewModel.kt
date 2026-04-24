@@ -97,8 +97,8 @@ class DashboardViewModel @Inject constructor(
                         activeProfile = activeProfile,
                         allProfiles = profiles,
                         // Ambil waktu transaksi terbaru sebagai lastSyncTime
-                        // Fallback ke waktu sekarang jika belum ada transaksi
-                        lastSyncTime = transactions.maxOfOrNull { it.date } ?: System.currentTimeMillis()
+                        // Gunakan createdAt (bukan date) karena createdAt menyimpan jam yang akurat
+                        lastSyncTime = transactions.maxOfOrNull { it.createdAt } ?: System.currentTimeMillis()
                     )
                 }
             }.collect { state ->
