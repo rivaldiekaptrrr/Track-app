@@ -70,7 +70,8 @@ fun DashboardScreen(
                         totalSpent = uiState.totalSpent,
                         totalIncome = uiState.totalIncome,
                         monthlyBudget = uiState.monthlyBudget,
-                        budgetRemaining = uiState.budgetRemaining
+                        budgetRemaining = uiState.budgetRemaining,
+                        lastSyncTime = uiState.lastSyncTime
                     )
                 }
 
@@ -153,39 +154,37 @@ private fun SummarySection(
     totalSpent: Double,
     totalIncome: Double,
     monthlyBudget: Double,
-    budgetRemaining: Double
+    budgetRemaining: Double,
+    lastSyncTime: Long
 ) {
     val saldoAktif = totalIncome - totalSpent
+    var isBalanceVisible by remember { mutableStateOf(true) }
+    
+    val cardColor = Color(0xFF27313F)
+    val circleColor = Color(0xFF333E4F)
+    val iconBgColor = Color(0xFF455062)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 12.dp,
+                elevation = 8.dp,
                 shape = RoundedCornerShape(24.dp),
-                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                spotColor = MaterialTheme.colorScheme.primary
+                spotColor = Color.Black.copy(alpha = 0.3f)
             ),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = cardColor)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
-                        )
-                    )
-                )
                 .drawWithContent {
-                    drawContent()
-                    // Glassmorphism effect overlay
-                    drawRect(
-                        color = Color.White.copy(alpha = 0.05f),
-                        blendMode = BlendMode.Overlay
+                    drawCircle(
+                        color = circleColor,
+                        radius = size.width * 0.4f,
+                        center = androidx.compose.ui.geometry.Offset(size.width, 0f)
                     )
+                    drawContent()
                 }
                 .padding(24.dp)
         ) {
@@ -193,113 +192,119 @@ private fun SummarySection(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Column {
                         Text(
-                            "Saldo Aktif",
-                            style = MaterialTheme.typography.labelLarge,
+                            text = "TOTAL SALDO",
+                            style = MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.7f),
-                            letterSpacing = 1.sp
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            CurrencyUtils.formatRupiah(saldoAktif),
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.ExtraBold,
+                            text = if (isBalanceVisible) CurrencyUtils.formatRupiah(saldoAktif) else "Rp •••••••••",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                     }
-                    Icon(
-                        imageVector = Icons.Default.AccountBalanceWallet,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.2f),
-                        modifier = Modifier.size(48.dp)
-                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(iconBgColor)
+                            .clickable { isBalanceVisible = !isBalanceVisible },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isBalanceVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = "Toggle Balance",
+                            tint = Color.White.copy(alpha = 0.8f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Color.White.copy(alpha = 0.1f))
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ArrowDownward, contentDescription = null, tint = Color(0xFF81C784), modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Pemasukan", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(CurrencyUtils.formatRupiah(totalIncome), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(
+                            text = "PEMASUKAN",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "+ " + CurrencyUtils.formatRupiah(totalIncome),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF66BB6A)
+                        )
                     }
+                    
                     Column(horizontalAlignment = Alignment.End) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = Color(0xFFE57373), modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Pengeluaran", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(CurrencyUtils.formatRupiah(totalSpent), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(
+                            text = "PENGELUARAN",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "- " + CurrencyUtils.formatRupiah(totalSpent),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEF5350)
+                        )
                     }
                 }
                 
-                if (monthlyBudget > 0) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    val progress = (totalSpent / monthlyBudget).toFloat().coerceIn(0f, 1f)
-                    
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        LinearProgressIndicator(
-                            progress = 1f,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(CircleShape),
-                            color = Color.White.copy(alpha = 0.2f),
-                            trackColor = Color.Transparent
-                        )
-                        LinearProgressIndicator(
-                            progress = progress,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(CircleShape),
-                            color = if (progress > 0.8f) Color(0xFFFF5252) else Color.White,
-                            trackColor = Color.Transparent
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF66BB6A)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column {
-                            Text(
-                                "SISA SALDO",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                CurrencyUtils.formatRupiah(budgetRemaining),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                "ANGGARAN",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                CurrencyUtils.formatRupiah(monthlyBudget),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    val syncTime = remember(lastSyncTime) {
+                        java.text.SimpleDateFormat("dd MMM, HH:mm", java.util.Locale("id", "ID")).format(java.util.Date(lastSyncTime))
+                    }
+                    Text(
+                        text = "Terakhir sinkron: $syncTime",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.6f)
+                    )
                 }
             }
         }

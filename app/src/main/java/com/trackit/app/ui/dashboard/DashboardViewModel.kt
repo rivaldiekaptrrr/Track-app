@@ -25,7 +25,8 @@ data class DashboardUiState(
     val recentTransactions: List<TransactionWithCategory> = emptyList(),
     val isLoading: Boolean = true,
     val activeProfile: ProfileEntity? = null,
-    val allProfiles: List<ProfileEntity> = emptyList()
+    val allProfiles: List<ProfileEntity> = emptyList(),
+    val lastSyncTime: Long = System.currentTimeMillis()
 )
 
 data class TransactionWithCategory(
@@ -94,7 +95,8 @@ class DashboardViewModel @Inject constructor(
                         },
                         isLoading = false,
                         activeProfile = activeProfile,
-                        allProfiles = profiles
+                        allProfiles = profiles,
+                        lastSyncTime = System.currentTimeMillis()
                     )
                 }
             }.collect { state ->
