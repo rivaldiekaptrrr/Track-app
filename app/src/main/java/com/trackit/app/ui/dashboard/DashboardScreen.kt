@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -27,9 +26,7 @@ import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -277,7 +274,50 @@ private fun SummarySection(
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
+                // Budget bar — hanya tampil jika anggaran disetel
+                if (monthlyBudget > 0) {
+                    val progress = (totalSpent / monthlyBudget).toFloat().coerceIn(0f, 1f)
+                    val progressColor = if (progress > 0.8f) Color(0xFFEF5350) else Color(0xFF66BB6A)
+
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "SISA ANGGARAN",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = CurrencyUtils.formatRupiah(budgetRemaining),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = progressColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(Color.White.copy(alpha = 0.15f))
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progress)
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(progressColor)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -296,7 +336,7 @@ private fun SummarySection(
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    
+
                     val syncTime = remember(lastSyncTime) {
                         java.text.SimpleDateFormat("dd MMM, HH:mm", java.util.Locale("id", "ID")).format(java.util.Date(lastSyncTime))
                     }
