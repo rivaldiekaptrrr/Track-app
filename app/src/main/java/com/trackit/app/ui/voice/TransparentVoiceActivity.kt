@@ -156,37 +156,73 @@ class TransparentVoiceActivity : ComponentActivity() {
     private fun processVoiceInput(spokenText: String) {
         lifecycleScope.launch {
             val categories = categoryRepository.getAllCategories(profileId).first()
-            val parseResult = VoiceParser.parse(spokenText, categories)
+            val batchResults = VoiceParser.parseBatch(spokenText, categories)
             
-            if (parseResult.isValid && parseResult.amount != null) {
-                val matchedCategory = categories.find { it.name.equals(parseResult.categoryName, ignoreCase = true) }
-                
-                if (matchedCategory != null) {
-                    saveTransaction(parseResult, matchedCategory)
-                } else {
-                    // Tampilkan BottomSheet
-                    availableCategories.value = categories
-                    pendingParseResult.value = parseResult
-                    showCategorySelector.value = true
-                    
-                    val keyword = extractUnknownKeyword(parseResult.description)
-                    val textToSpeak = if (keyword.isNotEmpty()) {
-                        "Kategori tidak dikenali. Pilih kategori untuk $keyword."
-                    } else {
-                        "Kategori tidak dikenali. Pilih kategori."
-                    }
-                    
-                    val isTtsEnabled = preferencesManager.isTtsEnabled.first()
-                    if (isTtsEnabled && isTtsReady && tts != null) {
-                        tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SELECT_CATEGORY")
-                    }
-                }
+            if (batchResults.size > 1) {
+                saveBatchTransactions(batchResults, categories)
             } else {
-                Toast.makeText(
-                    this@TransparentVoiceActivity, 
-                    "Gagal memahami nominal. Ucapan: '$spokenText'", 
-                    Toast.LENGTH_LONG
-                ).show()
+                val parseResult = VoiceParser.parse(spokenText, categories)
+                
+                if (parseResult.isValid && parseResult.amount != null) {
+                    val matchedCategory = categories.find { it.name.equals(parseResult.categoryName, ignoreCase = true) }
+                    
+                    if (matchedCategory != null) {
+                        saveTransaction(parseResult, matchedCategory)
+                    } else {
+                        // Tampilkan BottomSheet
+                        availableCategories.value = categories
+                        pendingParseResult.value = parseResult
+                        showCategorySelector.value = true
+                        
+                        val keyword = extractUnknownKeyword(parseResult.description)
+                        val textToSpeak = if (keyword.isNotEmpty()) {
+                            "Kategori tidak dikenali. Pilih kategori untuk $keyword."
+                        } else {
+                            "Kategori tidak dikenali. Pilih kategori."
+                        }
+                        
+                        val isTtsEnabled = preferencesManager.isTtsEnabled.first()
+                        if (isTtsEnabled && isTtsReady && tts != null) {
+                            tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SELECT_CATEGORY")
+                        }
+                    }
+                } else {
+                    Toast.makeText(
+                        this@TransparentVoiceActivity, 
+                        "Gagal memahami nominal. Ucapan: '$spokenText'", 
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finishActivityCleanly()
+                }
+            }
+        }
+    }
+
+    private fun saveBatchTransactions(batchResults: List<VoiceParseResult>, categories: List<CategoryEntity>) {
+        lifecycleScope.launch {
+            val fallbackCategory = categories.find { it.name.equals("Lainnya", ignoreCase = true) }
+            
+            batchResults.filter { it.amount != null }.forEach { result ->
+                val matchedCategory = categories.find { it.name.equals(result.categoryName, ignoreCase = true) } ?: fallbackCategory
+                
+                val entity = TransactionEntity(
+                    amount = result.amount!!.toDouble(),
+                    description = result.description,
+                    categoryId = matchedCategory?.id,
+                    date = result.dateMillis ?: System.currentTimeMillis(),
+                    profileId = profileId,
+                    type = result.type
+                )
+                transactionRepository.insert(entity)
+            }
+            
+            val textToSpeak = "Tersimpan, ${batchResults.size} transaksi"
+            Toast.makeText(this@TransparentVoiceActivity, textToSpeak, Toast.LENGTH_LONG).show()
+            
+            val isTtsEnabled = preferencesManager.isTtsEnabled.first()
+            if (isTtsEnabled && isTtsReady && tts != null) {
+                tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SAVE_SUCCESS")
+            } else {
                 finishActivityCleanly()
             }
         }

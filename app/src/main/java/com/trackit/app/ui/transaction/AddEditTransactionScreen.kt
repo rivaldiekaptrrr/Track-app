@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.basicMarquee
@@ -97,29 +99,44 @@ fun AddEditTransactionScreen(
             val matches = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             val spokenText = matches?.firstOrNull()
             if (spokenText != null) {
-                val parseResult = VoiceParser.parse(spokenText, formState.categories)
-                if (parseResult.isValid) {
-                    viewModel.setFromVoice(
-                        amount = parseResult.amount ?: 0L,
-                        description = parseResult.description,
-                        categoryName = parseResult.categoryName,
-                        dateMillis = parseResult.dateMillis,
-                        type = parseResult.type
-                    )
-                    showHighlight = true
+                val batchResults = VoiceParser.parseBatch(spokenText, formState.categories)
+                
+                if (batchResults.size > 1) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     
-                    // Auto-save jika kategori berhasil terdeteksi
-                    if (parseResult.categoryName != null) {
-                        viewModel.saveTransaction()
+                    val allHaveCategory = batchResults.all { it.categoryName != null }
+                    if (allHaveCategory) {
+                        // Semua kategori terdeteksi — langsung auto-save tanpa buka dialog
+                        viewModel.saveBatchTransactions(batchResults)
                     } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("✓ Terdeteksi: $spokenText. Silakan pilih kategori.")
-                        }
+                        // Ada kategori tidak dikenali — tampilkan dialog konfirmasi
+                        viewModel.setFromVoiceBatch(batchResults)
                     }
                 } else {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    Toast.makeText(context, "Nominal tidak terdeteksi, coba lagi", Toast.LENGTH_SHORT).show()
+                    val parseResult = VoiceParser.parse(spokenText, formState.categories)
+                    if (parseResult.isValid) {
+                        viewModel.setFromVoice(
+                            amount = parseResult.amount ?: 0L,
+                            description = parseResult.description,
+                            categoryName = parseResult.categoryName,
+                            dateMillis = parseResult.dateMillis,
+                            type = parseResult.type
+                        )
+                        showHighlight = true
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        
+                        // Auto-save jika kategori berhasil terdeteksi
+                        if (parseResult.categoryName != null) {
+                            viewModel.saveTransaction()
+                        } else {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("✓ Terdeteksi: $spokenText. Silakan pilih kategori.")
+                            }
+                        }
+                    } else {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        Toast.makeText(context, "Nominal tidak terdeteksi, coba lagi", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         } else if (result.resultCode != Activity.RESULT_CANCELED) {
@@ -174,9 +191,13 @@ fun AddEditTransactionScreen(
     LaunchedEffect(formState.savedSuccessfully) {
         if (formState.savedSuccessfully) {
             if (isTtsEnabled && tts != null) {
-                val categoryName = formState.categories.find { it.id == formState.selectedCategoryId }?.name ?: ""
-                val typeText = if (formState.type == "INCOME") "pemasukan" else "pengeluaran"
-                val textToSpeak = "Tersimpan, $typeText $categoryName ${formState.amount} rupiah"
+                val textToSpeak = if (formState.savedBatchSize > 1) {
+                    "Tersimpan, ${formState.savedBatchSize} transaksi"
+                } else {
+                    val categoryName = formState.categories.find { it.id == formState.selectedCategoryId }?.name ?: ""
+                    val typeText = if (formState.type == "INCOME") "pemasukan" else "pengeluaran"
+                    "Tersimpan, $typeText $categoryName ${formState.amount} rupiah"
+                }
                 
                 // Menunggu TTS selesai bicara (maksimal 5 detik agar tidak hang)
                 withTimeoutOrNull(5000) {
@@ -536,6 +557,83 @@ fun AddEditTransactionScreen(
             ) {
                 DatePicker(state = datePickerState)
             }
+        }
+
+        // Batch Voice Review Dialog
+        if (formState.pendingBatchTransactions.isNotEmpty()) {
+            AlertDialog(
+                onDismissRequest = { viewModel.dismissBatch() },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Terdeteksi Multi-Transaksi") 
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Ditemukan ${formState.pendingBatchTransactions.size} transaksi dalam ucapan Anda:", style = MaterialTheme.typography.bodyMedium)
+                        
+                        Column(
+                            modifier = Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            formState.pendingBatchTransactions.forEach { result ->
+                                val category = formState.categories.find { it.name.equals(result.categoryName, ignoreCase = true) }
+                                
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.size(36.dp).clip(CircleShape).background(
+                                                category?.let { CategoryIconMapper.parseColor(it.colorHex) } ?: MaterialTheme.colorScheme.outline
+                                            ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = category?.let { CategoryIconMapper.getIcon(it.iconName) } ?: Icons.Default.QuestionMark,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(result.description, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            Text(category?.name ?: "Pilih Kategori Nanti", style = MaterialTheme.typography.labelSmall, color = if (category == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text(
+                                            "Rp ${NumberUtils.formatWithThousandSeparators(result.amount?.toString() ?: "0")}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (result.type == "INCOME") Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { 
+                            viewModel.saveBatchTransactions(formState.pendingBatchTransactions) 
+                        }
+                    ) {
+                        Text("Simpan Semua")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.dismissBatch() }) {
+                        Text("Batal")
+                    }
+                }
+            )
         }
     }
 }

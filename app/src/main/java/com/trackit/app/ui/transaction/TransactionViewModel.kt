@@ -31,7 +31,9 @@ data class TransactionFormState(
     val savedSuccessfully: Boolean = false,
     val errorMessage: String? = null,
     val unrecognizedVoiceText: String? = null,
-    val activeProfileId: Long = 1L
+    val activeProfileId: Long = 1L,
+    val pendingBatchTransactions: List<com.trackit.app.util.VoiceParseResult> = emptyList(),
+    val savedBatchSize: Int = 0
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -141,6 +143,54 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
+    fun setFromVoiceBatch(results: List<com.trackit.app.util.VoiceParseResult>) {
+        if (results.size <= 1) {
+            // Fallback to single if only one
+            results.firstOrNull()?.let {
+                setFromVoice(it.amount ?: 0L, it.description, it.categoryName, it.dateMillis, it.type)
+            }
+        } else {
+            _formState.update { it.copy(pendingBatchTransactions = results) }
+        }
+    }
+
+    fun dismissBatch() {
+        _formState.update { it.copy(pendingBatchTransactions = emptyList()) }
+    }
+
+    fun saveBatchTransactions(selectedTransactions: List<com.trackit.app.util.VoiceParseResult>) {
+        viewModelScope.launch {
+            _formState.update { it.copy(isSaving = true) }
+            try {
+                selectedTransactions.forEach { result ->
+                    val matchedCategoryId = result.categoryName?.let { name ->
+                        _formState.value.categories.find { it.name.equals(name, ignoreCase = true) }?.id
+                    } ?: _formState.value.categories.find { it.name.equals("Lainnya", ignoreCase = true) }?.id
+
+                    val transaction = TransactionEntity(
+                        amount = (result.amount ?: 0L).toDouble(),
+                        description = result.description,
+                        categoryId = matchedCategoryId,
+                        date = result.dateMillis ?: DateUtils.todayMillis(),
+                        type = result.type,
+                        profileId = _formState.value.activeProfileId
+                    )
+                    transactionRepository.insert(transaction)
+                }
+                _formState.update { 
+                    it.copy(
+                        isSaving = false, 
+                        savedSuccessfully = true, 
+                        pendingBatchTransactions = emptyList(),
+                        savedBatchSize = selectedTransactions.size
+                    ) 
+                }
+            } catch (e: Exception) {
+                _formState.update { it.copy(isSaving = false, errorMessage = e.message) }
+            }
+        }
+    }
+
     fun saveTransaction() {
         val state = _formState.value
         val amount = state.amount.toDoubleOrNull()
@@ -203,7 +253,7 @@ class TransactionViewModel @Inject constructor(
                     }
                 }
 
-                _formState.update { it.copy(isSaving = false, savedSuccessfully = true, unrecognizedVoiceText = null) }
+                _formState.update { it.copy(isSaving = false, savedSuccessfully = true, unrecognizedVoiceText = null, savedBatchSize = 0) }
             } catch (e: Exception) {
                 _formState.update { it.copy(isSaving = false, errorMessage = e.message) }
             }

@@ -82,7 +82,7 @@ object VoiceParser {
     )
 
     /**
-     * Main parse function.
+     * Main parse function for a single transaction.
      * @param text Raw speech recognition result
      * @param categories List of all categories from DB (with customKeywords field)
      * @return VoiceParseResult with extracted data
@@ -111,6 +111,28 @@ object VoiceParser {
             type = type,
             isValid = amount != null && amount > 0
         )
+    }
+
+    /**
+     * Parse multiple transactions from a single text.
+     * Splits by conjunctions (dan, terus, lalu) or action words (beli, bayar).
+     */
+    fun parseBatch(text: String, categories: List<CategoryEntity> = emptyList()): List<VoiceParseResult> {
+        // Try splitting by conjunctions or punctuation first
+        var segments = text.lowercase()
+            .split(Regex("(?i)\\b(dan|terus|lalu|sama|serta)\\b|[;,]"))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        // If only one segment, try splitting by common action words (keeping the word at start)
+        if (segments.size <= 1) {
+            segments = text.lowercase()
+                .split(Regex("(?i)(?=\\b(beli|bayar|dapat|terima|masuk|keluar)\\b)"))
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        }
+
+        return segments.map { parse(it, categories) }.filter { it.isValid }
     }
 
     /**
