@@ -2,6 +2,13 @@
 <resources>
     <style name="Theme.TrackIt" parent="android:Theme.Material.Light.NoActionBar" />
     
+    <!-- Splash Screen API Theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#000000</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.TrackIt</item>
+    </style>
+    
     <style name="Theme.Transparent" parent="android:Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>

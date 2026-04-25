@@ -37,12 +37,12 @@ val OnTertiaryDark = Color(0xFF073543)
 val TertiaryContainerDark = Color(0xFF244B5A)
 val OnTertiaryContainerDark = Color(0xFFC1E8FB)
 val ErrorDark = Color(0xFFFFB4AB)
-val BackgroundDark = Color(0xFF191C1A)
+val BackgroundDark = Color(0xFF000000) // AMOLED Black
 val OnBackgroundDark = Color(0xFFE1E3DE)
-val SurfaceDark = Color(0xFF191C1A)
-val OnSurfaceDark = Color(0xFFE1E3DE)
-val SurfaceVariantDark = Color(0xFF404943)
-val OnSurfaceVariantDark = Color(0xFFC0C9C1)
+val SurfaceDark = Color(0xFF0D0D0D) // Very dark surface
+val OnSurfaceDark = Color(0xFFFFFFFF) // High contrast title text
+val SurfaceVariantDark = Color(0xFF1A1A1A) // Variant surface
+val OnSurfaceVariantDark = Color(0xFFA0A0A0) // Muted gray for hierarchy
 
 // Chart Colors
 val ChartColors = listOf(

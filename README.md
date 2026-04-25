@@ -205,7 +205,7 @@ Buka Home Screen → Tekan Widget Voice 🎤 → Ucapkan: "beli kopi 20 ribu bel
 | Perizinan | Kegunaan |
 |-----------|----------|
 | `RECORD_AUDIO` | Akses mikrofon untuk Speech-to-Text |
-| `USE_BIOMETRIC` | Autentikasi sidik jari / face unlock |
+| `USE_BIOMETRIC` | Autentikasi sidik jari |
 | `POST_NOTIFICATIONS` | Mengirim notifikasi budget alert |
 
 ---
