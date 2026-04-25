@@ -158,6 +158,16 @@ class TransactionViewModel @Inject constructor(
         _formState.update { it.copy(pendingBatchTransactions = emptyList()) }
     }
 
+    fun updateBatchTransactionCategory(index: Int, categoryName: String) {
+        _formState.update { state ->
+            val updatedBatch = state.pendingBatchTransactions.toMutableList()
+            if (index in updatedBatch.indices) {
+                updatedBatch[index] = updatedBatch[index].copy(categoryName = categoryName)
+            }
+            state.copy(pendingBatchTransactions = updatedBatch)
+        }
+    }
+
     fun saveBatchTransactions(selectedTransactions: List<com.trackit.app.util.VoiceParseResult>) {
         viewModelScope.launch {
             _formState.update { it.copy(isSaving = true) }

@@ -578,13 +578,16 @@ fun AddEditTransactionScreen(
                             modifier = Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            formState.pendingBatchTransactions.forEach { result ->
+                            formState.pendingBatchTransactions.forEachIndexed { index, result ->
                                 val category = formState.categories.find { it.name.equals(result.categoryName, ignoreCase = true) }
+                                var isDropdownExpanded by remember { mutableStateOf(false) }
                                 
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
+                                Box {
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.clickable { isDropdownExpanded = true }
+                                    ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth().padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
@@ -614,16 +617,42 @@ fun AddEditTransactionScreen(
                                             color = if (result.type == "INCOME") Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
                                         )
                                     }
+                                    }
+                                    
+                                    DropdownMenu(
+                                        expanded = isDropdownExpanded,
+                                        onDismissRequest = { isDropdownExpanded = false }
+                                    ) {
+                                        formState.categories.filter { !it.isHidden && it.type == result.type }.forEach { cat ->
+                                            DropdownMenuItem(
+                                                text = { Text(cat.name) },
+                                                onClick = {
+                                                    viewModel.updateBatchTransactionCategory(index, cat.name)
+                                                    isDropdownExpanded = false
+                                                },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = CategoryIconMapper.getIcon(cat.iconName),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(24.dp),
+                                                        tint = CategoryIconMapper.parseColor(cat.colorHex)
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 },
                 confirmButton = {
+                    val allCategoriesSelected = formState.pendingBatchTransactions.all { it.categoryName != null }
                     Button(
                         onClick = { 
                             viewModel.saveBatchTransactions(formState.pendingBatchTransactions) 
-                        }
+                        },
+                        enabled = allCategoriesSelected
                     ) {
                         Text("Simpan Semua")
                     }

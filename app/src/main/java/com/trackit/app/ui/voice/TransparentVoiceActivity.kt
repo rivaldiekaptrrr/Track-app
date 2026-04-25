@@ -63,6 +63,9 @@ class TransparentVoiceActivity : ComponentActivity() {
     private val pendingParseResult = mutableStateOf<VoiceParseResult?>(null)
     private val availableCategories = mutableStateOf<List<CategoryEntity>>(emptyList())
     
+    private val pendingBatchQueue = mutableStateOf<List<VoiceParseResult>>(emptyList())
+    private var totalBatchSavedCount = 0
+    
     private val speechRecognizerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -159,7 +162,47 @@ class TransparentVoiceActivity : ComponentActivity() {
             val batchResults = VoiceParser.parseBatch(spokenText, categories)
             
             if (batchResults.size > 1) {
-                saveBatchTransactions(batchResults, categories)
+                availableCategories.value = categories
+                
+                val recognized = mutableListOf<VoiceParseResult>()
+                val unrecognized = mutableListOf<VoiceParseResult>()
+                
+                batchResults.filter { it.amount != null }.forEach { result ->
+                    val matchedCategory = categories.find { it.name.equals(result.categoryName, ignoreCase = true) }
+                    if (matchedCategory != null) {
+                        recognized.add(result)
+                        // Save recognized item silently
+                        val entity = TransactionEntity(
+                            amount = result.amount!!.toDouble(),
+                            description = result.description,
+                            categoryId = matchedCategory.id,
+                            date = result.dateMillis ?: System.currentTimeMillis(),
+                            profileId = profileId,
+                            type = result.type
+                        )
+                        transactionRepository.insert(entity)
+                    } else {
+                        unrecognized.add(result)
+                    }
+                }
+                
+                totalBatchSavedCount = recognized.size
+                
+                if (unrecognized.isNotEmpty()) {
+                    pendingBatchQueue.value = unrecognized
+                    processNextUnrecognizedBatchItem()
+                } else {
+                    // All recognized
+                    val textToSpeak = "Tersimpan, ${totalBatchSavedCount} transaksi"
+                    Toast.makeText(this@TransparentVoiceActivity, textToSpeak, Toast.LENGTH_LONG).show()
+                    
+                    val isTtsEnabled = preferencesManager.isTtsEnabled.first()
+                    if (isTtsEnabled && isTtsReady && tts != null) {
+                        tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SAVE_SUCCESS")
+                    } else {
+                        finishActivityCleanly()
+                    }
+                }
             } else {
                 val parseResult = VoiceParser.parse(spokenText, categories)
                 
@@ -198,32 +241,38 @@ class TransparentVoiceActivity : ComponentActivity() {
         }
     }
 
-    private fun saveBatchTransactions(batchResults: List<VoiceParseResult>, categories: List<CategoryEntity>) {
-        lifecycleScope.launch {
-            val fallbackCategory = categories.find { it.name.equals("Lainnya", ignoreCase = true) }
+    private fun processNextUnrecognizedBatchItem() {
+        val queue = pendingBatchQueue.value
+        if (queue.isNotEmpty()) {
+            val nextItem = queue.first()
+            pendingParseResult.value = nextItem
+            showCategorySelector.value = true
             
-            batchResults.filter { it.amount != null }.forEach { result ->
-                val matchedCategory = categories.find { it.name.equals(result.categoryName, ignoreCase = true) } ?: fallbackCategory
-                
-                val entity = TransactionEntity(
-                    amount = result.amount!!.toDouble(),
-                    description = result.description,
-                    categoryId = matchedCategory?.id,
-                    date = result.dateMillis ?: System.currentTimeMillis(),
-                    profileId = profileId,
-                    type = result.type
-                )
-                transactionRepository.insert(entity)
+            val keyword = extractUnknownKeyword(nextItem.description)
+            val textToSpeak = if (keyword.isNotEmpty()) {
+                "Pilih kategori untuk $keyword."
+            } else {
+                "Pilih kategori."
             }
             
-            val textToSpeak = "Tersimpan, ${batchResults.size} transaksi"
+            lifecycleScope.launch {
+                val isTtsEnabled = preferencesManager.isTtsEnabled.first()
+                if (isTtsEnabled && isTtsReady && tts != null) {
+                    tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SELECT_CATEGORY")
+                }
+            }
+        } else {
+            // Queue empty, batch is done!
+            val textToSpeak = "Tersimpan, $totalBatchSavedCount transaksi"
             Toast.makeText(this@TransparentVoiceActivity, textToSpeak, Toast.LENGTH_LONG).show()
             
-            val isTtsEnabled = preferencesManager.isTtsEnabled.first()
-            if (isTtsEnabled && isTtsReady && tts != null) {
-                tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SAVE_SUCCESS")
-            } else {
-                finishActivityCleanly()
+            lifecycleScope.launch {
+                val isTtsEnabled = preferencesManager.isTtsEnabled.first()
+                if (isTtsEnabled && isTtsReady && tts != null) {
+                    tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "SAVE_SUCCESS")
+                } else {
+                    finishActivityCleanly()
+                }
             }
         }
     }
@@ -240,6 +289,15 @@ class TransparentVoiceActivity : ComponentActivity() {
             )
             
             transactionRepository.insert(entity)
+            
+            // IF it's part of a batch, don't speak individual save, just move to next!
+            if (pendingBatchQueue.value.isNotEmpty()) {
+                totalBatchSavedCount++
+                val newQueue = pendingBatchQueue.value.drop(1)
+                pendingBatchQueue.value = newQueue
+                processNextUnrecognizedBatchItem()
+                return@launch
+            }
             
             val prefix = if (isFallback) "Disimpan ke " else "Tercatat, "
             val textToSpeak = "$prefix${category.name}, ${CurrencyUtils.formatRupiah(entity.amount)}"
@@ -290,7 +348,13 @@ class TransparentVoiceActivity : ComponentActivity() {
             if (fallbackCategory != null) {
                 saveTransaction(parseResult, fallbackCategory, isFallback = true)
             } else {
-                finishActivityCleanly()
+                if (pendingBatchQueue.value.isNotEmpty()) {
+                    val newQueue = pendingBatchQueue.value.drop(1)
+                    pendingBatchQueue.value = newQueue
+                    processNextUnrecognizedBatchItem()
+                } else {
+                    finishActivityCleanly()
+                }
             }
         }
     }
