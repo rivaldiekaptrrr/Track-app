@@ -88,34 +88,13 @@ class TransactionViewModel @Inject constructor(
     }
 
     /**
-     * Menerima input dari keyboard Number.
-     * Hanya menyimpan digit murni (tanpa operator) — operator ditangani via appendOperator.
+     * Menerima input dari keyboard (atau paste).
+     * Compose mengirimkan teks secara penuh (termasuk operator jika ada).
      */
     fun updateAmount(input: String) {
-        // Ambil hanya digit dari input keyboard biasa
-        val rawDigits = input.filter { it.isDigit() }
-        val current = _formState.value.amount
-        // Jika current sedang dalam mode ekspresi (ada operator), jangan overwrite — biarkan appendOperator yang kelola
-        if (current.any { it in listOf('+', '-', '*', '/') }) {
-            // Append digit baru ke ekspresi yang sudah ada
-            val lastChar = current.lastOrNull()
-            if (lastChar != null && lastChar in listOf('+', '-', '*', '/')) {
-                // Setelah operator, tambah digit
-                val newDigits = input.filter { it.isDigit() }
-                if (newDigits.isNotEmpty()) {
-                    _formState.update { it.copy(amount = current + newDigits) }
-                }
-            } else {
-                // Sedang mengetik angka kedua, replace angka terakhir dengan input baru
-                val operatorIndex = current.indexOfLast { it in listOf('+', '-', '*', '/') }
-                if (operatorIndex >= 0) {
-                    val base = current.substring(0, operatorIndex + 1)
-                    _formState.update { it.copy(amount = base + rawDigits) }
-                }
-            }
-        } else {
-            _formState.update { it.copy(amount = rawDigits) }
-        }
+        // Cukup ambil karakter angka dan simbol matematika saja
+        val sanitized = input.filter { it.isDigit() || it in listOf('+', '-', '*', '/') }
+        _formState.update { it.copy(amount = sanitized) }
     }
 
     /**
