@@ -22,6 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.basicMarquee
@@ -154,10 +158,6 @@ fun AddEditTransactionScreen(
         }
     }
 
-    val formattedAmount = remember(formState.amount) {
-        NumberUtils.formatWithThousandSeparators(formState.amount)
-    }
-
     LaunchedEffect(showHighlight) {
         if (showHighlight) {
             delay(1000)
@@ -273,8 +273,9 @@ fun AddEditTransactionScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         OutlinedTextField(
-                            value = formattedAmount,
+                            value = formState.amount,
                             onValueChange = { viewModel.updateAmount(it) },
+                            visualTransformation = ThousandSeparatorVisualTransformation(),
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             placeholder = { Text("0") },
@@ -589,5 +590,48 @@ private fun CategoryChip(
             style = MaterialTheme.typography.labelSmall,
             maxLines = 1
         )
+    }
+}
+
+class ThousandSeparatorVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val originalText = text.text
+        if (originalText.isEmpty()) {
+            return TransformedText(text, OffsetMapping.Identity)
+        }
+
+        val formattedText = NumberUtils.formatWithThousandSeparators(originalText)
+        
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                if (originalText.isBlank()) return 0
+                var transformedOffset = 0
+                var originalCharCount = 0
+                for (i in 0 until formattedText.length) {
+                    if (originalCharCount == offset) break
+                    if (formattedText[i].isDigit()) {
+                        originalCharCount++
+                    }
+                    transformedOffset++
+                }
+                return transformedOffset
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                if (originalText.isBlank()) return 0
+                var originalOffset = 0
+                var transformedCharCount = 0
+                for (i in 0 until formattedText.length) {
+                    if (transformedCharCount == offset) break
+                    if (formattedText[i].isDigit()) {
+                        originalOffset++
+                    }
+                    transformedCharCount++
+                }
+                return originalOffset
+            }
+        }
+
+        return TransformedText(AnnotatedString(formattedText), offsetMapping)
     }
 }
