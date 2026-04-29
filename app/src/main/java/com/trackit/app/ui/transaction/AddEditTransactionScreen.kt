@@ -325,7 +325,6 @@ fun AddEditTransactionScreen(
                             )
                         }
                     }
-                    }
                     if (isListening) {
                         Text(
                             "Mendengarkan...",
