@@ -87,9 +87,138 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
-    fun updateAmount(amount: String) {
-        val rawDigits = amount.filter { it.isDigit() }
-        _formState.update { it.copy(amount = rawDigits) }
+    /**
+     * Menerima input dari keyboard Number.
+     * Hanya menyimpan digit murni (tanpa operator) — operator ditangani via appendOperator.
+     */
+    fun updateAmount(input: String) {
+        // Ambil hanya digit dari input keyboard biasa
+        val rawDigits = input.filter { it.isDigit() }
+        val current = _formState.value.amount
+        // Jika current sedang dalam mode ekspresi (ada operator), jangan overwrite — biarkan appendOperator yang kelola
+        if (current.any { it in listOf('+', '-', '*', '/') }) {
+            // Append digit baru ke ekspresi yang sudah ada
+            val lastChar = current.lastOrNull()
+            if (lastChar != null && lastChar in listOf('+', '-', '*', '/')) {
+                // Setelah operator, tambah digit
+                val newDigits = input.filter { it.isDigit() }
+                if (newDigits.isNotEmpty()) {
+                    _formState.update { it.copy(amount = current + newDigits) }
+                }
+            } else {
+                // Sedang mengetik angka kedua, replace angka terakhir dengan input baru
+                val operatorIndex = current.indexOfLast { it in listOf('+', '-', '*', '/') }
+                if (operatorIndex >= 0) {
+                    val base = current.substring(0, operatorIndex + 1)
+                    _formState.update { it.copy(amount = base + rawDigits) }
+                }
+            }
+        } else {
+            _formState.update { it.copy(amount = rawDigits) }
+        }
+    }
+
+    /**
+     * Dipanggil saat user menekan tombol operator di Calculator Toolbar (+, -, *, /).
+     */
+    fun appendOperator(operator: Char) {
+        val current = _formState.value.amount
+        if (current.isEmpty()) return
+        // Jika karakter terakhir adalah operator, ganti operator-nya
+        val newAmount = if (current.lastOrNull() in listOf('+', '-', '*', '/')) {
+            current.dropLast(1) + operator
+        } else {
+            current + operator
+        }
+        _formState.update { it.copy(amount = newAmount) }
+    }
+
+    /**
+     * Mengevaluasi ekspresi matematika seperti "45000+12000" menjadi "57000".
+     * Dipanggil saat user menekan tombol "=" di Calculator Toolbar.
+     */
+    fun evaluateExpression() {
+        val expression = _formState.value.amount
+        val result = evaluateMathExpression(expression)
+        if (result != null) {
+            _formState.update { it.copy(amount = result.toLong().toString()) }
+        }
+    }
+
+    /**
+     * Menghapus satu karakter terakhir dari ekspresi (backspace).
+     */
+    fun backspaceAmount() {
+        val current = _formState.value.amount
+        if (current.isNotEmpty()) {
+            _formState.update { it.copy(amount = current.dropLast(1)) }
+        }
+    }
+
+    /**
+     * Mengembalikan preview hasil kalkulasi real-time jika ekspresi valid.
+     * Contoh: "45000+12000" → "57.000"
+     */
+    fun getCalcPreview(): String? {
+        val expression = _formState.value.amount
+        if (!expression.any { it in listOf('+', '-', '*', '/') }) return null
+        val result = evaluateMathExpression(expression) ?: return null
+        return NumberUtils.formatWithThousandSeparators(result.toLong().toString())
+    }
+
+    private fun evaluateMathExpression(expression: String): Double? {
+        return try {
+            // Parse ekspresi sederhana: hanya mendukung +, -, *, /
+            val tokens = mutableListOf<String>()
+            var current = StringBuilder()
+            for (i in expression.indices) {
+                val c = expression[i]
+                if (c in listOf('+', '-', '*', '/') && i > 0 && expression[i-1].isDigit()) {
+                    tokens.add(current.toString())
+                    tokens.add(c.toString())
+                    current = StringBuilder()
+                } else {
+                    current.append(c)
+                }
+            }
+            if (current.isNotEmpty()) tokens.add(current.toString())
+
+            // Evaluasi dengan preseden operator: kali & bagi dulu, lalu tambah & kurang
+            var i = 0
+            val values = mutableListOf<Double>()
+            val ops = mutableListOf<Char>()
+            while (i < tokens.size) {
+                val token = tokens[i]
+                if (token.toDoubleOrNull() != null) {
+                    values.add(token.toDouble())
+                } else if (token.length == 1 && token[0] in listOf('+', '-', '*', '/')) {
+                    val op = token[0]
+                    while (ops.isNotEmpty() && (ops.last() == '*' || ops.last() == '/')) {
+                        val right = values.removeLast()
+                        val left = values.removeLast()
+                        values.add(applyOp(ops.removeLast(), left, right))
+                    }
+                    ops.add(op)
+                }
+                i++
+            }
+            while (ops.isNotEmpty()) {
+                val right = values.removeLast()
+                val left = values.removeLast()
+                values.add(applyOp(ops.removeLast(), left, right))
+            }
+            values.firstOrNull()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun applyOp(op: Char, left: Double, right: Double): Double = when (op) {
+        '+' -> left + right
+        '-' -> left - right
+        '*' -> left * right
+        '/' -> if (right != 0.0) left / right else left
+        else -> left
     }
 
     fun getFormattedAmount(): String {
@@ -202,6 +331,10 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun saveTransaction() {
+        // Evaluasi ekspresi terlebih dahulu jika ada operator
+        if (_formState.value.amount.any { it in listOf('+', '-', '*', '/') }) {
+            evaluateExpression()
+        }
         val state = _formState.value
         val amount = state.amount.toDoubleOrNull()
 

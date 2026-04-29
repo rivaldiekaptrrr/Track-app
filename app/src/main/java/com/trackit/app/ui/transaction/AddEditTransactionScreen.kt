@@ -325,6 +325,7 @@ fun AddEditTransactionScreen(
                             )
                         }
                     }
+                    }
                     if (isListening) {
                         Text(
                             "Mendengarkan...",
@@ -333,6 +334,60 @@ fun AddEditTransactionScreen(
                             modifier = Modifier.padding(top = 4.dp).align(Alignment.End)
                         )
                     }
+
+                    // ─── Calculator Toolbar ───────────────────────────────
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val calcPreview = viewModel.getCalcPreview()
+                    if (calcPreview != null) {
+                        Text(
+                            text = "= Rp $calcPreview",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val operatorButtons = listOf("+" to '+', "-" to '-', "×" to '*', "÷" to '/')
+                        operatorButtons.forEach { (label, op) ->
+                            FilledTonalButton(
+                                onClick = { viewModel.appendOperator(op) },
+                                modifier = Modifier.weight(1f).height(36.dp),
+                                contentPadding = PaddingValues(0.dp),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(label, style = MaterialTheme.typography.titleMedium)
+                            }
+                        }
+                        // Backspace
+                        FilledTonalButton(
+                            onClick = { viewModel.backspaceAmount() },
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Icon(Icons.Default.Backspace, contentDescription = "Hapus", modifier = Modifier.size(18.dp))
+                        }
+                        // Equals
+                        Button(
+                            onClick = { viewModel.evaluateExpression() },
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            enabled = calcPreview != null
+                        ) {
+                            Text("=", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                    // ─────────────────────────────────────────────────────
                 }
             }
 
@@ -721,9 +776,13 @@ private fun CategoryChip(
 }
 
 class ThousandSeparatorVisualTransformation : VisualTransformation {
+    private val operators = setOf('+', '-', '*', '/')
+
     override fun filter(text: AnnotatedString): TransformedText {
         val originalText = text.text
-        if (originalText.isEmpty()) {
+
+        // Jika kosong atau sedang dalam mode ekspresi kalkulator → tampilkan apa adanya
+        if (originalText.isEmpty() || originalText.any { it in operators }) {
             return TransformedText(text, OffsetMapping.Identity)
         }
 
@@ -762,3 +821,4 @@ class ThousandSeparatorVisualTransformation : VisualTransformation {
         return TransformedText(AnnotatedString(formattedText), offsetMapping)
     }
 }
+
