@@ -82,11 +82,12 @@ fun DashboardScreen(
                         Text(
                             "Transaksi Terbaru",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
                             DateUtils.formatMonthYear(System.currentTimeMillis()),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -157,19 +158,20 @@ private fun SummarySection(
     val saldoAktif = totalIncome - totalSpent
     var isBalanceVisible by remember { mutableStateOf(true) }
     
-    val cardColor = Color(0xFF27313F)
-    val circleColor = Color(0xFF333E4F)
-    val iconBgColor = Color(0xFF455062)
+    val cardColor = Color(0xFF121212) // AMOLED friendly deep gray
+    val circleColor = Color(0xFF1E1E1E)
+    val iconBgColor = Color(0xFF2C2C2C)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(24.dp),
-                spotColor = Color.Black.copy(alpha = 0.3f)
+                elevation = 16.dp,
+                shape = RoundedCornerShape(28.dp),
+                spotColor = Color.Black.copy(alpha = 0.15f), // Softer shadow
+                ambientColor = Color.Black.copy(alpha = 0.1f)
             ),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor)
     ) {
         Box(
@@ -363,11 +365,17 @@ private fun TransactionItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = Color.Black.copy(alpha = 0.05f),
+                ambientColor = Color.Black.copy(alpha = 0.02f)
+            )
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Row(
@@ -407,6 +415,8 @@ private fun TransactionItem(
                 Text(
                     text = tx.description.ifEmpty { category?.name ?: "Transaksi" },
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

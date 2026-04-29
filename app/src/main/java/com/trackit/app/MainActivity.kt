@@ -19,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
@@ -60,6 +61,7 @@ class MainActivity : FragmentActivity() {
     private var isSafeToAutoBackup = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         
         if (intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)) {
@@ -233,7 +235,7 @@ class MainActivity : FragmentActivity() {
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Autentikasi Diperlukan")
-            .setSubtitle("Gunakan sidik jari, face unlock, atau sandi HP untuk masuk")
+            .setSubtitle("Gunakan sidik jari atau PIN/Sandi untuk masuk")
             .setAllowedAuthenticators(
                 BiometricManager.Authenticators.BIOMETRIC_STRONG or
                 BiometricManager.Authenticators.BIOMETRIC_WEAK or

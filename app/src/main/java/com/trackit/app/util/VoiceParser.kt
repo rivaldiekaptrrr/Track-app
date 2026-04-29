@@ -82,7 +82,7 @@ object VoiceParser {
     )
 
     /**
-     * Main parse function.
+     * Main parse function for a single transaction.
      * @param text Raw speech recognition result
      * @param categories List of all categories from DB (with customKeywords field)
      * @return VoiceParseResult with extracted data
@@ -111,6 +111,54 @@ object VoiceParser {
             type = type,
             isValid = amount != null && amount > 0
         )
+    }
+
+    /**
+     * Parse multiple transactions from a single text.
+     * Splits by conjunctions (dan, terus, lalu) or action words (beli, bayar).
+     */
+    fun parseBatch(text: String, categories: List<CategoryEntity> = emptyList()): List<VoiceParseResult> {
+        // Try splitting by conjunctions or punctuation first
+        var segments = text.lowercase()
+            .split(Regex("(?i)\\b(dan|terus|lalu|sama|serta)\\b|[;,]"))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        // If only one segment, try splitting by common action words (keeping the word at start)
+        if (segments.size <= 1) {
+            segments = text.lowercase()
+                .split(Regex("(?i)(?=\\b(beli|bayar|dapat|terima|masuk|keluar)\\b)"))
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        }
+
+        // If STILL only one segment, try splitting AFTER any amount mentions
+        // This handles implicit lists like "beli tas 30.000 baju 40.000"
+        if (segments.size <= 1) {
+            var formattedText = text.lowercase()
+                // Compound "X juta Y ribu"
+                .replace(Regex("""(\d+[.,]?\d*\s*(?:juta|jt)\s+\d+[.,]?\d*\s*(?:ribu|rb|rebu))"""), "$1|SPLIT|")
+                // Rupiah "Rp 30.000"
+                .replace(Regex("""((?:rp|rupiah)\.?\s*\d{1,3}(?:[.,]\d{3})*)"""), "$1|SPLIT|")
+                // Multiplier "30 ribu"
+                .replace(Regex("""(\d+[.,]?\d*\s*(?:juta|jt|ribu|rb|rebu|ratus\s+ribu|ratus\s+rb|ratus\s+rebu))"""), "$1|SPLIT|")
+                // Slang "gocap"
+                .replace(Regex("""\b(gocap|cepek|gopek|seceng|noban|goban|selawe)\b"""), "$1|SPLIT|")
+                // Plain large numbers "30000"
+                .replace(Regex("""\b(\d{3,})\b"""), "$1|SPLIT|")
+                
+            // Deduplicate SPLIT tokens just in case multiple patterns matched the same amount
+            formattedText = formattedText.replace(Regex("""(\|SPLIT\|\s*)+"""), "|SPLIT|")
+            
+            val amountCount = formattedText.split("|SPLIT|").size - 1
+            if (amountCount > 1) {
+                segments = formattedText.split("|SPLIT|")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+            }
+        }
+
+        return segments.map { parse(it, categories) }.filter { it.isValid }
     }
 
     /**

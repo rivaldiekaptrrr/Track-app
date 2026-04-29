@@ -24,9 +24,9 @@
 **TrackIt** adalah aplikasi pencatatan keuangan pribadi yang dirancang untuk menghilangkan hambatan dalam mencatat pemasukan dan pengeluaran. Dengan memanfaatkan **Android SpeechRecognizer secara Offline**, pengguna cukup mengucapkan transaksi menggunakan bahasa natural (misal: *"beli sayur 50 ribu"* atau *"dapat gaji 5 juta"*) dan form akan terisi otomatis beserta kategorinya!
 
 ### Target Pengguna
-- 🎓 Mahasiswa yang ingin mengelola uang saku bulanan dengan praktis.
-- 💼 Pekerja kantoran yang sibuk dan ingin mencatat pengeluaran secepat berbicara.
-- 🔒 Pengguna yang peduli privasi — semua proses pengenalan suara dan data disimpan **100% offline** di perangkat.
+- 🎯 **Semua Orang** yang ingin mengelola, melacak, dan mengontrol keuangan pribadinya dengan lebih mudah.
+- 💼 **Individu Super Sibuk** yang membutuhkan kecepatan pencatatan pengeluaran semudah berbicara.
+- 🔒 **Pengguna Peduli Privasi** — semua proses pengenalan suara dan data disimpan **100% offline** di dalam perangkat Anda.
 
 ---
 
@@ -37,9 +37,11 @@
 | Fitur | Deskripsi |
 |-------|-----------|
 | **Pemasukan & Pengeluaran** | Mendukung pencatatan dua tipe transaksi dengan filter UI pintar. |
-| **Dashboard** | Menampilkan total pengeluaran bulan ini, sisa anggaran, progress bar, dan daftar transaksi terbaru. |
-| **Kategori Transaksi** | 12 kategori bawaan (8 Pengeluaran, 4 Pemasukan). |
-| **Visualisasi Data** | Donut pie chart menampilkan persentase pengeluaran per kategori. |
+| **Dashboard & Navigasi Premium** | UI modern dengan Animated Bottom Navigation yang mendukung *long-press* untuk switch Profile. |
+| **Premium UI/UX** | *Digital Card* untuk visualisasi saldo, *Interactive Empty State*, *Haptic Feedback*, dan *Onboarding Edukasi*. |
+| **Multi-Profile** | Pisahkan pembukuan pribadi dan bisnis/pekerjaan dengan mudah. |
+| **Kategori Kustom** | Tersedia 12 kategori bawaan, dan pengguna **bebas membuat/mengedit** kategori (Ikon & Warna). |
+| **Smart Calculator** | Evaluasi operasi matematika langsung pada kolom nominal (misal: `45000+12000`). |
 | **Penyimpanan Offline** | Semua data tersimpan di Room Database lokal — tidak memerlukan internet. |
 
 ### 🟡 Fase 2 — Smart (Otomatisasi Suara)
@@ -47,23 +49,24 @@
 | Fitur | Deskripsi |
 |-------|-----------|
 | **Offline Voice Tracking** | Pengenalan suara tanpa internet menggunakan Android SpeechRecognizer. |
-| **Natural Language Parser** | Memahami bahasa gaul ("gocap", "cepek", "gopek") dan angka huruf ("dua juta"). |
-| **Machine Learning Natural** | Aplikasi otomatis "belajar" kata kunci baru jika pengguna memilih kategori secara manual setelah ucapan gagal dikenali. |
-| **Voice Feedback (TTS)** | Robot asisten membacakan konfirmasi setelah transaksi sukses tersimpan. |
-| **Quick Settings Tile** | Pintasan menambahkan transaksi suara langsung dari panel notifikasi (status bar) tanpa membuka aplikasi! |
+| **Batch Voice Input** | Kemampuan mencatat banyak transaksi dalam satu nafas (misal: *"beli tas 30 ribu baju 40 ribu"* dipisah otomatis). |
+| **Atomic Smart Dictionary** | AI otomatis belajar kata baru sambil membuang angka & kata hubung agar kamus (*Natural Language Parser*) tetap efisien. |
+| **Voice Widget (Transparent)** | Widget *home screen* transparan pintar dengan sistem **Antrean Kategori** untuk batch input secepat kilat. |
+| **Voice Feedback (TTS)** | Robot asisten membacakan konfirmasi dinamis ("Tersimpan, 3 transaksi") setelah *auto-save*. |
 
-### 🟢 Fase 3 — Security (Keamanan & Privasi)
+### 🟢 Fase 3 — Security (Keamanan & Backup)
 
 | Fitur | Deskripsi |
 |-------|-----------|
-| **Biometric Login** | Autentikasi sidik jari / face unlock sebelum akses dashboard. |
+| **Biometric Login & Auto-Lock** | Autentikasi sidik jari untuk akses aplikasi, dan **otomatis terkunci** saat masuk ke latar belakang (*onStop*). |
 | **Privacy Screen** | `FLAG_SECURE` mencegah konten aplikasi terlihat di layar Recent Apps. |
+| **Auto Backup & Restore** | Pencadangan otomatis secara berkala dan pemulihan data instan (satu-klik) dengan *auto-restart*. |
 
 ### 🔵 Fase 4 — Advanced (Laporan & Notifikasi)
 
 | Fitur | Deskripsi |
 |-------|-----------|
-| **Export PDF** | Laporan bulanan ke format PDF (A4). |
+| **Export Laporan** | Ekspor transaksi bulanan ke format **PDF (A4)** dan **CSV (Excel)**. |
 | **Budget Alert** | Notifikasi otomatis dikirim jika ≥ 80% anggaran tercapai. |
 | **Transaksi Berulang** | Transaksi otomatis harian/mingguan/bulanan via WorkManager. |
 
@@ -83,6 +86,7 @@
 | **Keamanan** | AndroidX Biometric API 1.1.0 |
 | **Background Tasks** | WorkManager 2.9.0 |
 | **Build System** | Gradle 8.5 + AGP 8.2.2 + KSP |
+| **CI/CD Pipeline** | GitHub Actions (Auto Build APK) |
 | **Min SDK** | Android 8.0 (API 26) |
 | **Target SDK** | Android 14 (API 34) |
 
@@ -136,12 +140,22 @@ Buka App → Biometric Auth → Dashboard → Tekan FAB (+)
 ```
 
 ### Alur 2: Fitur Self-Learning (Belajar Otomatis)
-```
+```text
 Ucapkan: "bayar langganan gym 150 ribu"
 → Nominal terisi 150.000, Kategori KOSONG (karena 'gym' belum dikenal)
 → Anda memilih kategori "Kesehatan" secara manual → Simpan
 → Sistem otomatis menambahkan kata "langganan gym" ke dalam otak kategori "Kesehatan".
 → Besok saat Anda menyebut "gym" lagi, aplikasi otomatis memasukannya ke "Kesehatan"!
+```
+
+### Alur 3: Multi-Transaction (Batch Voice Input via Widget)
+```text
+Buka Home Screen → Tekan Widget Voice 🎤 → Ucapkan: "beli kopi 20 ribu beli cemilan 15 ribu"
+→ AI memecah ucapan menjadi 2 transaksi.
+→ Transaksi yang dikenali langsung disimpan di latar belakang (tanpa UI).
+→ Untuk yang tidak dikenali, muncul BottomSheet interaktif: "Pilih kategori untuk kopi".
+→ Setelah dipilih, antrean bergeser menanyakan: "Pilih kategori untuk cemilan".
+→ Setelah antrean habis, TTS berkata: "Tersimpan, 2 transaksi".
 ```
 
 ---
@@ -191,7 +205,7 @@ Ucapkan: "bayar langganan gym 150 ribu"
 | Perizinan | Kegunaan |
 |-----------|----------|
 | `RECORD_AUDIO` | Akses mikrofon untuk Speech-to-Text |
-| `USE_BIOMETRIC` | Autentikasi sidik jari / face unlock |
+| `USE_BIOMETRIC` | Autentikasi sidik jari |
 | `POST_NOTIFICATIONS` | Mengirim notifikasi budget alert |
 
 ---

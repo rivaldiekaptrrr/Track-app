@@ -19,7 +19,7 @@
     <string name="export_pdf">Ekspor PDF</string>
     <string name="budget_limit">Batas Anggaran</string>
     <string name="biometric_title">Autentikasi Diperlukan</string>
-    <string name="biometric_subtitle">Gunakan sidik jari atau face unlock untuk masuk</string>
+    <string name="biometric_subtitle">Gunakan sidik jari untuk masuk</string>
     <string name="biometric_negative">Batal</string>
     <string name="no_transactions">Belum ada transaksi</string>
     <string name="delete_confirm">Yakin ingin menghapus transaksi ini?</string>
