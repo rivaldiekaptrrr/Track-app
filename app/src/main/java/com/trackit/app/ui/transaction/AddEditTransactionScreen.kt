@@ -26,6 +26,8 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -79,6 +81,21 @@ fun AddEditTransactionScreen(
     
     var isListening by remember { mutableStateOf(false) }
     var showHighlight by remember { mutableStateOf(false) }
+
+    // State untuk TextFieldValue agar cursor stabil saat update dari Toolbar
+    var amountTextFieldValue by remember { 
+        mutableStateOf(TextFieldValue(text = formState.amount, selection = TextRange(formState.amount.length))) 
+    }
+
+    // Sinkronisasi otomatis: Jika ViewModel mengubah nominal (misal: tombol + ditekan), paksa kursor ke kanan
+    LaunchedEffect(formState.amount) {
+        if (formState.amount != amountTextFieldValue.text) {
+            amountTextFieldValue = amountTextFieldValue.copy(
+                text = formState.amount,
+                selection = TextRange(formState.amount.length)
+            )
+        }
+    }
 
     // TTS Setup
     val preferencesManager = remember { com.trackit.app.data.local.PreferencesManager(context) }
@@ -294,8 +311,11 @@ fun AddEditTransactionScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         OutlinedTextField(
-                            value = formState.amount,
-                            onValueChange = { viewModel.updateAmount(it) },
+                            value = amountTextFieldValue,
+                            onValueChange = { newValue -> 
+                                amountTextFieldValue = newValue
+                                viewModel.updateAmount(newValue.text) 
+                            },
                             visualTransformation = ThousandSeparatorVisualTransformation(),
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
