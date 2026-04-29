@@ -49,6 +49,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
+    companion object {
+        // Toggle untuk Developer: Set 'false' agar bisa mengambil screenshot dokumentasi.
+        // Wajib di-set ke 'true' kembali saat rilis ke Production (FR 3.2 Privacy).
+        const val ENABLE_ANTI_SCREENSHOT = false
+    }
+
     @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var categoryRepository: CategoryRepository
     @Inject lateinit var database: com.trackit.app.data.local.TrackItDatabase
@@ -69,10 +75,12 @@ class MainActivity : FragmentActivity() {
         }
 
         // FR 3.2 - Privacy Screen: Hide content in Recent Apps
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE
-        )
+        if (ENABLE_ANTI_SCREENSHOT) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+        }
 
         // Seed default categories on first launch
         seedCategories()
