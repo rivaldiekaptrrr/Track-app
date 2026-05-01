@@ -66,6 +66,7 @@ fun DashboardScreen(
                     SummarySection(
                         totalSpent = uiState.totalSpent,
                         totalIncome = uiState.totalIncome,
+                        allTimeBalance = uiState.allTimeBalance,
                         monthlyBudget = uiState.monthlyBudget,
                         budgetRemaining = uiState.budgetRemaining,
                         lastSyncTime = uiState.lastSyncTime
@@ -151,11 +152,12 @@ fun DashboardScreen(
 private fun SummarySection(
     totalSpent: Double,
     totalIncome: Double,
+    allTimeBalance: Double,  // saldo akumulatif dari semua bulan
     monthlyBudget: Double,
     budgetRemaining: Double,
     lastSyncTime: Long
 ) {
-    val saldoAktif = totalIncome - totalSpent
+    val saldoAktif = allTimeBalance  // gunakan saldo akumulatif, bukan hanya bulan ini
     var isBalanceVisible by remember { mutableStateOf(true) }
     
     val cardColor = Color(0xFF121212) // AMOLED friendly deep gray

@@ -64,7 +64,21 @@ interface TransactionDao {
     """)
     fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<CategorySpending>>
 
-    @Query("SELECT * FROM transactions WHERE isRecurring = 1 AND profileId = :profileId")
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
+        WHERE type = 'INCOME' AND profileId = :profileId
+    """)
+    fun getAllTimeIncome(profileId: Long): Flow<Double>
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
+        WHERE type = 'EXPENSE' AND profileId = :profileId
+    """)
+    fun getAllTimeExpense(profileId: Long): Flow<Double>
+
+    @Query("""
+        SELECT * FROM transactions WHERE isRecurring = 1 AND profileId = :profileId
+    """)
     suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity>
 
     @Query("""
