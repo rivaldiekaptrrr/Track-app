@@ -37,9 +37,6 @@ class ChartViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ChartUiState())
     val uiState: StateFlow<ChartUiState> = _uiState.asStateFlow()
 
-    private val startOfMonth = DateUtils.getStartOfMonth()
-    private val endOfMonth = DateUtils.getEndOfMonth()
-
     init {
         loadChartData()
     }
@@ -47,6 +44,10 @@ class ChartViewModel @Inject constructor(
     private fun loadChartData() {
         viewModelScope.launch {
             preferencesManager.activeProfileId.flatMapLatest { profileId ->
+                // Hitung range bulan saat ini secara dinamis setiap kali dipanggil
+                val startOfMonth = DateUtils.getStartOfMonth()
+                val endOfMonth = DateUtils.getEndOfMonth()
+
                 combine(
                     transactionRepository.getSpendingByCategory(startOfMonth, endOfMonth, profileId),
                     categoryRepository.getAllCategories(profileId)

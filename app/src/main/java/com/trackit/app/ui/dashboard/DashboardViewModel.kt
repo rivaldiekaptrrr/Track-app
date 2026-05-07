@@ -20,6 +20,7 @@ import javax.inject.Inject
 data class DashboardUiState(
     val totalSpent: Double = 0.0,
     val totalIncome: Double = 0.0,
+    val allTimeBalance: Double = 0.0,  // saldo akumulatif semua bulan
     val monthlyBudget: Double = 0.0,
     val budgetRemaining: Double = 0.0,
     val recentTransactions: List<TransactionWithCategory> = emptyList(),
@@ -47,9 +48,6 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    private val startOfMonth = DateUtils.getStartOfMonth()
-    private val endOfMonth = DateUtils.getEndOfMonth()
-
     init {
         loadDashboardData()
     }
@@ -58,15 +56,28 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             // Observe active profile ID from DataStore
             preferencesManager.activeProfileId.flatMapLatest { profileId ->
-                // Concurrently observe all reactive streams for this profile
-                combine(
+                // Hitung range bulan saat ini secara dinamis setiap kali dipanggil
+                val startOfMonth = DateUtils.getStartOfMonth()
+                val endOfMonth = DateUtils.getEndOfMonth()
+
+                // Stream 1: data bulanan (6 stream, maks combine)
+                val monthlyStream = combine(
                     transactionRepository.getTotalSpentInMonth(startOfMonth, endOfMonth, profileId),
                     transactionRepository.getTotalIncomeInMonth(startOfMonth, endOfMonth, profileId),
                     budgetRepository.getBudgetSetting(profileId),
                     transactionRepository.getRecentTransactions(profileId, 10),
                     categoryRepository.getAllCategories(profileId),
                     profileRepository.getAllProfiles()
-                ) { params ->
+                ) { params -> params }
+
+                // Stream 2: saldo akumulatif semua bulan
+                val allTimeStream = combine(
+                    transactionRepository.getAllTimeIncome(profileId),
+                    transactionRepository.getAllTimeExpense(profileId)
+                ) { income, expense -> income - expense }
+
+                // Gabungkan keduanya
+                combine(monthlyStream, allTimeStream) { params, allTimeBalance ->
                     val totalSpent   = params[0] as Double
                     val totalIncome  = params[1] as Double
                     @Suppress("UNCHECKED_CAST")
@@ -85,6 +96,7 @@ class DashboardViewModel @Inject constructor(
                     DashboardUiState(
                         totalSpent = totalSpent,
                         totalIncome = totalIncome,
+                        allTimeBalance = allTimeBalance,
                         monthlyBudget = budget,
                         budgetRemaining = if (budget > 0) budget - totalSpent else 0.0,
                         recentTransactions = transactions.map { tx ->
@@ -96,8 +108,6 @@ class DashboardViewModel @Inject constructor(
                         isLoading = false,
                         activeProfile = activeProfile,
                         allProfiles = profiles,
-                        // Ambil waktu transaksi terbaru sebagai lastSyncTime
-                        // Gunakan createdAt (bukan date) karena createdAt menyimpan jam yang akurat
                         lastSyncTime = transactions.maxOfOrNull { it.createdAt } ?: System.currentTimeMillis()
                     )
                 }
