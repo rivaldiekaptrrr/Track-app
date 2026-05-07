@@ -138,14 +138,14 @@ object VoiceParser {
             var formattedText = text.lowercase()
                 // Compound "X juta Y ribu"
                 .replace(Regex("""(\d+[.,]?\d*\s*(?:juta|jt)\s+\d+[.,]?\d*\s*(?:ribu|rb|rebu))"""), "$1|SPLIT|")
-                // Rupiah "Rp 30.000"
-                .replace(Regex("""((?:rp|rupiah)\.?\s*\d{1,3}(?:[.,]\d{3})*)"""), "$1|SPLIT|")
-                // Multiplier "30 ribu"
-                .replace(Regex("""(\d+[.,]?\d*\s*(?:juta|jt|ribu|rb|rebu|ratus\s+ribu|ratus\s+rb|ratus\s+rebu))"""), "$1|SPLIT|")
+                // Rupiah "Rp 30.000" or "Rp 30000"
+                .replace(Regex("""((?:rp|rupiah)\.?\s*(?:\d{1,3}(?:[.,]\d{3})+|\d+))"""), "$1|SPLIT|")
+                // Multiplier "30 ribu", "30k"
+                .replace(Regex("""(\d+[.,]?\d*\s*(?:juta|jt|ribu|rb|rebu|ratus\s+ribu|ratus\s+rb|ratus\s+rebu|k\b))"""), "$1|SPLIT|")
                 // Slang "gocap"
                 .replace(Regex("""\b(gocap|cepek|gopek|seceng|noban|goban|selawe)\b"""), "$1|SPLIT|")
-                // Plain large numbers "30000"
-                .replace(Regex("""\b(\d{3,})\b"""), "$1|SPLIT|")
+                // Plain large numbers "30000" or "30.000"
+                .replace(Regex("""(?<!\d)(\d{1,3}(?:[.,]\d{3})+|\d{3,})(?!\d)"""), "$1|SPLIT|")
                 
             // Deduplicate SPLIT tokens just in case multiple patterns matched the same amount
             formattedText = formattedText.replace(Regex("""(\|SPLIT\|\s*)+"""), "|SPLIT|")
@@ -167,8 +167,8 @@ object VoiceParser {
      *          "Rp. 50.000", "Rp.50,000", "Rp50000", etc.
      */
     private fun extractRupiahFormat(text: String): Long? {
-        // Pattern: "rp" or "rupiah" optionally followed by "." and/or spaces, then digits with dot/comma thousand separators
-        val rupiahPattern = Regex("""(?:rp|rupiah)\.?\s*(\d{1,3}(?:[.,]\d{3})*)""")
+        // Pattern: "rp" or "rupiah" optionally followed by "." and/or spaces, then digits with or without thousand separators
+        val rupiahPattern = Regex("""(?:rp|rupiah)\.?\s*(\d{1,3}(?:[.,]\d{3})+|\d+)""")
         val match = rupiahPattern.find(text) ?: return null
         val numberStr = match.groupValues[1].replace(".", "").replace(",", "")
         return numberStr.toLongOrNull()
@@ -229,7 +229,8 @@ object VoiceParser {
         val patterns = listOf(
             Regex("""(\d+[.,]?\d*)\s*(?:juta|jt)""") to 1_000_000.0,
             Regex("""(\d+[.,]?\d*)\s*(?:ribu|rb|rebu)""") to 1_000.0,
-            Regex("""(\d+[.,]?\d*)\s*(?:ratus)\s*(?:ribu|rb|rebu)""") to 100_000.0
+            Regex("""(\d+[.,]?\d*)\s*(?:ratus)\s*(?:ribu|rb|rebu)""") to 100_000.0,
+            Regex("""(\d+[.,]?\d*)\s*(?:k)\b""") to 1_000.0
         )
 
         // Also handle "setengah juta" = 500,000
@@ -339,14 +340,18 @@ object VoiceParser {
     }
 
     private fun extractPlainNumber(text: String): Long? {
-        // Find standalone numbers, including formats with thousand separators (e.g., 350.000 or 50,000)
-        val plainPattern = Regex("""(?<!\d)(\d{1,3}(?:[.,]\d{3})*)(?!\d)""")
+        // Find standalone numbers, either formatted with dots/commas or plain numbers
+        val plainPattern = Regex("""(?<!\d)(\d{1,3}(?:[.,]\d{3})+|\d+)(?!\d)""")
         val matches = plainPattern.findAll(text).toList()
-        // Take the last match (override logic)
-        val lastMatchStr = matches.lastOrNull()?.groupValues?.get(1) ?: return null
-        // Clean out dots and commas before parsing
-        val numberStr = lastMatchStr.replace(".", "").replace(",", "")
-        return numberStr.toLongOrNull()
+        
+        // Map all valid matches to Long, taking the maximum value.
+        // This prevents picking up small numbers like quantities instead of prices.
+        val validNumbers = matches.mapNotNull { match ->
+            val numStr = match.groupValues[1].replace(".", "").replace(",", "")
+            numStr.toLongOrNull()
+        }
+        
+        return validNumbers.maxOrNull()
     }
 
     private fun parseDecimal(value: String): Double {
