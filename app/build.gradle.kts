@@ -22,9 +22,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("shared") {
+            storeFile = file("trackit-keystore.jks")
+            storePassword = "trackit123"
+            keyAlias = "trackit"
+            keyPassword = "trackit123"
+        }
+    }
+
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("shared")
+        }
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("shared")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
