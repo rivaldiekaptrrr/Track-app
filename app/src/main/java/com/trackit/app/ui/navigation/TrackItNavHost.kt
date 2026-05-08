@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.trackit.app.ui.budget.CategoryBudgetScreen
 import com.trackit.app.ui.chart.ChartScreen
 import com.trackit.app.ui.dashboard.DashboardScreen
 import com.trackit.app.ui.dashboard.DashboardViewModel
@@ -37,7 +38,8 @@ fun TrackItNavHost(
         Screen.EditTransaction.route,
         "edit_transaction/{transactionId}",
         Screen.CustomKeywords.route,
-        Screen.ProfileManagement.route
+        Screen.ProfileManagement.route,
+        Screen.CategoryBudget.route
     )
     val shouldShowNavBar = hideNavBarRoutes.none { currentRoute?.startsWith(it.substringBefore("{")) == true }
 
@@ -122,6 +124,9 @@ fun TrackItNavHost(
                     onExportCsv = onExportCsv,
                     onNavigateToCustomKeywords = {
                         navController.navigate(Screen.CustomKeywords.route)
+                    },
+                    onNavigateToCategoryBudget = {
+                        navController.navigate(Screen.CategoryBudget.route)
                     }
                 )
             }
@@ -134,6 +139,12 @@ fun TrackItNavHost(
 
             composable(Screen.ProfileManagement.route) {
                 ProfileManagementScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.CategoryBudget.route) {
+                CategoryBudgetScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

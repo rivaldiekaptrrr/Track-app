@@ -21,9 +21,10 @@ import kotlinx.coroutines.launch
         TransactionEntity::class,
         CategoryEntity::class,
         BudgetSettingEntity::class,
-        com.trackit.app.data.local.entity.ProfileEntity::class
+        com.trackit.app.data.local.entity.ProfileEntity::class,
+        com.trackit.app.data.local.entity.CategoryBudgetEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -32,6 +33,7 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun budgetSettingDao(): BudgetSettingDao
     abstract fun profileDao(): com.trackit.app.data.local.dao.ProfileDao
+    abstract fun categoryBudgetDao(): com.trackit.app.data.local.dao.CategoryBudgetDao
 
     companion object {
         /**
@@ -87,6 +89,22 @@ abstract class TrackItDatabase : RoomDatabase() {
                 db.execSQL("INSERT INTO budget_settings_new (profileId, monthlyBudget) SELECT 1, monthlyBudget FROM budget_settings")
                 db.execSQL("DROP TABLE budget_settings")
                 db.execSQL("ALTER TABLE budget_settings_new RENAME TO budget_settings")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `category_budgets` (
+                        `categoryId` INTEGER NOT NULL,
+                        `amount` REAL NOT NULL,
+                        `alertPercentage` REAL NOT NULL DEFAULT 0.9,
+                        `lastWarningMonth` TEXT NOT NULL DEFAULT '',
+                        `profileId` INTEGER NOT NULL DEFAULT 1,
+                        PRIMARY KEY(`categoryId`),
+                        FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """)
             }
         }
 

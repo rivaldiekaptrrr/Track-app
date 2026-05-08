@@ -16,6 +16,9 @@ class CategoryRepository @Inject constructor(
     suspend fun getById(id: Long): CategoryEntity? =
         categoryDao.getById(id)
 
+    suspend fun getCategoryByIdSync(id: Long): CategoryEntity? =
+        categoryDao.getById(id)
+
     suspend fun insert(category: CategoryEntity): Long =
         categoryDao.insert(category)
 

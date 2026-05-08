@@ -25,7 +25,7 @@ object DatabaseModule {
             TrackItDatabase::class.java,
             "trackit_database"
         )
-        .addMigrations(TrackItDatabase.MIGRATION_1_2, TrackItDatabase.MIGRATION_2_3, TrackItDatabase.MIGRATION_3_4, TrackItDatabase.MIGRATION_4_5)
+        .addMigrations(TrackItDatabase.MIGRATION_1_2, TrackItDatabase.MIGRATION_2_3, TrackItDatabase.MIGRATION_3_4, TrackItDatabase.MIGRATION_4_5, TrackItDatabase.MIGRATION_5_6)
         .build()
     }
 
@@ -44,4 +44,8 @@ object DatabaseModule {
     @Provides
     fun provideProfileDao(database: TrackItDatabase): com.trackit.app.data.local.dao.ProfileDao =
         database.profileDao()
+
+    @Provides
+    fun provideCategoryBudgetDao(database: TrackItDatabase): com.trackit.app.data.local.dao.CategoryBudgetDao =
+        database.categoryBudgetDao()
 }

@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.TransactionEntity
+import com.trackit.app.data.repository.CategoryBudgetRepository
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.TransactionRepository
+import com.trackit.app.util.CategoryBudgetNotifier
 import com.trackit.app.util.DateUtils
 import com.trackit.app.util.NumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +43,7 @@ data class TransactionFormState(
 class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
+    private val categoryBudgetNotifier: CategoryBudgetNotifier,
     private val preferencesManager: PreferencesManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -376,6 +379,14 @@ class TransactionViewModel @Inject constructor(
                 }
 
                 _formState.update { it.copy(isSaving = false, savedSuccessfully = true, unrecognizedVoiceText = null, savedBatchSize = 0) }
+
+                // Cek budget kategori setelah berhasil simpan pengeluaran
+                if (state.type == "EXPENSE" && state.selectedCategoryId != null) {
+                    categoryBudgetNotifier.checkAfterTransaction(
+                        categoryId = state.selectedCategoryId,
+                        profileId = state.activeProfileId
+                    )
+                }
             } catch (e: Exception) {
                 _formState.update { it.copy(isSaving = false, errorMessage = e.message) }
             }
