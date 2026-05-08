@@ -297,6 +297,14 @@ class TransactionViewModel @Inject constructor(
                         profileId = _formState.value.activeProfileId
                     )
                     transactionRepository.insert(transaction)
+
+                    // Cek budget kategori setelah berhasil simpan pengeluaran batch
+                    if (transaction.type == "EXPENSE" && transaction.categoryId != null) {
+                        categoryBudgetNotifier.checkAfterTransaction(
+                            categoryId = transaction.categoryId,
+                            profileId = transaction.profileId
+                        )
+                    }
                 }
                 _formState.update { 
                     it.copy(
@@ -378,8 +386,6 @@ class TransactionViewModel @Inject constructor(
                     }
                 }
 
-                _formState.update { it.copy(isSaving = false, savedSuccessfully = true, unrecognizedVoiceText = null, savedBatchSize = 0) }
-
                 // Cek budget kategori setelah berhasil simpan pengeluaran
                 if (state.type == "EXPENSE" && state.selectedCategoryId != null) {
                     categoryBudgetNotifier.checkAfterTransaction(
@@ -387,6 +393,8 @@ class TransactionViewModel @Inject constructor(
                         profileId = state.activeProfileId
                     )
                 }
+
+                _formState.update { it.copy(isSaving = false, savedSuccessfully = true, unrecognizedVoiceText = null, savedBatchSize = 0) }
             } catch (e: Exception) {
                 _formState.update { it.copy(isSaving = false, errorMessage = e.message) }
             }
