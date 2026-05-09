@@ -320,6 +320,114 @@ fun SettingsScreen(
                 }
             }
 
+            // Notification Settings
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Pengaturan Notifikasi",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Daily Reminder Toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Pengingat Harian",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                "Ingatkan jika belum mencatat pengeluaran hari ini",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = uiState.isDailyReminderEnabled,
+                            onCheckedChange = { enabled -> 
+                                viewModel.toggleDailyReminder(enabled)
+                                if (enabled) {
+                                    com.trackit.app.worker.ReminderScheduler.scheduleReminder(context, uiState.dailyReminderTime)
+                                } else {
+                                    com.trackit.app.worker.ReminderScheduler.cancelReminder(context)
+                                }
+                            }
+                        )
+                    }
+
+                    if (uiState.isDailyReminderEnabled) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // Time Picker
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val timeParts = uiState.dailyReminderTime.split(":")
+                                    val hour = timeParts.getOrNull(0)?.toIntOrNull() ?: 20
+                                    val minute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
+
+                                    android.app.TimePickerDialog(
+                                        context,
+                                        { _, selectedHour, selectedMinute ->
+                                            val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+                                            viewModel.updateDailyReminderTime(formattedTime)
+                                            com.trackit.app.worker.ReminderScheduler.scheduleReminder(context, formattedTime)
+                                        },
+                                        hour,
+                                        minute,
+                                        true // 24 hour view
+                                    ).show()
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.AccessTime,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    "Waktu Pengingat",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Text(
+                                text = uiState.dailyReminderTime,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
             // Export PDF
             Card(
                 shape = RoundedCornerShape(16.dp),

@@ -64,4 +64,7 @@ class TransactionRepository @Inject constructor(
 
     suspend fun countTransactionsByCategory(categoryId: Long): Int =
         transactionDao.countTransactionsByCategory(categoryId)
+
+    suspend fun countExpensesForDaySync(startOfDay: Long, endOfDay: Long, profileId: Long): Int =
+        transactionDao.countExpensesForDaySync(startOfDay, endOfDay, profileId)
 }

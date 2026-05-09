@@ -17,7 +17,9 @@ data class SettingsUiState(
     val isTtsEnabled: Boolean = true,
     val savedSuccessfully: Boolean = false,
     val errorMessage: String? = null,
-    val activeProfileId: Long = 1L
+    val activeProfileId: Long = 1L,
+    val isDailyReminderEnabled: Boolean = false,
+    val dailyReminderTime: String = "20:00"
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,12 +35,26 @@ class SettingsViewModel @Inject constructor(
     init {
         loadTtsPreference()
         loadBudgetForActiveProfile()
+        loadDailyReminderPreferences()
     }
 
     private fun loadTtsPreference() {
         viewModelScope.launch {
             preferencesManager.isTtsEnabled.collect { isEnabled ->
                 _uiState.update { it.copy(isTtsEnabled = isEnabled) }
+            }
+        }
+    }
+
+    private fun loadDailyReminderPreferences() {
+        viewModelScope.launch {
+            preferencesManager.isDailyReminderEnabled.collect { isEnabled ->
+                _uiState.update { it.copy(isDailyReminderEnabled = isEnabled) }
+            }
+        }
+        viewModelScope.launch {
+            preferencesManager.dailyReminderTime.collect { time ->
+                _uiState.update { it.copy(dailyReminderTime = time) }
             }
         }
     }
@@ -84,6 +100,18 @@ class SettingsViewModel @Inject constructor(
     fun toggleTts(enabled: Boolean) {
         viewModelScope.launch {
             preferencesManager.setTtsEnabled(enabled)
+        }
+    }
+
+    fun toggleDailyReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setDailyReminderEnabled(enabled)
+        }
+    }
+
+    fun updateDailyReminderTime(time: String) {
+        viewModelScope.launch {
+            preferencesManager.setDailyReminderTime(time)
         }
     }
 }

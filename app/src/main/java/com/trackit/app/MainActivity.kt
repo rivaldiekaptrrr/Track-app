@@ -88,6 +88,15 @@ class MainActivity : FragmentActivity() {
         // Schedule periodic workers
         scheduleWorkers()
 
+        // Schedule daily reminder if enabled
+        lifecycleScope.launch {
+            val isEnabled = preferencesManager.isDailyReminderEnabled.first()
+            if (isEnabled) {
+                val time = preferencesManager.dailyReminderTime.first()
+                com.trackit.app.worker.ReminderScheduler.scheduleReminder(this@MainActivity, time)
+            }
+        }
+
         var showRestoreDialog by mutableStateOf(false)
         lifecycleScope.launch {
             val activeProfileId = preferencesManager.activeProfileId.first()

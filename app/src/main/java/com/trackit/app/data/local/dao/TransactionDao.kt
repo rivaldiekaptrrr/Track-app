@@ -94,6 +94,12 @@ interface TransactionDao {
         LIMIT :limit
     """)
     fun getRecentTransactions(profileId: Long, limit: Int = 10): Flow<List<TransactionEntity>>
+
+    @Query("""
+        SELECT COUNT(*) FROM transactions 
+        WHERE date >= :startOfDay AND date < :endOfDay AND type = 'EXPENSE' AND profileId = :profileId
+    """)
+    suspend fun countExpensesForDaySync(startOfDay: Long, endOfDay: Long, profileId: Long): Int
 }
 
 data class CategorySpending(
