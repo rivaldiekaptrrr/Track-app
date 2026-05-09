@@ -115,6 +115,24 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    val updateViewModel: com.trackit.app.updater.UpdateViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                    val updateUiState by updateViewModel.uiState.collectAsState()
+
+                    LaunchedEffect(Unit) {
+                        updateViewModel.checkForUpdate(silent = true)
+                    }
+
+                    if (updateUiState.updateInfo != null && updateUiState.updateInfo!!.isUpdateAvailable) {
+                        com.trackit.app.ui.components.UpdateDialog(
+                            updateInfo = updateUiState.updateInfo!!,
+                            downloadState = updateUiState.downloadState,
+                            onStartDownload = { updateViewModel.startDownload() },
+                            onInstall = { updateViewModel.installUpdate(it) },
+                            onDismiss = { updateViewModel.dismissUpdateDialog() },
+                            onResetDownload = { updateViewModel.resetDownloadState() }
+                        )
+                    }
+
                     var biometricError by remember { mutableStateOf<String?>(null) }
                     isBiometricAvailable = remember { checkBiometricAvailability() }
                     

@@ -555,7 +555,46 @@ fun SettingsScreen(
                         "• Data tersimpan secara offline di perangkat Anda\n• Privasi data terjamin\n• Tidak memerlukan koneksi internet",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    val updateViewModel: com.trackit.app.updater.UpdateViewModel = hiltViewModel()
+                    val updateUiState by updateViewModel.uiState.collectAsStateWithLifecycle()
+                    
+                    Button(
+                        onClick = { updateViewModel.checkForUpdate(silent = false) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (updateUiState.isChecking) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Mengecek...")
+                        } else {
+                            Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Cek Pembaruan")
+                        }
+                    }
+                    
+                    updateUiState.checkError?.let { error ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    if (updateUiState.updateInfo != null) {
+                        com.trackit.app.ui.components.UpdateDialog(
+                            updateInfo = updateUiState.updateInfo!!,
+                            downloadState = updateUiState.downloadState,
+                            onStartDownload = { updateViewModel.startDownload() },
+                            onInstall = { updateViewModel.installUpdate(it) },
+                            onDismiss = { updateViewModel.dismissUpdateDialog() },
+                            onResetDownload = { updateViewModel.resetDownloadState() }
+                        )
+                    }
                 }
             }
         }

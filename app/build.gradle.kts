@@ -13,8 +13,8 @@ android {
         applicationId = "com.trackit.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -108,6 +108,9 @@ dependencies {
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Networking
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Charts - Vico
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
