@@ -83,7 +83,7 @@ class DailyReminderWorker @AssistedInject constructor(
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification) // Ensure this icon exists or fallback to system icon if needed.
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("Belum mencatat pengeluaran?")
             .setContentText("Ayo catat pengeluaran hari ini agar keuanganmu tetap terpantau!")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
