@@ -28,13 +28,13 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE categoryId = :categoryId")
     suspend fun countTransactionsByCategory(categoryId: Long): Int
 
-    @Query("SELECT * FROM transactions WHERE profileId = :profileId ORDER BY date DESC")
+    @Query("SELECT * FROM transactions WHERE profileId = :profileId ORDER BY date DESC, createdAt DESC")
     fun getAllTransactions(profileId: Long): Flow<List<TransactionEntity>>
 
     @Query("""
         SELECT * FROM transactions 
         WHERE date >= :startOfMonth AND date < :endOfMonth AND profileId = :profileId
-        ORDER BY date DESC
+        ORDER BY date DESC, createdAt DESC
     """)
     fun getTransactionsByMonth(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<TransactionEntity>>
 
@@ -90,7 +90,7 @@ interface TransactionDao {
     @Query("""
         SELECT * FROM transactions 
         WHERE profileId = :profileId
-        ORDER BY date DESC 
+        ORDER BY date DESC, createdAt DESC 
         LIMIT :limit
     """)
     fun getRecentTransactions(profileId: Long, limit: Int = 10): Flow<List<TransactionEntity>>
