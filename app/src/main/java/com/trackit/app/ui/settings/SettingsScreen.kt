@@ -555,6 +555,7 @@ fun SettingsScreen(
                         "• Data tersimpan secara offline di perangkat Anda\n• Privasi data terjamin\n• Tidak memerlukan koneksi internet",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     val updateViewModel: com.trackit.app.updater.UpdateViewModel = hiltViewModel()
