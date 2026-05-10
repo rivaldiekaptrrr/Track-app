@@ -1,6 +1,6 @@
 # 🎤 TrackIt — Smart Voice Expense Tracker
 
-> Aplikasi pencatatan keuangan pribadi berbasis Android dengan teknologi **Offline Voice Tracking** (Speech-to-Text), **Natural Machine Learning** untuk kategorisasi otomatis, keamanan biometrik, dan notifikasi anggaran cerdas.
+> Aplikasi pencatatan keuangan pribadi berbasis Android dengan teknologi **Offline Voice Tracking** (Speech-to-Text), **Natural Machine Learning** untuk kategorisasi otomatis, keamanan biometrik, notifikasi anggaran cerdas, dan **Pembaruan Aplikasi Mandiri (In-App Update)** langsung dari GitHub Releases.
 
 ---
 
@@ -69,6 +69,14 @@
 | **Export Laporan** | Ekspor transaksi bulanan ke format **PDF (A4)** dan **CSV (Excel)**. |
 | **Budget Alert** | Notifikasi otomatis dikirim jika ≥ 80% anggaran tercapai. |
 | **Transaksi Berulang** | Transaksi otomatis harian/mingguan/bulanan via WorkManager. |
+
+### 🟣 Fase 5 — Maintenance & Delivery (Pembaruan Mandiri)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| **In-App Update (Auto)** | Mengecek versi terbaru dari GitHub Releases API secara *silent* di background setiap kali aplikasi dibuka. |
+| **Pembaruan Manual** | Cek ketersediaan update melalui menu Settings dengan indikator *loading* responsif. |
+| **Download & Install Otomatis** | Mengunduh APK baru dengan progress bar *real-time* dan meluncurkan *Android Installer* secara langsung tanpa perlu repot ke browser. |
 
 ---
 
@@ -158,6 +166,14 @@ Buka Home Screen → Tekan Widget Voice 🎤 → Ucapkan: "beli kopi 20 ribu bel
 → Setelah antrean habis, TTS berkata: "Tersimpan, 2 transaksi".
 ```
 
+### Alur 4: Pembaruan Mandiri (In-App Update)
+```text
+(Skenario Auto) Buka Aplikasi → Aplikasi diam-diam mengecek versi ke GitHub
+→ Ditemukan versi baru → Dialog "Pembaruan Tersedia" muncul di layar
+→ Klik "Unduh Sekarang" → Progress bar berjalan (0% - 100%)
+→ Selesai mengunduh → Klik "Pasang" → Sistem Android melakukan instalasi versi terbaru.
+```
+
 ---
 
 ## 🗄 Skema Database
@@ -207,6 +223,8 @@ Buka Home Screen → Tekan Widget Voice 🎤 → Ucapkan: "beli kopi 20 ribu bel
 | `RECORD_AUDIO` | Akses mikrofon untuk Speech-to-Text |
 | `USE_BIOMETRIC` | Autentikasi sidik jari |
 | `POST_NOTIFICATIONS` | Mengirim notifikasi budget alert |
+| `REQUEST_INSTALL_PACKAGES` | Menginstal versi baru APK (In-App Update) |
+| `INTERNET` | Mengunduh APK pembaruan dari GitHub |
 
 ---
 

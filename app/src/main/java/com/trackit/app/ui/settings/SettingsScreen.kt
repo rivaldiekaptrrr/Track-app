@@ -541,7 +541,7 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "TrackIt v1.0",
+                        "TrackIt v${com.trackit.app.BuildConfig.VERSION_NAME}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -552,7 +552,12 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "• Data tersimpan secara offline di perangkat Anda\n• Privasi data terjamin\n• Tidak memerlukan koneksi internet",
+                        "• Pencatatan transaksi pintar menggunakan Suara (Voice Command)\n" +
+                        "• Machine Learning untuk mempelajari kebiasaan pengeluaran\n" +
+                        "• Backup, Export & Import data (PDF, CSV, Excel)\n" +
+                        "• Pembaruan aplikasi mandiri otomatis (In-App Update)\n" +
+                        "• Tampilan Mode Gelap (Dark Mode) dinamis\n" +
+                        "• Data tersimpan offline, privasi data 100% terjamin",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
