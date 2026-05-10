@@ -40,11 +40,14 @@ class UpdateViewModel @Inject constructor(
                 val currentVersion = BuildConfig.VERSION_NAME
                 val updateInfo = appUpdateChecker.checkForUpdate(repoOwner, repoName, currentVersion)
                 
+                // Hanya tampilkan dialog jika benar-benar ada versi baru
+                val actualUpdateInfo = if (updateInfo?.isUpdateAvailable == true) updateInfo else null
+                
                 _uiState.update { 
                     it.copy(
                         isChecking = false,
-                        updateInfo = updateInfo,
-                        checkError = if (!silent && updateInfo == null) "Tidak dapat terhubung atau tidak ada pembaruan." else null
+                        updateInfo = actualUpdateInfo,
+                        checkError = if (!silent && actualUpdateInfo == null) "Aplikasi sudah versi terbaru." else null
                     )
                 }
             } catch (e: Exception) {
