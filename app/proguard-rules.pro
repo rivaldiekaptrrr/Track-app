@@ -19,3 +19,8 @@
 -keepclassmembers class * {
   @com.google.api.client.util.Key <fields>;
 }
+
+# Suppress warnings for missing Apache HttpClient classes (removed in Android 6.0)
+-dontwarn org.apache.http.**
+-dontwarn com.google.api.client.http.apache.v2.**
+-dontwarn com.google.api.client.googleapis.apache.v2.**
