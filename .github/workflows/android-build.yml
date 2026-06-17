@@ -63,6 +63,7 @@ jobs:
           name: "TrackIt ${{ github.ref_name }}"
           draft: false
           prerelease: false
+          generate_release_notes: true
           files: app-trackit-${{ github.ref_name }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

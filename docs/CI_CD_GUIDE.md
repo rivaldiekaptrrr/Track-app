@@ -128,9 +128,11 @@ git push origin main
 #### 3. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis!
 
 ```bash
-git tag v1.2.0
+git tag -a v1.2.0 -m "Catatan Rilis: Menambahkan fitur X dan memperbaiki bug Y"
 git push origin v1.2.0
 ```
+
+> 💡 **Tips Penting:** Gunakan flag `-a` (annotated tag) dan `-m` (message) seperti contoh di atas. Pesan yang Anda tuliskan di dalam tanda kutip tersebut akan **otomatis menjadi teks Catatan Rilis** yang muncul di dalam pop-up aplikasi TrackIt!
 
 Setelah perintah ini, GitHub Actions akan berjalan dengan **alur penuh** termasuk pembuatan GitHub Release:
 

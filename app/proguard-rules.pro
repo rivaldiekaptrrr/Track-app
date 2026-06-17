@@ -10,3 +10,12 @@
 
 # ML Kit
 -keep class com.google.mlkit.** { *; }
+
+# Google API Client (Drive)
+-keep class com.google.api.** { *; }
+-keep class com.google.api.services.drive.** { *; }
+-keep class com.google.api.client.** { *; }
+-keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault
+-keepclassmembers class * {
+  @com.google.api.client.util.Key <fields>;
+}
