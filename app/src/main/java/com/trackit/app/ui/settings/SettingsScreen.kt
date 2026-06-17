@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.util.BackupManager
+import com.trackit.app.util.GDriveBackupManager
+import kotlinx.coroutines.launch
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
@@ -37,7 +39,29 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
+
+    val gDriveSignInLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            if (task.isSuccessful) {
+                scope.launch {
+                    Toast.makeText(context, "Mencadangkan ke Google Drive...", Toast.LENGTH_SHORT).show()
+                    val backupResult = GDriveBackupManager.backupDatabase(context)
+                    if (backupResult.isSuccess) {
+                        Toast.makeText(context, "Backup berhasil disimpan di Google Drive", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(context, "Gagal backup: ${backupResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Login Google gagal", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let { 
@@ -549,6 +573,52 @@ fun SettingsScreen(
                         )
                         Text(
                             "Muat ulang data dari file .db manual",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                }
+            }
+
+            // Google Drive Backup
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().clickable {
+                    if (GDriveBackupManager.isSignedIn(context)) {
+                        scope.launch {
+                            Toast.makeText(context, "Mencadangkan ke Google Drive...", Toast.LENGTH_SHORT).show()
+                            val backupResult = GDriveBackupManager.backupDatabase(context)
+                            if (backupResult.isSuccess) {
+                                Toast.makeText(context, "Backup berhasil disimpan di Google Drive", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, "Gagal backup: ${backupResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        gDriveSignInLauncher.launch(GDriveBackupManager.getSignInIntent(context))
+                    }
+                },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            "Backup ke Google Drive",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "Simpan data Anda dengan aman di awan",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

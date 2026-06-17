@@ -50,26 +50,21 @@ Dokumen ini adalah panduan **khusus Developer** untuk mengonfigurasi Google Driv
 4. Isi formulir:
    - **Name**: `TrackIt Android`
    - **Package name**: `com.trackit.app`
-   - **SHA-1 certificate fingerprint**: *(lihat cara mendapatkannya di bawah)*
+   - **SHA-1 certificate fingerprint**: `51:4B:75:08:E3:43:8D:78:FE:20:38:0A:6A:56:D0:A9:FA:E0:71:CA`
 5. Klik **"Create"**
 
-> ⚠️ **Penting:** Kamu perlu membuat **2 Client ID terpisah** — satu untuk *Debug Keystore* dan satu lagi untuk *Release Keystore* (Production).
+> 💡 **Kabar Baik:** Karena aplikasi TrackIt di repositori ini dikonfigurasi untuk menggunakan keystore yang sama (`trackit-keystore.jks`) baik untuk *Debug* maupun *Release*, Anda **hanya perlu membuat 1 Client ID** saja untuk Android. Client ID ini akan berfungsi baik saat Anda menguji di HP (debug) maupun saat aplikasi dirilis.
 
 ---
 
-## Cara Mendapatkan SHA-1 Fingerprint
+## Cara Mendapatkan SHA-1 Fingerprint Secara Manual
 
-### Debug Keystore (otomatis oleh Android Studio)
-Jalankan perintah berikut di Terminal:
-```bash
-keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
-```
-Salin nilai **SHA1** dari output.
+Jika di masa mendatang Anda perlu mengekstrak ulang SHA-1 dari keystore bawaan proyek ini (`trackit-keystore.jks`), Anda bisa menjalankan perintah berikut di Terminal (di dalam folder `app/`):
 
-### Release Keystore (Keystore kamu sendiri)
 ```bash
-keytool -list -v -keystore /path/to/your/release.keystore -alias your-key-alias
+keytool -list -v -keystore trackit-keystore.jks -alias trackit -storepass trackit123 -keypass trackit123
 ```
+Salin nilai **SHA1** dari output sertifikat.
 
 ---
 
@@ -119,12 +114,12 @@ Setelah semua konfigurasi selesai:
 
 ## Catatan Penting
 
-| Lingkungan | SHA-1 | Client ID |
-|---|---|---|
-| Debug | Debug Keystore SHA-1 | Debug Android Client |
-| Release/Play Store | Release Keystore SHA-1 | Production Android Client |
+| Lingkungan | SHA-1 |
+|---|---|
+| Lokal (Debug) | `51:4B:75:08:E3:43:8D:78:FE:20:38:0A:6A:56:D0:A9:FA:E0:71:CA` |
+| GitHub Actions (Release) | `51:4B:75:08:E3:43:8D:78:FE:20:38:0A:6A:56:D0:A9:FA:E0:71:CA` |
 
-> Jika menggunakan Play App Signing, SHA-1 *Release* harus diambil dari **Google Play Console → Setup → App Signing**.
+> Karena proyek ini berbagi keystore yang sama, SHA-1 di atas berlaku untuk semua versi. Namun, jika Anda mendaftarkannya ke **Google Play Console** dan Google mengaktifkan fitur *Play App Signing*, Google akan menandatangani ulang aplikasi Anda dengan keystore Google. Jika itu terjadi, Anda harus menambahkan *Client ID* baru di Google Cloud Console menggunakan SHA-1 yang diberikan oleh Play Console.
 
 ---
 
