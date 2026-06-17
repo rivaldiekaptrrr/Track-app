@@ -575,6 +575,7 @@ fun SettingsScreen(
                             "Muat ulang data dari file .db manual",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
