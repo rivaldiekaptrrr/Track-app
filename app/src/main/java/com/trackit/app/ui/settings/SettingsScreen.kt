@@ -29,14 +29,15 @@ import android.net.Uri
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onExportPdf: () -> Unit,
-    onExportCsv: () -> Unit,
+    onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onNavigateToCustomKeywords: () -> Unit,
     onNavigateToCategoryBudget: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showExportDialog by remember { mutableStateOf(false) }
 
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let { 
@@ -428,7 +429,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Export PDF
+            // Export (Laporan) — dialog-based
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
@@ -451,34 +452,71 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Ekspor daftar transaksi bulan ini ke format PDF atau Excel (CSV) untuk dibagikan atau direkap ulang.",
+                        "Ekspor laporan keuangan ke format PDF atau Excel (CSV) dengan filter tanggal, judul, dan jenis transaksi.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    Button(
+                        onClick = { showExportDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = onExportPdf,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("PDF")
-                        }
+                        Icon(Icons.Default.FileDownload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Buat & Ekspor Laporan")
+                    }
+                }
+            }
 
-                        OutlinedButton(
-                            onClick = onExportCsv,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.TableChart, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Excel")
-                        }
+            // Mode Khusus Pengeluaran
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.TrendingDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Mode Khusus Pengeluaran",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "Aktifkan jika kamu hanya ingin mencatat pengeluaran. Fitur pemasukan akan disembunyikan di seluruh aplikasi, dan kartu beranda akan menampilkan total pengeluaran sebagai fokus utama.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            if (uiState.isExpenseOnlyMode) "Aktif" else "Nonaktif",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = if (uiState.isExpenseOnlyMode) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Switch(
+                            checked = uiState.isExpenseOnlyMode,
+                            onCheckedChange = { viewModel.toggleExpenseOnlyMode(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.error,
+                                checkedTrackColor = MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                            )
+                        )
                     }
                 }
             }
@@ -604,5 +642,20 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showExportDialog) {
+        ExportReportDialog(
+            onDismiss = { showExportDialog = false },
+            isExpenseOnlyMode = uiState.isExpenseOnlyMode,
+            onExportPdf = { title, startDate, endDate, typeFilter ->
+                showExportDialog = false
+                onExportPdf(title, startDate, endDate, typeFilter)
+            },
+            onExportCsv = { title, startDate, endDate, typeFilter ->
+                showExportDialog = false
+                onExportCsv(title, startDate, endDate, typeFilter)
+            }
+        )
     }
 }

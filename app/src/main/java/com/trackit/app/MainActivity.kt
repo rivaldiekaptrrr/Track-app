@@ -158,8 +158,12 @@ class MainActivity : FragmentActivity() {
                         TrackItNavHost(
                             navController = navController,
                             startDestination = startDest,
-                            onExportPdf = { exportPdf() },
-                            onExportCsv = { exportCsv() }
+                            onExportPdf = { title, startDate, endDate, typeFilter ->
+                                exportPdf(title, startDate, endDate, typeFilter)
+                            },
+                            onExportCsv = { title, startDate, endDate, typeFilter ->
+                                exportCsv(title, startDate, endDate, typeFilter)
+                            }
                         )
 
                         if (showRestoreDialog) {
@@ -346,52 +350,56 @@ class MainActivity : FragmentActivity() {
         )
     }
 
-    private fun exportPdf() {
+    private fun exportPdf(
+        title: String = "Laporan Keuangan",
+        startDate: Long = DateUtils.getStartOfMonth(),
+        endDate: Long = DateUtils.getEndOfMonth(),
+        typeFilter: String = "ALL"
+    ) {
         lifecycleScope.launch {
             val activeProfileId = preferencesManager.activeProfileId.first()
-            val startOfMonth = DateUtils.getStartOfMonth()
-            val endOfMonth = DateUtils.getEndOfMonth()
-            val monthYear = DateUtils.formatMonthYear(System.currentTimeMillis())
-
+            val isExpenseOnly = preferencesManager.isExpenseOnlyMode.first()
             val transactions = transactionRepository
-                .getTransactionsByMonth(startOfMonth, endOfMonth, activeProfileId)
-                .first()
-
+                .getTransactionsByDateRange(startDate, endDate, activeProfileId)
             val categories = categoryRepository.getAllCategories(activeProfileId).first()
             val categoryMap = categories.associateBy { it.id }
 
-            val totalSpent = transactionRepository
-                .getTotalSpentInMonthSync(startOfMonth, endOfMonth, activeProfileId)
-
-            PdfExporter.exportMonthlyReport(
+            PdfExporter.exportReport(
                 context = this@MainActivity,
                 transactions = transactions,
                 categories = categoryMap,
-                monthYear = monthYear,
-                totalSpent = totalSpent
+                title = title,
+                startDate = startDate,
+                endDate = endDate,
+                typeFilter = typeFilter,
+                showIncomeColumn = !isExpenseOnly
             )
         }
     }
-    
-    private fun exportCsv() {
+
+    private fun exportCsv(
+        title: String = "Laporan Keuangan",
+        startDate: Long = DateUtils.getStartOfMonth(),
+        endDate: Long = DateUtils.getEndOfMonth(),
+        typeFilter: String = "ALL"
+    ) {
         lifecycleScope.launch {
             val activeProfileId = preferencesManager.activeProfileId.first()
-            val startOfMonth = DateUtils.getStartOfMonth()
-            val endOfMonth = DateUtils.getEndOfMonth()
-            val monthYear = DateUtils.formatMonthYear(System.currentTimeMillis())
-
+            val isExpenseOnly = preferencesManager.isExpenseOnlyMode.first()
             val transactions = transactionRepository
-                .getTransactionsByMonth(startOfMonth, endOfMonth, activeProfileId)
-                .first()
-
+                .getTransactionsByDateRange(startDate, endDate, activeProfileId)
             val categories = categoryRepository.getAllCategories(activeProfileId).first()
             val categoryMap = categories.associateBy { it.id }
 
-            CsvExporter.exportMonthlyReport(
+            CsvExporter.exportReport(
                 context = this@MainActivity,
                 transactions = transactions,
                 categories = categoryMap,
-                monthYear = monthYear
+                title = title,
+                startDate = startDate,
+                endDate = endDate,
+                typeFilter = typeFilter,
+                showIncomeColumn = !isExpenseOnly
             )
         }
     }

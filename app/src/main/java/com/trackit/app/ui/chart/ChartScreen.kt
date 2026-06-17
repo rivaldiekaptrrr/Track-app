@@ -8,12 +8,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,16 +39,12 @@ fun ChartScreen(
     viewModel: ChartViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
+    val haptic = LocalHapticFeedback.current
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Simple top header bar (no nested Scaffold)
         TopAppBar(
-            title = {
-                Text(
-                    "Statistik - ${DateUtils.formatMonthYear(System.currentTimeMillis())}",
-                    fontWeight = FontWeight.SemiBold
-                )
-            },
+            title = { Text("Statistik", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
@@ -55,20 +55,78 @@ fun ChartScreen(
             )
         )
 
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+        // Month navigation
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    viewModel.navigateToPreviousMonth()
+                }
             ) {
+                Icon(
+                    Icons.Default.ChevronLeft,
+                    contentDescription = "Bulan sebelumnya",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Text(
+                text = DateUtils.formatMonthYear(selectedMonth),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (viewModel.isCurrentMonth()) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface
+            )
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    viewModel.navigateToNextMonth()
+                },
+                enabled = !viewModel.isCurrentMonth()
+            ) {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = "Bulan berikutnya",
+                    tint = if (!viewModel.isCurrentMonth()) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Type filter (tersembunyi jika expense only mode aktif)
+        if (!uiState.isExpenseOnlyMode) {
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                SegmentedButton(
+                    selected = uiState.selectedTransactionType == "EXPENSE",
+                    onClick = { viewModel.setTransactionType("EXPENSE") },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                ) { Text("Pengeluaran") }
+                SegmentedButton(
+                    selected = uiState.selectedTransactionType == "INCOME",
+                    onClick = { viewModel.setTransactionType("INCOME") },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                ) { Text("Pemasukan") }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (uiState.spendingByCategory.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    "Belum ada data pengeluaran bulan ini",
+                    "Belum ada data ${if (uiState.selectedTransactionType == "INCOME") "pemasukan" else "pengeluaran"} bulan ini",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -79,13 +137,10 @@ fun ChartScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Pie Chart
                 item {
                     Card(
                         shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
@@ -95,27 +150,25 @@ fun ChartScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                "Pengeluaran per Kategori",
+                                if (uiState.selectedTransactionType == "INCOME") "Pemasukan per Kategori"
+                                else "Pengeluaran per Kategori",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.height(24.dp))
-                            PieChart(
-                                data = uiState.spendingByCategory,
-                                modifier = Modifier.size(220.dp)
-                            )
+                            PieChart(data = uiState.spendingByCategory, modifier = Modifier.size(220.dp))
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 "Total: ${CurrencyUtils.formatRupiah(uiState.totalSpent)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = if (uiState.selectedTransactionType == "INCOME")
+                                    Color(0xFF66BB6A) else MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
 
-                // Legend / Category Breakdown
                 item {
                     Text(
                         "Detail per Kategori",
@@ -133,25 +186,17 @@ fun ChartScreen(
 }
 
 @Composable
-private fun PieChart(
-    data: List<CategoryChartData>,
-    modifier: Modifier = Modifier
-) {
+private fun PieChart(data: List<CategoryChartData>, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val canvasSize = min(size.width, size.height)
         val radius = canvasSize / 2f
         val strokeWidth = canvasSize * 0.18f
-        val innerRadius = radius - strokeWidth
-
         var startAngle = -90f
-
         data.forEachIndexed { index, item ->
             val sweepAngle = item.percentage / 100f * 360f
             val color = if (item.category != null)
                 CategoryIconMapper.parseColor(item.category.colorHex)
-            else
-                ChartColors[index % ChartColors.size]
-
+            else ChartColors[index % ChartColors.size]
             drawArc(
                 color = color,
                 startAngle = startAngle,
@@ -173,9 +218,7 @@ private fun PieChart(
 private fun CategoryBreakdownItem(data: CategoryChartData) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier
@@ -190,8 +233,7 @@ private fun CategoryBreakdownItem(data: CategoryChartData) {
                     .background(
                         if (data.category != null)
                             CategoryIconMapper.parseColor(data.category.colorHex).copy(alpha = 0.15f)
-                        else
-                            MaterialTheme.colorScheme.surfaceVariant
+                        else MaterialTheme.colorScheme.surfaceVariant
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -200,14 +242,11 @@ private fun CategoryBreakdownItem(data: CategoryChartData) {
                     contentDescription = null,
                     tint = if (data.category != null)
                         CategoryIconMapper.parseColor(data.category.colorHex)
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
             }
-
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = data.category?.name ?: "Lainnya",
@@ -216,21 +255,18 @@ private fun CategoryBreakdownItem(data: CategoryChartData) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
-                    progress = data.percentage / 100f,
+                    progress = { data.percentage / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
                     color = if (data.category != null)
                         CategoryIconMapper.parseColor(data.category.colorHex)
-                    else
-                        MaterialTheme.colorScheme.primary,
+                    else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
-
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = CurrencyUtils.formatRupiah(data.amount),

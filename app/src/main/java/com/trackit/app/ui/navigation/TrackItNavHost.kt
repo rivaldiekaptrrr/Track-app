@@ -26,8 +26,8 @@ import com.trackit.app.ui.transaction.AddEditTransactionScreen
 fun TrackItNavHost(
     navController: NavHostController,
     startDestination: String = Screen.Dashboard.route,
-    onExportPdf: () -> Unit,
-    onExportCsv: () -> Unit
+    onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit
 ) {
     // Routes where bottom navbar should be hidden
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -120,8 +120,12 @@ fun TrackItNavHost(
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onExportPdf = onExportPdf,
-                    onExportCsv = onExportCsv,
+                    onExportPdf = { title, startDate, endDate, typeFilter ->
+                        onExportPdf(title, startDate, endDate, typeFilter)
+                    },
+                    onExportCsv = { title, startDate, endDate, typeFilter ->
+                        onExportCsv(title, startDate, endDate, typeFilter)
+                    },
                     onNavigateToCustomKeywords = {
                         navController.navigate(Screen.CustomKeywords.route)
                     },

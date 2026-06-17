@@ -100,6 +100,7 @@ fun AddEditTransactionScreen(
     // TTS Setup
     val preferencesManager = remember { com.trackit.app.data.local.PreferencesManager(context) }
     val isTtsEnabled by preferencesManager.isTtsEnabled.collectAsState(initial = true)
+    val isExpenseOnlyMode by preferencesManager.isExpenseOnlyMode.collectAsState(initial = false)
     
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
@@ -265,24 +266,23 @@ fun AddEditTransactionScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Type Selection
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                SegmentedButton(
-                    selected = formState.type == "EXPENSE",
-                    onClick = { viewModel.updateType("EXPENSE") },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                ) {
-                    Text("Pengeluaran")
+            // Type Selection — tersembunyi jika hanya mode pengeluaran
+            if (!isExpenseOnlyMode) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = formState.type == "EXPENSE",
+                        onClick = { viewModel.updateType("EXPENSE") },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    ) { Text("Pengeluaran") }
+                    SegmentedButton(
+                        selected = formState.type == "INCOME",
+                        onClick = { viewModel.updateType("INCOME") },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    ) { Text("Pemasukan") }
                 }
-                SegmentedButton(
-                    selected = formState.type == "INCOME",
-                    onClick = { viewModel.updateType("INCOME") },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                ) {
-                    Text("Pemasukan")
-                }
+            } else {
+                // Mode pengeluaran saja — tampilkan label info saja
+                LaunchedEffect(Unit) { viewModel.updateType("EXPENSE") }
             }
 
             // Amount Input with Camera Icon

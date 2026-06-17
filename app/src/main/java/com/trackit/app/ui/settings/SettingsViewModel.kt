@@ -19,7 +19,8 @@ data class SettingsUiState(
     val errorMessage: String? = null,
     val activeProfileId: Long = 1L,
     val isDailyReminderEnabled: Boolean = false,
-    val dailyReminderTime: String = "20:00"
+    val dailyReminderTime: String = "20:00",
+    val isExpenseOnlyMode: Boolean = false
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -36,6 +37,7 @@ class SettingsViewModel @Inject constructor(
         loadTtsPreference()
         loadBudgetForActiveProfile()
         loadDailyReminderPreferences()
+        loadExpenseOnlyMode()
     }
 
     private fun loadTtsPreference() {
@@ -112,6 +114,20 @@ class SettingsViewModel @Inject constructor(
     fun updateDailyReminderTime(time: String) {
         viewModelScope.launch {
             preferencesManager.setDailyReminderTime(time)
+        }
+    }
+
+    private fun loadExpenseOnlyMode() {
+        viewModelScope.launch {
+            preferencesManager.isExpenseOnlyMode.collect { enabled ->
+                _uiState.update { it.copy(isExpenseOnlyMode = enabled) }
+            }
+        }
+    }
+
+    fun toggleExpenseOnlyMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setExpenseOnlyMode(enabled)
         }
     }
 }

@@ -15,19 +15,22 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 data class DashboardUiState(
     val totalSpent: Double = 0.0,
     val totalIncome: Double = 0.0,
-    val allTimeBalance: Double = 0.0,  // saldo akumulatif semua bulan
+    val allTimeBalance: Double = 0.0,
     val monthlyBudget: Double = 0.0,
     val budgetRemaining: Double = 0.0,
     val recentTransactions: List<TransactionWithCategory> = emptyList(),
     val isLoading: Boolean = true,
     val activeProfile: ProfileEntity? = null,
     val allProfiles: List<ProfileEntity> = emptyList(),
-    val lastSyncTime: Long = System.currentTimeMillis()
+    val lastSyncTime: Long = System.currentTimeMillis(),
+    val selectedMonthMillis: Long = System.currentTimeMillis(),
+    val isExpenseOnlyMode: Boolean = false
 )
 
 data class TransactionWithCategory(
@@ -45,38 +48,50 @@ class DashboardViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
+    private val _selectedMonth = MutableStateFlow(System.currentTimeMillis())
+    val selectedMonth: StateFlow<Long> = _selectedMonth.asStateFlow()
+
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
         loadDashboardData()
+        loadExpenseOnlyMode()
+    }
+
+    private fun loadExpenseOnlyMode() {
+        viewModelScope.launch {
+            preferencesManager.isExpenseOnlyMode.collect { enabled ->
+                _uiState.update { it.copy(isExpenseOnlyMode = enabled) }
+            }
+        }
     }
 
     private fun loadDashboardData() {
         viewModelScope.launch {
-            // Observe active profile ID from DataStore
-            preferencesManager.activeProfileId.flatMapLatest { profileId ->
-                // Hitung range bulan saat ini secara dinamis setiap kali dipanggil
-                val startOfMonth = DateUtils.getStartOfMonth()
-                val endOfMonth = DateUtils.getEndOfMonth()
+            combine(
+                preferencesManager.activeProfileId,
+                _selectedMonth
+            ) { profileId, monthMillis -> Pair(profileId, monthMillis) }
+            .flatMapLatest { (profileId, monthMillis) ->
+                val cal = Calendar.getInstance().apply { timeInMillis = monthMillis }
+                val startOfMonth = DateUtils.getStartOfMonth(cal)
+                val endOfMonth = DateUtils.getEndOfMonth(cal)
 
-                // Stream 1: data bulanan (6 stream, maks combine)
                 val monthlyStream = combine(
                     transactionRepository.getTotalSpentInMonth(startOfMonth, endOfMonth, profileId),
                     transactionRepository.getTotalIncomeInMonth(startOfMonth, endOfMonth, profileId),
                     budgetRepository.getBudgetSetting(profileId),
-                    transactionRepository.getRecentTransactions(profileId, 10),
+                    transactionRepository.getTransactionsByMonth(startOfMonth, endOfMonth, profileId),
                     categoryRepository.getAllCategories(profileId),
                     profileRepository.getAllProfiles()
                 ) { params -> params }
 
-                // Stream 2: saldo akumulatif semua bulan
                 val allTimeStream = combine(
                     transactionRepository.getAllTimeIncome(profileId),
                     transactionRepository.getAllTimeExpense(profileId)
                 ) { income, expense -> income - expense }
 
-                // Gabungkan keduanya
                 combine(monthlyStream, allTimeStream) { params, allTimeBalance ->
                     val totalSpent   = params[0] as Double
                     val totalIncome  = params[1] as Double
@@ -108,13 +123,34 @@ class DashboardViewModel @Inject constructor(
                         isLoading = false,
                         activeProfile = activeProfile,
                         allProfiles = profiles,
-                        lastSyncTime = transactions.maxOfOrNull { it.createdAt } ?: System.currentTimeMillis()
+                        lastSyncTime = transactions.maxOfOrNull { it.createdAt } ?: System.currentTimeMillis(),
+                        selectedMonthMillis = _selectedMonth.value,
+                        isExpenseOnlyMode = _uiState.value.isExpenseOnlyMode
                     )
                 }
             }.collect { state ->
-                _uiState.value = state
+                _uiState.value = state.copy(isExpenseOnlyMode = _uiState.value.isExpenseOnlyMode)
             }
         }
+    }
+
+    fun navigateToPreviousMonth() {
+        val cal = Calendar.getInstance().apply { timeInMillis = _selectedMonth.value }
+        cal.add(Calendar.MONTH, -1)
+        _selectedMonth.value = cal.timeInMillis
+    }
+
+    fun navigateToNextMonth() {
+        val cal = Calendar.getInstance().apply { timeInMillis = _selectedMonth.value }
+        cal.add(Calendar.MONTH, 1)
+        _selectedMonth.value = cal.timeInMillis
+    }
+
+    fun isCurrentMonth(): Boolean {
+        val now = Calendar.getInstance()
+        val sel = Calendar.getInstance().apply { timeInMillis = _selectedMonth.value }
+        return now.get(Calendar.YEAR) == sel.get(Calendar.YEAR) &&
+               now.get(Calendar.MONTH) == sel.get(Calendar.MONTH)
     }
 
     fun deleteTransaction(transactionId: Long) {

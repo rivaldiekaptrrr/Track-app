@@ -50,6 +50,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
     val haptic = LocalHapticFeedback.current
+    val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     var hasNotificationPermission by remember {
@@ -142,28 +143,69 @@ fun DashboardScreen(
                         allTimeBalance = uiState.allTimeBalance,
                         monthlyBudget = uiState.monthlyBudget,
                         budgetRemaining = uiState.budgetRemaining,
-                        lastSyncTime = uiState.lastSyncTime
+                        lastSyncTime = uiState.lastSyncTime,
+                        isExpenseOnlyMode = uiState.isExpenseOnlyMode
                     )
                 }
 
-                // Recent Transactions Header
+                // Month Navigation + Recent Transactions Header
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Transaksi Terbaru",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            DateUtils.formatMonthYear(System.currentTimeMillis()),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Column {
+                        // Month navigator
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Transaksi",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        viewModel.navigateToPreviousMonth()
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.ChevronLeft,
+                                        contentDescription = "Bulan sebelumnya",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Text(
+                                    DateUtils.formatMonthYear(selectedMonth),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (viewModel.isCurrentMonth()) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                IconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        viewModel.navigateToNextMonth()
+                                    },
+                                    enabled = !viewModel.isCurrentMonth(),
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.ChevronRight,
+                                        contentDescription = "Bulan berikutnya",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = if (!viewModel.isCurrentMonth()) MaterialTheme.colorScheme.primary
+                                               else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -225,10 +267,11 @@ fun DashboardScreen(
 private fun SummarySection(
     totalSpent: Double,
     totalIncome: Double,
-    allTimeBalance: Double,  // saldo akumulatif dari semua bulan
+    allTimeBalance: Double,
     monthlyBudget: Double,
     budgetRemaining: Double,
-    lastSyncTime: Long
+    lastSyncTime: Long,
+    isExpenseOnlyMode: Boolean = false
 ) {
     val saldoAktif = allTimeBalance  // gunakan saldo akumulatif, bukan hanya bulan ini
     var isBalanceVisible by remember { mutableStateOf(true) }
@@ -270,18 +313,21 @@ private fun SummarySection(
                 ) {
                     Column {
                         Text(
-                            text = "TOTAL SALDO",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = if (isExpenseOnlyMode) "PENGELUARAN BULAN INI" else "TOTAL SALDO",
+                            style = if (isExpenseOnlyMode) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.7f),
                             letterSpacing = 1.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = if (isBalanceVisible) CurrencyUtils.formatRupiah(saldoAktif) else "Rp •••••••••",
-                            style = MaterialTheme.typography.headlineMedium,
+                            text = if (isBalanceVisible) {
+                                if (isExpenseOnlyMode) CurrencyUtils.formatRupiah(totalSpent)
+                                else CurrencyUtils.formatRupiah(saldoAktif)
+                            } else "Rp •••••••••",
+                            style = if (isExpenseOnlyMode) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = if (isExpenseOnlyMode) Color(0xFFEF5350) else Color.White
                         )
                     }
                     
@@ -312,45 +358,45 @@ private fun SummarySection(
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "PEMASUKAN",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "+ " + CurrencyUtils.formatRupiah(totalIncome),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF66BB6A)
-                        )
+
+                if (!isExpenseOnlyMode) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "PEMASUKAN",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "+ " + CurrencyUtils.formatRupiah(totalIncome),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF66BB6A)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "PENGELUARAN",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "- " + CurrencyUtils.formatRupiah(totalSpent),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFEF5350)
+                            )
+                        }
                     }
-                    
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "PENGELUARAN",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "- " + CurrencyUtils.formatRupiah(totalSpent),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFEF5350)
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
 
                 // Budget bar — hanya tampil jika anggaran disetel
                 if (monthlyBudget > 0) {

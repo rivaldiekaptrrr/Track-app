@@ -65,6 +65,21 @@ interface TransactionDao {
     fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<CategorySpending>>
 
     @Query("""
+        SELECT categoryId, COALESCE(SUM(amount), 0.0) as total 
+        FROM transactions 
+        WHERE date >= :startOfMonth AND date < :endOfMonth AND type = :type AND profileId = :profileId
+        GROUP BY categoryId
+    """)
+    fun getSpendingByCategoryAndType(startOfMonth: Long, endOfMonth: Long, type: String, profileId: Long): Flow<List<CategorySpending>>
+
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE profileId = :profileId AND date >= :startDate AND date <= :endDate
+        ORDER BY date DESC, createdAt DESC
+    """)
+    suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long, profileId: Long): List<TransactionEntity>
+
+    @Query("""
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
         WHERE type = 'INCOME' AND profileId = :profileId
     """)
