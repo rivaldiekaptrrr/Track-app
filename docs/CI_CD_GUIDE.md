@@ -125,14 +125,34 @@ git commit -m "chore: bump version to v1.2.0"
 git push origin main
 ```
 
-#### 3. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis!
+#### 3. Isi `RELEASE_NOTES.md` dengan Catatan Rilis
+
+Buka file [RELEASE_NOTES.md](file:///d:\Project\Track-app\RELEASE_NOTES.md) di root proyek dan tuliskan perubahan yang ingin ditampilkan di pop-up pembaruan aplikasi:
+
+```markdown
+## Catatan Rilis v1.2.0
+
+- Menambahkan fitur baru X
+- Memperbaiki bug Y
+- Optimasi performa Z
+```
+
+Simpan file tersebut, lalu:
 
 ```bash
-git tag -a v1.2.0 -m "Catatan Rilis: Menambahkan fitur X dan memperbaiki bug Y"
+git add RELEASE_NOTES.md
+git commit -m "chore: update release notes v1.2.0"
+git push origin main
+```
+
+#### 4. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis!
+
+```bash
+git tag v1.2.0
 git push origin v1.2.0
 ```
 
-> 💡 **Tips Penting:** Gunakan flag `-a` (annotated tag) dan `-m` (message) seperti contoh di atas. Pesan yang Anda tuliskan di dalam tanda kutip tersebut akan **otomatis menjadi teks Catatan Rilis** yang muncul di dalam pop-up aplikasi TrackIt!
+> 💡 **Cara kerja:** GitHub Actions akan membaca isi file `RELEASE_NOTES.md` secara otomatis dan menggunakannya sebagai deskripsi di GitHub Release. Teks tersebut yang akan muncul di pop-up "Catatan Rilis" dalam aplikasi TrackIt.
 
 Setelah perintah ini, GitHub Actions akan berjalan dengan **alur penuh** termasuk pembuatan GitHub Release:
 
