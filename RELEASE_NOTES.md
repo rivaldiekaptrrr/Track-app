@@ -1,5 +1,4 @@
-## Catatan Rilis v1.1.11
+## Catatan Rilis v1.1.12
 
-- Menambahkan fitur **Pulihkan dari Google Drive**: pilih file backup dari daftar dan pulihkan data secara otomatis.
-- Perbaikan error backup Google Drive akibat ProGuard minifikasi (key error).
-- Perbaikan tampilan Catatan Rilis di pop-up pembaruan.
+- **[Hotfix]** Perbaikan bug pada fitur "Pulihkan dari Google Drive" yang sebelumnya tidak merespon saat ditekan.
+- Sekarang pop-up pemulihan akan menampilkan status loading, daftar file cadangan, serta informasi yang lebih jelas jika tidak ada file yang ditemukan.

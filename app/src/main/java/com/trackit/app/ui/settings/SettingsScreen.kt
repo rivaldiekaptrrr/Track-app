@@ -771,4 +771,145 @@ fun SettingsScreen(
             }
         )
     }
+
+    if (showGDriveRestoreDialog) {
+        RestoreGDriveDialog(
+            onDismiss = { showGDriveRestoreDialog = false },
+            onRestoreSuccess = {
+                showGDriveRestoreDialog = false
+                Toast.makeText(
+                    context,
+                    "✅ Restore berhasil! Silakan tutup aplikasi dari Recent Apps lalu buka kembali.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        )
+    }
+}
+
+@Composable
+fun RestoreGDriveDialog(
+    onDismiss: () -> Unit,
+    onRestoreSuccess: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(true) }
+    var backups by remember { mutableStateOf<List<GDriveBackupManager.DriveBackupFile>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isRestoring by remember { mutableStateOf(false) }
+    var restoringName by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        val result = GDriveBackupManager.listBackups(context)
+        if (result.isSuccess) {
+            backups = result.getOrNull() ?: emptyList()
+            if (backups.isEmpty()) {
+                errorMessage = "Tidak ada file backup ditemukan di Google Drive Anda."
+            }
+        } else {
+            errorMessage = result.exceptionOrNull()?.message ?: "Gagal mengambil daftar backup."
+        }
+        isLoading = false
+    }
+
+    AlertDialog(
+        onDismissRequest = { if (!isRestoring) onDismiss() },
+        title = { Text("Pulihkan dari Google Drive", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                when {
+                    isLoading -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Memuat daftar backup...")
+                        }
+                    }
+                    errorMessage != null -> {
+                        Text(
+                            errorMessage!!,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    else -> {
+                        Text(
+                            "Pilih file backup yang ingin dipulihkan:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                            items(backups) { backup ->
+                                val dateString = java.text.SimpleDateFormat(
+                                    "dd MMM yyyy, HH:mm", java.util.Locale.getDefault()
+                                ).format(java.util.Date(backup.createdTimeMs))
+
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable {
+                                            if (isRestoring) return@clickable
+                                            isRestoring = true
+                                            restoringName = backup.name
+                                            scope.launch {
+                                                val result = GDriveBackupManager.restoreDatabase(context, backup.id)
+                                                isRestoring = false
+                                                if (result.isSuccess) {
+                                                    BackupManager.isRestoring = true
+                                                    onRestoreSuccess()
+                                                } else {
+                                                    errorMessage = "Gagal: ${result.exceptionOrNull()?.message}"
+                                                }
+                                            }
+                                        },
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            backup.name,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            dateString,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (isRestoring) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    "Memulihkan \"$restoringName\"...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isRestoring) {
+                Text("Tutup")
+            }
+        }
+    )
 }
