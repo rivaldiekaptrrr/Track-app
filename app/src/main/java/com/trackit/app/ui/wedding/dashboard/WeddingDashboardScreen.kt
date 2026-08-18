@@ -138,6 +138,49 @@ fun WeddingDashboardScreen(
             }
         }
 
+        // === SPRINT 4 STAT CARDS ===
+        item {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text("Ringkasan Persiapan",
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 10.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StatMiniCard(
+                        modifier = Modifier.weight(1f),
+                        emoji = "👥",
+                        value = "${uiState.totalGuests}",
+                        label = "Tamu",
+                        sublabel = "${uiState.totalPax} pax",
+                        onClick = onNavigateToGuests
+                    )
+                    StatMiniCard(
+                        modifier = Modifier.weight(1f),
+                        emoji = "🏪",
+                        value = "${uiState.contractedVendors}/${uiState.totalVendors}",
+                        label = "Vendor",
+                        sublabel = "terkontrak",
+                        onClick = onNavigateToVendors
+                    )
+                    StatMiniCard(
+                        modifier = Modifier.weight(1f),
+                        emoji = "🎁",
+                        value = "${uiState.readySeserahanItems}/${uiState.totalSeserahanItems}",
+                        label = "Seserahan",
+                        sublabel = "siap",
+                        onClick = onNavigateToSeserahan
+                    )
+                    StatMiniCard(
+                        modifier = Modifier.weight(1f),
+                        emoji = "👗",
+                        value = "${uiState.uniformReadyCount}/${uiState.totalCommitteeMembers}",
+                        label = "Panitia",
+                        sublabel = "seragam",
+                        onClick = onNavigateToCommittee
+                    )
+                }
+            }
+        }
+
         // === BUDGET WIDGET ===
         item {
             Card(
@@ -354,6 +397,38 @@ private fun QuickActionCard(
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+        }
+    }
+}
+
+@Composable
+private fun StatMiniCard(
+    modifier: Modifier = Modifier,
+    emoji: String,
+    value: String,
+    label: String,
+    sublabel: String,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        modifier = modifier
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp).fillMaxWidth()
+        ) {
+            Text(emoji, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(2.dp))
+            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(label, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(sublabel, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }
 }
