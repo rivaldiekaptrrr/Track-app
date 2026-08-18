@@ -1,0 +1,422 @@
+{
+  "app/build.gradle.kts": {
+    "mtime": 1787025760.64917,
+    "seen": 1787027037.1426015,
+    "ast_hash": "a81a402f88a05c452d7b9a2bf0c1fb71",
+    "semantic_hash": "a81a402f88a05c452d7b9a2bf0c1fb71"
+  },
+  "app/src/main/java/com/trackit/app/MainActivity.kt": {
+    "mtime": 1787025760.6535637,
+    "seen": 1787027037.142608,
+    "ast_hash": "a788cb469ca71e37b8506751afd2a9bf",
+    "semantic_hash": "a788cb469ca71e37b8506751afd2a9bf"
+  },
+  "app/src/main/java/com/trackit/app/TrackItApp.kt": {
+    "mtime": 1787025760.6572504,
+    "seen": 1787027037.1426105,
+    "ast_hash": "492a2bd75d246a42ab1e4d7d7c6ecaef",
+    "semantic_hash": "492a2bd75d246a42ab1e4d7d7c6ecaef"
+  },
+  "app/src/main/java/com/trackit/app/data/local/PreferencesManager.kt": {
+    "mtime": 1787025760.658422,
+    "seen": 1787027037.1426122,
+    "ast_hash": "0d4a2ba717c6e7b7970a92e030a40997",
+    "semantic_hash": "0d4a2ba717c6e7b7970a92e030a40997"
+  },
+  "app/src/main/java/com/trackit/app/data/local/TrackItDatabase.kt": {
+    "mtime": 1787025760.658422,
+    "seen": 1787027037.1426134,
+    "ast_hash": "7df15862dbb3ae49c55c4c868faf5548",
+    "semantic_hash": "7df15862dbb3ae49c55c4c868faf5548"
+  },
+  "app/src/main/java/com/trackit/app/data/local/dao/BudgetSettingDao.kt": {
+    "mtime": 1787025760.658422,
+    "seen": 1787027037.1426148,
+    "ast_hash": "bc5ce4361c627a90d782d894332e87b8",
+    "semantic_hash": "bc5ce4361c627a90d782d894332e87b8"
+  },
+  "app/src/main/java/com/trackit/app/data/local/dao/CategoryBudgetDao.kt": {
+    "mtime": 1787025760.66206,
+    "seen": 1787027037.142616,
+    "ast_hash": "dc2ca654cf74798f6a90f8b2a2f41f58",
+    "semantic_hash": "dc2ca654cf74798f6a90f8b2a2f41f58"
+  },
+  "app/src/main/java/com/trackit/app/data/local/dao/CategoryDao.kt": {
+    "mtime": 1787025760.663088,
+    "seen": 1787027037.142617,
+    "ast_hash": "a0b80983c5db3008e57ef2bce7029e1a",
+    "semantic_hash": "a0b80983c5db3008e57ef2bce7029e1a"
+  },
+  "app/src/main/java/com/trackit/app/data/local/dao/ProfileDao.kt": {
+    "mtime": 1787025760.663088,
+    "seen": 1787027037.1426182,
+    "ast_hash": "256b3c7b306a65d741cb52ff4b100ca8",
+    "semantic_hash": "256b3c7b306a65d741cb52ff4b100ca8"
+  },
+  "app/src/main/java/com/trackit/app/data/local/dao/TransactionDao.kt": {
+    "mtime": 1787025760.663088,
+    "seen": 1787027037.1426191,
+    "ast_hash": "9a74cd8ca53634405f9393757816c769",
+    "semantic_hash": "9a74cd8ca53634405f9393757816c769"
+  },
+  "app/src/main/java/com/trackit/app/data/local/entity/BudgetSettingEntity.kt": {
+    "mtime": 1787025760.6661255,
+    "seen": 1787027037.14262,
+    "ast_hash": "023d5d2d99079aedc2f75fbdb983704d",
+    "semantic_hash": "023d5d2d99079aedc2f75fbdb983704d"
+  },
+  "app/src/main/java/com/trackit/app/data/local/entity/CategoryBudgetEntity.kt": {
+    "mtime": 1787025760.6661255,
+    "seen": 1787027037.1426218,
+    "ast_hash": "3cb969e26b47a19352242e18b934d77c",
+    "semantic_hash": "3cb969e26b47a19352242e18b934d77c"
+  },
+  "app/src/main/java/com/trackit/app/data/local/entity/CategoryEntity.kt": {
+    "mtime": 1787025760.6661255,
+    "seen": 1787027037.1426227,
+    "ast_hash": "ef4b1b4d682e2b1d43d1a7b1b42999e0",
+    "semantic_hash": "ef4b1b4d682e2b1d43d1a7b1b42999e0"
+  },
+  "app/src/main/java/com/trackit/app/data/local/entity/ProfileEntity.kt": {
+    "mtime": 1787025760.6661255,
+    "seen": 1787027037.1426237,
+    "ast_hash": "6bf8ff615cc29e9ac0800b28db64f220",
+    "semantic_hash": "6bf8ff615cc29e9ac0800b28db64f220"
+  },
+  "app/src/main/java/com/trackit/app/data/local/entity/TransactionEntity.kt": {
+    "mtime": 1787025760.6661255,
+    "seen": 1787027037.142625,
+    "ast_hash": "6b5717f506be22299e55ad093704e177",
+    "semantic_hash": "6b5717f506be22299e55ad093704e177"
+  },
+  "app/src/main/java/com/trackit/app/data/repository/BudgetRepository.kt": {
+    "mtime": 1787025760.6661255,
+    "seen": 1787027037.1426258,
+    "ast_hash": "67a360f18106902238fc4baaf7b89b73",
+    "semantic_hash": "67a360f18106902238fc4baaf7b89b73"
+  },
+  "app/src/main/java/com/trackit/app/data/repository/CategoryBudgetRepository.kt": {
+    "mtime": 1787025760.672083,
+    "seen": 1787027037.1426272,
+    "ast_hash": "2c25ee239c4e08f94f702c4f2b95176d",
+    "semantic_hash": "2c25ee239c4e08f94f702c4f2b95176d"
+  },
+  "app/src/main/java/com/trackit/app/data/repository/CategoryRepository.kt": {
+    "mtime": 1787025760.6738698,
+    "seen": 1787027037.1426284,
+    "ast_hash": "d6eed5c1e74440fa0a7b0ca7b9d22d79",
+    "semantic_hash": "d6eed5c1e74440fa0a7b0ca7b9d22d79"
+  },
+  "app/src/main/java/com/trackit/app/data/repository/ProfileRepository.kt": {
+    "mtime": 1787025760.6738698,
+    "seen": 1787027037.1426294,
+    "ast_hash": "61231398be80cb588a6a055340c9723e",
+    "semantic_hash": "61231398be80cb588a6a055340c9723e"
+  },
+  "app/src/main/java/com/trackit/app/data/repository/TransactionRepository.kt": {
+    "mtime": 1787025760.6738698,
+    "seen": 1787027037.1426306,
+    "ast_hash": "1daefef44b88879ae9e957f0c2045ef9",
+    "semantic_hash": "1daefef44b88879ae9e957f0c2045ef9"
+  },
+  "app/src/main/java/com/trackit/app/di/DatabaseModule.kt": {
+    "mtime": 1787025760.6738698,
+    "seen": 1787027037.1426318,
+    "ast_hash": "e27189aabf6ecaffc9355961220f3ded",
+    "semantic_hash": "e27189aabf6ecaffc9355961220f3ded"
+  },
+  "app/src/main/java/com/trackit/app/di/NetworkModule.kt": {
+    "mtime": 1787025760.6738698,
+    "seen": 1787027037.1426327,
+    "ast_hash": "bb9336170fea3852a8760489979cd67b",
+    "semantic_hash": "bb9336170fea3852a8760489979cd67b"
+  },
+  "app/src/main/java/com/trackit/app/service/VoiceTileService.kt": {
+    "mtime": 1787025760.6738698,
+    "seen": 1787027037.1426342,
+    "ast_hash": "57cf68537bc52c0acdd99df9d0fac646",
+    "semantic_hash": "57cf68537bc52c0acdd99df9d0fac646"
+  },
+  "app/src/main/java/com/trackit/app/ui/biometric/BiometricLockScreen.kt": {
+    "mtime": 1787025760.6830595,
+    "seen": 1787027037.1426353,
+    "ast_hash": "928d411e0365920fbe0fad6cea2ad6fc",
+    "semantic_hash": "928d411e0365920fbe0fad6cea2ad6fc"
+  },
+  "app/src/main/java/com/trackit/app/ui/budget/CategoryBudgetScreen.kt": {
+    "mtime": 1787025760.6830595,
+    "seen": 1787027037.1426363,
+    "ast_hash": "0f45532cab6936abdce832a164cc1759",
+    "semantic_hash": "0f45532cab6936abdce832a164cc1759"
+  },
+  "app/src/main/java/com/trackit/app/ui/budget/CategoryBudgetViewModel.kt": {
+    "mtime": 1787025760.6830595,
+    "seen": 1787027037.1426373,
+    "ast_hash": "2ad6305b5de4c5a2c81884516e18ee62",
+    "semantic_hash": "2ad6305b5de4c5a2c81884516e18ee62"
+  },
+  "app/src/main/java/com/trackit/app/ui/chart/ChartScreen.kt": {
+    "mtime": 1787025760.6830595,
+    "seen": 1787027037.142638,
+    "ast_hash": "15e043e2ad349eeebbbfc48c4ceaf200",
+    "semantic_hash": "15e043e2ad349eeebbbfc48c4ceaf200"
+  },
+  "app/src/main/java/com/trackit/app/ui/chart/ChartViewModel.kt": {
+    "mtime": 1787025760.6880949,
+    "seen": 1787027037.1426392,
+    "ast_hash": "48caa36dd478d339674e5e88da5a0751",
+    "semantic_hash": "48caa36dd478d339674e5e88da5a0751"
+  },
+  "app/src/main/java/com/trackit/app/ui/components/UpdateDialog.kt": {
+    "mtime": 1787025760.6880949,
+    "seen": 1787027037.14264,
+    "ast_hash": "5aea486238670a36aa94dcd40d4c248d",
+    "semantic_hash": "5aea486238670a36aa94dcd40d4c248d"
+  },
+  "app/src/main/java/com/trackit/app/ui/dashboard/DashboardScreen.kt": {
+    "mtime": 1787025760.693088,
+    "seen": 1787027037.142641,
+    "ast_hash": "6406cff6358ada3d1838a918705eab4b",
+    "semantic_hash": "6406cff6358ada3d1838a918705eab4b"
+  },
+  "app/src/main/java/com/trackit/app/ui/dashboard/DashboardViewModel.kt": {
+    "mtime": 1787025760.693771,
+    "seen": 1787027037.1426423,
+    "ast_hash": "0cde0450e0a76cb01550900f2e99dc71",
+    "semantic_hash": "0cde0450e0a76cb01550900f2e99dc71"
+  },
+  "app/src/main/java/com/trackit/app/ui/navigation/BottomNavBar.kt": {
+    "mtime": 1787025760.693771,
+    "seen": 1787027037.1426432,
+    "ast_hash": "5bf3370543aec840e5c606161bf7f1e5",
+    "semantic_hash": "5bf3370543aec840e5c606161bf7f1e5"
+  },
+  "app/src/main/java/com/trackit/app/ui/navigation/Screen.kt": {
+    "mtime": 1787025760.693771,
+    "seen": 1787027037.1426442,
+    "ast_hash": "d58aa8eed9ceb25a954c917b66e15bde",
+    "semantic_hash": "d58aa8eed9ceb25a954c917b66e15bde"
+  },
+  "app/src/main/java/com/trackit/app/ui/navigation/TrackItNavHost.kt": {
+    "mtime": 1787025760.697698,
+    "seen": 1787027037.142645,
+    "ast_hash": "cf0e4472d23977999054553ff6aecfdb",
+    "semantic_hash": "cf0e4472d23977999054553ff6aecfdb"
+  },
+  "app/src/main/java/com/trackit/app/ui/profile/ProfileManagementScreen.kt": {
+    "mtime": 1787025760.697698,
+    "seen": 1787027037.142646,
+    "ast_hash": "042771ba9542c784ad46264528254813",
+    "semantic_hash": "042771ba9542c784ad46264528254813"
+  },
+  "app/src/main/java/com/trackit/app/ui/settings/CustomKeywordScreen.kt": {
+    "mtime": 1787025760.697698,
+    "seen": 1787027037.1426468,
+    "ast_hash": "eaf8e0f3d3ea850411d1ab0d58353a09",
+    "semantic_hash": "eaf8e0f3d3ea850411d1ab0d58353a09"
+  },
+  "app/src/main/java/com/trackit/app/ui/settings/ExportReportDialog.kt": {
+    "mtime": 1787025760.697698,
+    "seen": 1787027037.1426477,
+    "ast_hash": "d728f97b42a90017adf6bdec0e19747b",
+    "semantic_hash": "d728f97b42a90017adf6bdec0e19747b"
+  },
+  "app/src/main/java/com/trackit/app/ui/settings/SettingsScreen.kt": {
+    "mtime": 1787025760.702976,
+    "seen": 1787027037.1426485,
+    "ast_hash": "cf4c1273ba6b160da2bb52366207862e",
+    "semantic_hash": "cf4c1273ba6b160da2bb52366207862e"
+  },
+  "app/src/main/java/com/trackit/app/ui/settings/SettingsViewModel.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426497,
+    "ast_hash": "25b5b4f68c02cb34984233e2e8096b6b",
+    "semantic_hash": "25b5b4f68c02cb34984233e2e8096b6b"
+  },
+  "app/src/main/java/com/trackit/app/ui/theme/Color.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426506,
+    "ast_hash": "c9f201c5591393d63107a6f693fd2430",
+    "semantic_hash": "c9f201c5591393d63107a6f693fd2430"
+  },
+  "app/src/main/java/com/trackit/app/ui/theme/Theme.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426518,
+    "ast_hash": "5f84ed860ff52d19611f768327b27a0a",
+    "semantic_hash": "5f84ed860ff52d19611f768327b27a0a"
+  },
+  "app/src/main/java/com/trackit/app/ui/theme/Type.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426528,
+    "ast_hash": "6b1f774db457c95be0a752fc1f687e04",
+    "semantic_hash": "6b1f774db457c95be0a752fc1f687e04"
+  },
+  "app/src/main/java/com/trackit/app/ui/transaction/AddEditTransactionScreen.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426537,
+    "ast_hash": "de62fbfd7825eb97d67bbc9a12926630",
+    "semantic_hash": "de62fbfd7825eb97d67bbc9a12926630"
+  },
+  "app/src/main/java/com/trackit/app/ui/transaction/TransactionViewModel.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426554,
+    "ast_hash": "86f3f2a6ae58db55634f67243a3b44c6",
+    "semantic_hash": "86f3f2a6ae58db55634f67243a3b44c6"
+  },
+  "app/src/main/java/com/trackit/app/ui/voice/TransparentVoiceActivity.kt": {
+    "mtime": 1787025760.7046971,
+    "seen": 1787027037.1426566,
+    "ast_hash": "37e44bb4be18792ffd6a8f14d7e36cb9",
+    "semantic_hash": "37e44bb4be18792ffd6a8f14d7e36cb9"
+  },
+  "app/src/main/java/com/trackit/app/updater/AppUpdateChecker.kt": {
+    "mtime": 1787025760.7119973,
+    "seen": 1787027037.1426575,
+    "ast_hash": "e5d0a4f9ced35385e4105ab6dba08672",
+    "semantic_hash": "e5d0a4f9ced35385e4105ab6dba08672"
+  },
+  "app/src/main/java/com/trackit/app/updater/AppUpdateDownloader.kt": {
+    "mtime": 1787025760.713797,
+    "seen": 1787027037.1426585,
+    "ast_hash": "54b2e9c523de5979f057eaef389432c5",
+    "semantic_hash": "54b2e9c523de5979f057eaef389432c5"
+  },
+  "app/src/main/java/com/trackit/app/updater/UpdateInfo.kt": {
+    "mtime": 1787025760.713797,
+    "seen": 1787027037.1426597,
+    "ast_hash": "0cdef38306927c23b07e5382828a0841",
+    "semantic_hash": "0cdef38306927c23b07e5382828a0841"
+  },
+  "app/src/main/java/com/trackit/app/updater/UpdateViewModel.kt": {
+    "mtime": 1787025760.713797,
+    "seen": 1787027037.1426606,
+    "ast_hash": "2ce5abc8972aefe5a48cbfb052fc14b6",
+    "semantic_hash": "2ce5abc8972aefe5a48cbfb052fc14b6"
+  },
+  "app/src/main/java/com/trackit/app/util/BackupManager.kt": {
+    "mtime": 1787025760.713797,
+    "seen": 1787027037.1426613,
+    "ast_hash": "bffd9024a00cc62f7bb2150664f68c15",
+    "semantic_hash": "bffd9024a00cc62f7bb2150664f68c15"
+  },
+  "app/src/main/java/com/trackit/app/util/CategoryBudgetNotifier.kt": {
+    "mtime": 1787025760.713797,
+    "seen": 1787027037.142663,
+    "ast_hash": "4d71d81e49d461c766cb54e919e6fd5e",
+    "semantic_hash": "4d71d81e49d461c766cb54e919e6fd5e"
+  },
+  "app/src/main/java/com/trackit/app/util/CategoryIconMapper.kt": {
+    "mtime": 1787025760.7198255,
+    "seen": 1787027037.142664,
+    "ast_hash": "0d7ffb776eafda5d16739cc0667e79c7",
+    "semantic_hash": "0d7ffb776eafda5d16739cc0667e79c7"
+  },
+  "app/src/main/java/com/trackit/app/util/CsvExporter.kt": {
+    "mtime": 1787025760.721485,
+    "seen": 1787027037.142665,
+    "ast_hash": "bb809bd7402c62923c2e3de24a0da797",
+    "semantic_hash": "bb809bd7402c62923c2e3de24a0da797"
+  },
+  "app/src/main/java/com/trackit/app/util/DateUtils.kt": {
+    "mtime": 1787025760.7230415,
+    "seen": 1787027037.142666,
+    "ast_hash": "af5f64aa60c1394d11c2d1906297de7d",
+    "semantic_hash": "af5f64aa60c1394d11c2d1906297de7d"
+  },
+  "app/src/main/java/com/trackit/app/util/GDriveBackupManager.kt": {
+    "mtime": 1787025760.7238073,
+    "seen": 1787027037.1426668,
+    "ast_hash": "dcc71c62220ce56f00314e7018a41b6c",
+    "semantic_hash": "dcc71c62220ce56f00314e7018a41b6c"
+  },
+  "app/src/main/java/com/trackit/app/util/NumberUtils.kt": {
+    "mtime": 1787025760.7251883,
+    "seen": 1787027037.1426678,
+    "ast_hash": "dcbb489ba121dc7740a4d54463b9e9ed",
+    "semantic_hash": "dcbb489ba121dc7740a4d54463b9e9ed"
+  },
+  "app/src/main/java/com/trackit/app/util/PdfExporter.kt": {
+    "mtime": 1787025760.7251883,
+    "seen": 1787027037.1426687,
+    "ast_hash": "cd897a9219d00a70995d273953c47ab7",
+    "semantic_hash": "cd897a9219d00a70995d273953c47ab7"
+  },
+  "app/src/main/java/com/trackit/app/util/VoiceParser.kt": {
+    "mtime": 1787025760.7262022,
+    "seen": 1787027037.14267,
+    "ast_hash": "2cdca7a7bbd022cb13c107ba6bd949a1",
+    "semantic_hash": "2cdca7a7bbd022cb13c107ba6bd949a1"
+  },
+  "app/src/main/java/com/trackit/app/widget/VoiceWidgetProvider.kt": {
+    "mtime": 1787025760.728076,
+    "seen": 1787027037.1426709,
+    "ast_hash": "3541aee1bc0909eca3cc9ad6b856ef56",
+    "semantic_hash": "3541aee1bc0909eca3cc9ad6b856ef56"
+  },
+  "app/src/main/java/com/trackit/app/worker/BudgetCheckWorker.kt": {
+    "mtime": 1787025760.7290843,
+    "seen": 1787027037.1426718,
+    "ast_hash": "fab4181e5233aa988f966a9ea67b31a8",
+    "semantic_hash": "fab4181e5233aa988f966a9ea67b31a8"
+  },
+  "app/src/main/java/com/trackit/app/worker/DailyReminderWorker.kt": {
+    "mtime": 1787025760.7294521,
+    "seen": 1787027037.1426728,
+    "ast_hash": "330be43e83f14f9ce44b2d64ee3ecb86",
+    "semantic_hash": "330be43e83f14f9ce44b2d64ee3ecb86"
+  },
+  "app/src/main/java/com/trackit/app/worker/RecurringTransactionWorker.kt": {
+    "mtime": 1787025760.7319832,
+    "seen": 1787027037.142674,
+    "ast_hash": "e412d1f3392bee0414b440c783bf8016",
+    "semantic_hash": "e412d1f3392bee0414b440c783bf8016"
+  },
+  "app/src/main/java/com/trackit/app/worker/ReminderScheduler.kt": {
+    "mtime": 1787025760.7330067,
+    "seen": 1787027037.1426747,
+    "ast_hash": "552c8a365d6a76c7e03ebae4e9035a09",
+    "semantic_hash": "552c8a365d6a76c7e03ebae4e9035a09"
+  },
+  "app/src/test/java/com/trackit/app/updater/AppUpdateCheckerTest.kt": {
+    "mtime": 1787025760.761873,
+    "seen": 1787027037.1426759,
+    "ast_hash": "e32ac1be3a1fc85754f3fd819f5a46bb",
+    "semantic_hash": "e32ac1be3a1fc85754f3fd819f5a46bb"
+  },
+  "app/src/test/java/com/trackit/app/worker/DailyReminderWorkerFactory.kt": {
+    "mtime": 1787025760.7635727,
+    "seen": 1787027037.142677,
+    "ast_hash": "c956233a28f3c25fc103bc70f9bfb5c0",
+    "semantic_hash": "c956233a28f3c25fc103bc70f9bfb5c0"
+  },
+  "app/src/test/java/com/trackit/app/worker/DailyReminderWorkerTest.kt": {
+    "mtime": 1787025760.7635727,
+    "seen": 1787027037.142678,
+    "ast_hash": "61eafb1ff5ba6b3f773f712c0d4ef1ed",
+    "semantic_hash": "61eafb1ff5ba6b3f773f712c0d4ef1ed"
+  },
+  "app/src/test/java/com/trackit/app/worker/ReminderSchedulerTest.kt": {
+    "mtime": 1787025760.7635727,
+    "seen": 1787027037.1426787,
+    "ast_hash": "db4d7d18268363339088b894f572a917",
+    "semantic_hash": "db4d7d18268363339088b894f572a917"
+  },
+  "build.gradle.kts": {
+    "mtime": 1787025760.7671885,
+    "seen": 1787027037.1426797,
+    "ast_hash": "b6db7b1fb6926c94624f2da60ce41746",
+    "semantic_hash": "b6db7b1fb6926c94624f2da60ce41746"
+  },
+  "gradlew": {
+    "mtime": 1787025760.7866137,
+    "seen": 1787027037.142681,
+    "ast_hash": "d1a9cdfab69c4247907d20523b1d15ea",
+    "semantic_hash": "d1a9cdfab69c4247907d20523b1d15ea"
+  },
+  "settings.gradle.kts": {
+    "mtime": 1787025760.7866137,
+    "seen": 1787027037.1426816,
+    "ast_hash": "99010bcb6b2ffd0f9ad9930ca852d1a0",
+    "semantic_hash": "99010bcb6b2ffd0f9ad9930ca852d1a0"
+  }
+}
