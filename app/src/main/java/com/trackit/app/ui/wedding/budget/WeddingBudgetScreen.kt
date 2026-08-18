@@ -1,4 +1,4 @@
-﻿package com.trackit.app.ui.wedding.budget
+package com.trackit.app.ui.wedding.budget
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -319,6 +319,7 @@ private fun ExpenseItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddExpenseDialog(
     onDismiss: () -> Unit,
