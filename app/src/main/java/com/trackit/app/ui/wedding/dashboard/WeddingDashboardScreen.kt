@@ -35,6 +35,7 @@ fun WeddingDashboardScreen(
     onNavigateToVendors: () -> Unit = {},
     onNavigateToSeserahan: () -> Unit = {},
     onNavigateToCommittee: () -> Unit = {},
+    onNavigateToRundown: () -> Unit = {},
     viewModel: WeddingDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -287,6 +288,12 @@ fun WeddingDashboardScreen(
                     icon = Icons.Default.People,
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToGuests
+                )
+                QuickActionCard(
+                    label = "Rundown",
+                    icon = Icons.Default.Schedule,
+                    modifier = Modifier.weight(1f),
+                    onClick = onNavigateToRundown
                 )
             }
             Spacer(Modifier.height(8.dp))

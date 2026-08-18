@@ -15,6 +15,8 @@ import com.trackit.app.data.local.dao.WeddingTaskDao
 import com.trackit.app.data.local.dao.WeddingVendorDao
 import com.trackit.app.data.local.dao.WeddingSeserahanDao
 import com.trackit.app.data.local.dao.WeddingCommitteeDao
+import com.trackit.app.data.local.dao.WeddingEventDao
+import com.trackit.app.data.local.dao.WeddingRundownItemDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,7 +43,8 @@ object DatabaseModule {
             TrackItDatabase.MIGRATION_4_5,
             TrackItDatabase.MIGRATION_5_6,
             TrackItDatabase.MIGRATION_6_7,
-            TrackItDatabase.MIGRATION_7_8
+            TrackItDatabase.MIGRATION_7_8,
+            TrackItDatabase.MIGRATION_8_9
         )
         .build()
     }
@@ -101,5 +104,13 @@ object DatabaseModule {
     @Provides
     fun provideWeddingCommitteeDao(database: TrackItDatabase): WeddingCommitteeDao =
         database.weddingCommitteeDao()
+
+    @Provides
+    fun provideWeddingEventDao(database: TrackItDatabase): WeddingEventDao =
+        database.weddingEventDao()
+
+    @Provides
+    fun provideWeddingRundownItemDao(database: TrackItDatabase): WeddingRundownItemDao =
+        database.weddingRundownItemDao()
 }
 

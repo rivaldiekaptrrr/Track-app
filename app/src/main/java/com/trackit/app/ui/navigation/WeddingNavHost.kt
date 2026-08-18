@@ -31,6 +31,7 @@ import com.trackit.app.ui.wedding.tasks.WeddingTasksScreen
 import com.trackit.app.ui.wedding.vendor.WeddingVendorScreen
 import com.trackit.app.ui.wedding.seserahan.WeddingSeserahanScreen
 import com.trackit.app.ui.wedding.committee.WeddingCommitteeScreen
+import com.trackit.app.ui.wedding.rundown.WeddingRundownScreen
 
 data class WeddingBottomNavItem(
     val route: String,
@@ -97,7 +98,8 @@ fun WeddingNavHost(
                     onNavigateToGuests = { navController.navigate(Screen.WeddingGuests.route) },
                     onNavigateToVendors = { navController.navigate(Screen.WeddingVendors.route) },
                     onNavigateToSeserahan = { navController.navigate(Screen.WeddingSeserahan.route) },
-                    onNavigateToCommittee = { navController.navigate(Screen.WeddingCommittee.route) }
+                    onNavigateToCommittee = { navController.navigate(Screen.WeddingCommittee.route) },
+                    onNavigateToRundown = { navController.navigate(Screen.WeddingRundown.route) }
                 )
             }
             composable(Screen.WeddingTasks.route) {
@@ -138,6 +140,12 @@ fun WeddingNavHost(
             }
             composable(Screen.WeddingCommittee.route) {
                 WeddingCommitteeScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.WeddingRundown.route) {
+                WeddingRundownScreen(
                     weddingProfileId = weddingProfileId,
                     onNavigateBack = { navController.popBackStack() }
                 )

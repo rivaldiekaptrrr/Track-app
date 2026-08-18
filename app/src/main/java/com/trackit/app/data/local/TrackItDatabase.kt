@@ -30,6 +30,10 @@ import com.trackit.app.data.local.entity.WeddingTaskEntity
 import com.trackit.app.data.local.entity.WeddingVendorEntity
 import com.trackit.app.data.local.entity.WeddingSeserahanEntity
 import com.trackit.app.data.local.entity.WeddingCommitteeEntity
+import com.trackit.app.data.local.entity.WeddingEventEntity
+import com.trackit.app.data.local.entity.WeddingRundownItemEntity
+import com.trackit.app.data.local.dao.WeddingEventDao
+import com.trackit.app.data.local.dao.WeddingRundownItemDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,9 +53,11 @@ import kotlinx.coroutines.launch
         WeddingGuestEntity::class,
         WeddingVendorEntity::class,
         WeddingSeserahanEntity::class,
-        WeddingCommitteeEntity::class
+        WeddingCommitteeEntity::class,
+        WeddingEventEntity::class,
+        WeddingRundownItemEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -70,6 +76,8 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun weddingVendorDao(): WeddingVendorDao
     abstract fun weddingSeserahanDao(): WeddingSeserahanDao
     abstract fun weddingCommitteeDao(): WeddingCommitteeDao
+    abstract fun weddingEventDao(): WeddingEventDao
+    abstract fun weddingRundownItemDao(): WeddingRundownItemDao
 
     companion object {
         /**
@@ -305,6 +313,40 @@ abstract class TrackItDatabase : RoomDatabase() {
                     )
                 """)
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_committee_weddingProfileId` ON `wedding_committee` (`weddingProfileId`)")
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // wedding_events table (tab acara: Akad, Resepsi, Siraman, dll.)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_events` (
+                        `eventId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `eventName` TEXT NOT NULL,
+                        `eventDate` INTEGER NOT NULL,
+                        `eventLocation` TEXT,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_events_weddingProfileId` ON `wedding_events` (`weddingProfileId`)")
+
+                // wedding_rundown_items table (baris timetable per acara)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_rundown_items` (
+                        `itemId` TEXT NOT NULL PRIMARY KEY,
+                        `eventId` TEXT NOT NULL,
+                        `timeStart` TEXT NOT NULL,
+                        `durationMinutes` INTEGER NOT NULL DEFAULT 15,
+                        `sessionTitle` TEXT NOT NULL,
+                        `pic` TEXT,
+                        `mcScript` TEXT,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`eventId`) REFERENCES `wedding_events`(`eventId`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_rundown_items_eventId` ON `wedding_rundown_items` (`eventId`)")
             }
         }
 
