@@ -23,7 +23,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.trackit.app.ui.settings.SettingsScreen
+import com.trackit.app.ui.wedding.budget.WeddingBudgetScreen
 import com.trackit.app.ui.wedding.dashboard.WeddingDashboardScreen
+import com.trackit.app.ui.wedding.documents.WeddingDocumentsScreen
 
 data class WeddingBottomNavItem(
     val route: String,
@@ -97,10 +99,16 @@ fun WeddingNavHost(
                 WeddingComingSoonScreen(title = "Manajemen Tamu")
             }
             composable(Screen.WeddingBudget.route) {
-                WeddingComingSoonScreen(title = "Anggaran & Split-Bill")
+                WeddingBudgetScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.WeddingDocuments.route) {
-                WeddingComingSoonScreen(title = "Berkas KUA & Dokumen")
+                WeddingDocumentsScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.WeddingVendors.route) {
                 WeddingComingSoonScreen(title = "Vendor Hub")
@@ -125,6 +133,11 @@ fun WeddingNavHost(
             }
             composable(Screen.CategoryBudget.route) {
                 com.trackit.app.ui.budget.CategoryBudgetScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.ProfileManagement.route) {
+                com.trackit.app.ui.profile.ProfileManagementScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

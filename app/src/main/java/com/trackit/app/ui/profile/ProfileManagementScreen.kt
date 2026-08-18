@@ -32,7 +32,9 @@ import com.trackit.app.data.local.entity.WeddingProfileEntity
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.TransactionRepository
+import com.trackit.app.data.repository.WeddingDocumentRepository
 import com.trackit.app.data.repository.WeddingProfileRepository
+import com.trackit.app.data.wedding.WeddingDocumentPresets
 import com.trackit.app.util.CategoryIconMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -53,7 +55,8 @@ class ProfileManagementViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val preferencesManager: PreferencesManager,
-    private val weddingProfileRepository: WeddingProfileRepository
+    private val weddingProfileRepository: WeddingProfileRepository,
+    private val weddingDocumentRepository: WeddingDocumentRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileManagementUiState())
@@ -80,15 +83,20 @@ class ProfileManagementViewModel @Inject constructor(
         viewModelScope.launch {
             if (profile.id == 0L) {
                 if (profile.mode == "WEDDING" && weddingProfile != null) {
-                    // Create wedding profile first, get its ID
+                    // 1. Simpan wedding profile
                     weddingProfileRepository.insert(weddingProfile)
-                    val newProfileId = profileRepository.insert(
-                        profile.copy(weddingProfileId = weddingProfile.id)
+                    // 2. Simpan profil utama dengan link ke wedding profile
+                    profileRepository.insert(profile.copy(weddingProfileId = weddingProfile.id))
+                    // 3. Auto-seed berkas legalitas sesuai agama
+                    val docs = WeddingDocumentPresets.getPreset(
+                        weddingProfileId = weddingProfile.id,
+                        religionType = weddingProfile.religionType,
+                        religionDetail = weddingProfile.religionDetail
                     )
-                    // No need to seed expense categories for wedding profiles
+                    weddingDocumentRepository.insertAll(docs)
                 } else {
                     val newId = profileRepository.insert(profile)
-                    // Seed default categories for new expense profile
+                    // Seed default categories untuk expense profile
                     val defaults = com.trackit.app.data.local.TrackItDatabase
                         .getDefaultCategories()
                         .map { it.copy(profileId = newId) }
