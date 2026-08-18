@@ -77,25 +77,25 @@ fun TrackItBottomNavBar(
     // Derive badge condition from profile data (budget warning)
     val budgetWarning = false // Can be wired to ViewModel later
 
-    val navBackground = Color(0xFF1C1C1E)
-    val accentPurple = Color(0xFF6342E8)
-    val ringLightBlue = Color(0xFFB0C4FF)
-    val activeTextBlue = Color(0xFF4285F4)
-    val inactiveGray = Color(0xFF8E8E93)
+    val navBackground = MaterialTheme.colorScheme.surfaceVariant
+    val accentPurple = MaterialTheme.colorScheme.primary
+    val ringLightBlue = MaterialTheme.colorScheme.primaryContainer
+    val activeTextBlue = MaterialTheme.colorScheme.primary
+    val inactiveGray = MaterialTheme.colorScheme.onSurfaceVariant
 
     // Profile switcher Instagram-style dialog
     if (showProfileSwitcher && allProfiles.isNotEmpty()) {
         Dialog(onDismissRequest = { showProfileSwitcher = false }) {
             Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2E))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         "Ganti Profil",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     allProfiles.forEach { profile ->
@@ -105,7 +105,7 @@ fun TrackItBottomNavBar(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (isActive) Color(0xFF3A3A3C) else Color.Transparent
+                                    if (isActive) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
                                 )
                                 .clickable {
                                     if (!isActive) onSwitchProfile(profile.id)
@@ -132,7 +132,7 @@ fun TrackItBottomNavBar(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     profile.name,
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                                     style = MaterialTheme.typography.bodyLarge
                                 )
@@ -155,7 +155,7 @@ fun TrackItBottomNavBar(
                         }
                         if (profile != allProfiles.last()) {
                             HorizontalDivider(
-                                color = Color(0xFF48484A),
+                                color = MaterialTheme.colorScheme.outlineVariant,
                                 modifier = Modifier.padding(horizontal = 12.dp)
                             )
                         }
@@ -337,7 +337,7 @@ fun TrackItBottomNavBar(
                 .align(Alignment.TopCenter)
                 .offset(y = (-10).dp)
                 .size(72.dp)
-                .background(Color.White, CircleShape)
+                .background(MaterialTheme.colorScheme.background, CircleShape)
                 .padding(5.dp)
                 .background(ringLightBlue, CircleShape)
                 .padding(4.dp)

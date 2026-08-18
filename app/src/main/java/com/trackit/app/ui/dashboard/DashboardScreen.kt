@@ -275,10 +275,12 @@ private fun SummarySection(
 ) {
     val saldoAktif = allTimeBalance  // gunakan saldo akumulatif, bukan hanya bulan ini
     var isBalanceVisible by remember { mutableStateOf(true) }
-    
-    val cardColor = Color(0xFF121212) // AMOLED friendly deep gray
-    val circleColor = Color(0xFF1E1E1E)
-    val iconBgColor = Color(0xFF2C2C2C)
+    val cardColor = MaterialTheme.colorScheme.primaryContainer
+    val circleColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+    val iconBgColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    val onCardColor = MaterialTheme.colorScheme.onPrimaryContainer
+    val expenseColor = MaterialTheme.colorScheme.error
+    val incomeColor = Color(0xFF66BB6A)
 
     Card(
         modifier = Modifier
@@ -315,7 +317,7 @@ private fun SummarySection(
                         Text(
                             text = if (isExpenseOnlyMode) "PENGELUARAN BULAN INI" else "TOTAL SALDO",
                             style = if (isExpenseOnlyMode) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = onCardColor.copy(alpha = 0.7f),
                             letterSpacing = 1.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -327,7 +329,7 @@ private fun SummarySection(
                             } else "Rp •••••••••",
                             style = if (isExpenseOnlyMode) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = if (isExpenseOnlyMode) Color(0xFFEF5350) else Color.White
+                            color = if (isExpenseOnlyMode) expenseColor else onCardColor
                         )
                     }
                     
@@ -342,7 +344,7 @@ private fun SummarySection(
                         Icon(
                             imageVector = if (isBalanceVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                             contentDescription = "Toggle Balance",
-                            tint = Color.White.copy(alpha = 0.8f),
+                            tint = onCardColor.copy(alpha = 0.8f),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -354,7 +356,7 @@ private fun SummarySection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color.White.copy(alpha = 0.1f))
+                        .background(onCardColor.copy(alpha = 0.1f))
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -368,7 +370,7 @@ private fun SummarySection(
                             Text(
                                 text = "PEMASUKAN",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.6f),
+                                color = onCardColor.copy(alpha = 0.6f),
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -376,14 +378,14 @@ private fun SummarySection(
                                 text = "+ " + CurrencyUtils.formatRupiah(totalIncome),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF66BB6A)
+                                color = incomeColor
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 text = "PENGELUARAN",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.6f),
+                                color = onCardColor.copy(alpha = 0.6f),
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -391,17 +393,16 @@ private fun SummarySection(
                                 text = "- " + CurrencyUtils.formatRupiah(totalSpent),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFEF5350)
+                                color = expenseColor
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Budget bar — hanya tampil jika anggaran disetel
                 if (monthlyBudget > 0) {
                     val progress = (totalSpent / monthlyBudget).toFloat().coerceIn(0f, 1f)
-                    val progressColor = if (progress > 0.8f) Color(0xFFEF5350) else Color(0xFF66BB6A)
+                    val progressColor = if (progress > 0.8f) expenseColor else incomeColor
 
                     Column {
                         Row(
@@ -411,7 +412,7 @@ private fun SummarySection(
                             Text(
                                 text = "SISA ANGGARAN",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.6f)
+                                color = onCardColor.copy(alpha = 0.6f)
                             )
                             Text(
                                 text = CurrencyUtils.formatRupiah(budgetRemaining),
@@ -427,7 +428,7 @@ private fun SummarySection(
                                     .fillMaxWidth()
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp))
-                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .background(onCardColor.copy(alpha = 0.15f))
                             )
                             Box(
                                 modifier = Modifier
@@ -448,13 +449,13 @@ private fun SummarySection(
                         modifier = Modifier
                             .size(16.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xFF66BB6A)),
+                            .background(incomeColor),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = onCardColor,
                             modifier = Modifier.size(12.dp)
                         )
                     }
@@ -466,7 +467,7 @@ private fun SummarySection(
                     Text(
                         text = "Terakhir sinkron: $syncTime",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.6f)
+                        color = onCardColor.copy(alpha = 0.6f)
                     )
                 }
             }
