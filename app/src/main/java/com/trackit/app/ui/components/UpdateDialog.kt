@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trackit.app.updater.DownloadState
 import com.trackit.app.updater.UpdateInfo
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 fun UpdateDialog(
@@ -41,9 +42,16 @@ fun UpdateDialog(
                 
                 if (updateInfo.releaseNotes.isNotEmpty()) {
                     Text(
-                        "Catatan Rilis:\n${updateInfo.releaseNotes}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "Catatan Rilis:",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    MarkdownText(
+                        markdown = updateInfo.releaseNotes,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
