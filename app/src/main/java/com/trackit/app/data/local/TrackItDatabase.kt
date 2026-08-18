@@ -15,6 +15,9 @@ import com.trackit.app.data.local.dao.WeddingGuestDao
 import com.trackit.app.data.local.dao.WeddingPaymentTermDao
 import com.trackit.app.data.local.dao.WeddingProfileDao
 import com.trackit.app.data.local.dao.WeddingTaskDao
+import com.trackit.app.data.local.dao.WeddingVendorDao
+import com.trackit.app.data.local.dao.WeddingSeserahanDao
+import com.trackit.app.data.local.dao.WeddingCommitteeDao
 import com.trackit.app.data.local.entity.BudgetSettingEntity
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.TransactionEntity
@@ -24,6 +27,9 @@ import com.trackit.app.data.local.entity.WeddingGuestEntity
 import com.trackit.app.data.local.entity.WeddingPaymentTermEntity
 import com.trackit.app.data.local.entity.WeddingProfileEntity
 import com.trackit.app.data.local.entity.WeddingTaskEntity
+import com.trackit.app.data.local.entity.WeddingVendorEntity
+import com.trackit.app.data.local.entity.WeddingSeserahanEntity
+import com.trackit.app.data.local.entity.WeddingCommitteeEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,9 +46,12 @@ import kotlinx.coroutines.launch
         WeddingDocumentEntity::class,
         WeddingExpenseEntity::class,
         WeddingPaymentTermEntity::class,
-        WeddingGuestEntity::class
+        WeddingGuestEntity::class,
+        WeddingVendorEntity::class,
+        WeddingSeserahanEntity::class,
+        WeddingCommitteeEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -58,6 +67,9 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun weddingExpenseDao(): WeddingExpenseDao
     abstract fun weddingPaymentTermDao(): WeddingPaymentTermDao
     abstract fun weddingGuestDao(): WeddingGuestDao
+    abstract fun weddingVendorDao(): WeddingVendorDao
+    abstract fun weddingSeserahanDao(): WeddingSeserahanDao
+    abstract fun weddingCommitteeDao(): WeddingCommitteeDao
 
     companion object {
         /**
@@ -235,6 +247,64 @@ abstract class TrackItDatabase : RoomDatabase() {
                     )
                 """)
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_guests_weddingProfileId` ON `wedding_guests` (`weddingProfileId`)")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // wedding_vendors table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_vendors` (
+                        `vendorId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `category` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `picName` TEXT,
+                        `phoneNumber` TEXT,
+                        `instagramHandle` TEXT,
+                        `contractValue` REAL NOT NULL DEFAULT 0,
+                        `notes` TEXT,
+                        `status` TEXT NOT NULL DEFAULT 'PROSPEK',
+                        `createdAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_vendors_weddingProfileId` ON `wedding_vendors` (`weddingProfileId`)")
+
+                // wedding_seserahan table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_seserahan` (
+                        `itemId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `direction` TEXT NOT NULL,
+                        `itemName` TEXT NOT NULL,
+                        `quantity` INTEGER NOT NULL DEFAULT 1,
+                        `estimatedPrice` REAL NOT NULL DEFAULT 0,
+                        `status` TEXT NOT NULL DEFAULT 'BELUM_BELI',
+                        `notes` TEXT,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_seserahan_weddingProfileId` ON `wedding_seserahan` (`weddingProfileId`)")
+
+                // wedding_committee table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_committee` (
+                        `memberId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `memberName` TEXT NOT NULL,
+                        `role` TEXT NOT NULL,
+                        `side` TEXT NOT NULL DEFAULT 'KELUARGA_CPP',
+                        `phoneNumber` TEXT,
+                        `uniformDescription` TEXT,
+                        `fabricMeters` REAL NOT NULL DEFAULT 0,
+                        `uniformStatus` TEXT NOT NULL DEFAULT 'BELUM_DIBAGI',
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_committee_weddingProfileId` ON `wedding_committee` (`weddingProfileId`)")
             }
         }
 

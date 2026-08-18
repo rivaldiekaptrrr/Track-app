@@ -1,4 +1,4 @@
-﻿package com.trackit.app.ui.wedding.dashboard
+package com.trackit.app.ui.wedding.dashboard
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -32,6 +32,9 @@ fun WeddingDashboardScreen(
     onNavigateToDocuments: () -> Unit = {},
     onNavigateToBudget: () -> Unit = {},
     onNavigateToGuests: () -> Unit = {},
+    onNavigateToVendors: () -> Unit = {},
+    onNavigateToSeserahan: () -> Unit = {},
+    onNavigateToCommittee: () -> Unit = {},
     viewModel: WeddingDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -241,6 +244,32 @@ fun WeddingDashboardScreen(
                     icon = Icons.Default.People,
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToGuests
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                QuickActionCard(
+                    label = "Vendor Hub",
+                    icon = Icons.Default.Store,
+                    modifier = Modifier.weight(1f),
+                    onClick = onNavigateToVendors
+                )
+                QuickActionCard(
+                    label = "Seserahan",
+                    icon = Icons.Default.Favorite,
+                    modifier = Modifier.weight(1f),
+                    onClick = onNavigateToSeserahan
+                )
+                QuickActionCard(
+                    label = "Panitia",
+                    icon = Icons.Default.Group,
+                    modifier = Modifier.weight(1f),
+                    onClick = onNavigateToCommittee
                 )
             }
         }

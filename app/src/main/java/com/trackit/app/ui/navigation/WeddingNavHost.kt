@@ -28,6 +28,9 @@ import com.trackit.app.ui.wedding.dashboard.WeddingDashboardScreen
 import com.trackit.app.ui.wedding.documents.WeddingDocumentsScreen
 import com.trackit.app.ui.wedding.guests.WeddingGuestsScreen
 import com.trackit.app.ui.wedding.tasks.WeddingTasksScreen
+import com.trackit.app.ui.wedding.vendor.WeddingVendorScreen
+import com.trackit.app.ui.wedding.seserahan.WeddingSeserahanScreen
+import com.trackit.app.ui.wedding.committee.WeddingCommitteeScreen
 
 data class WeddingBottomNavItem(
     val route: String,
@@ -91,7 +94,10 @@ fun WeddingNavHost(
                     onNavigateToTasks = { navController.navigate(Screen.WeddingTasks.route) },
                     onNavigateToDocuments = { navController.navigate(Screen.WeddingDocuments.route) },
                     onNavigateToBudget = { navController.navigate(Screen.WeddingBudget.route) },
-                    onNavigateToGuests = { navController.navigate(Screen.WeddingGuests.route) }
+                    onNavigateToGuests = { navController.navigate(Screen.WeddingGuests.route) },
+                    onNavigateToVendors = { navController.navigate(Screen.WeddingVendors.route) },
+                    onNavigateToSeserahan = { navController.navigate(Screen.WeddingSeserahan.route) },
+                    onNavigateToCommittee = { navController.navigate(Screen.WeddingCommittee.route) }
                 )
             }
             composable(Screen.WeddingTasks.route) {
@@ -119,7 +125,22 @@ fun WeddingNavHost(
                 )
             }
             composable(Screen.WeddingVendors.route) {
-                WeddingComingSoonScreen(title = "Vendor Hub")
+                WeddingVendorScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.WeddingSeserahan.route) {
+                WeddingSeserahanScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.WeddingCommittee.route) {
+                WeddingCommitteeScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Settings.route) {
                 SettingsScreen(

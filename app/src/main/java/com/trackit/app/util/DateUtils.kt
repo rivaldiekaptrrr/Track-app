@@ -52,4 +52,14 @@ object CurrencyUtils {
     fun formatRupiah(amount: Double): String {
         return currencyFormat.format(amount)
     }
+
+    /** Compact format: Rp1,5jt / Rp250rb / Rp500 */
+    fun formatRupiahShort(amount: Double): String {
+        return when {
+            amount >= 1_000_000_000 -> "Rp${String.format("%.1f", amount / 1_000_000_000)}M"
+            amount >= 1_000_000 -> "Rp${String.format("%.1f", amount / 1_000_000)}jt"
+            amount >= 1_000 -> "Rp${String.format("%.0f", amount / 1_000)}rb"
+            else -> "Rp${amount.toLong()}"
+        }
+    }
 }
