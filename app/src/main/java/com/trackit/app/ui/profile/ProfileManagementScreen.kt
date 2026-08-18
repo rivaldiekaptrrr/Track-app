@@ -34,7 +34,9 @@ import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.data.repository.WeddingDocumentRepository
 import com.trackit.app.data.repository.WeddingProfileRepository
+import com.trackit.app.data.repository.WeddingTaskRepository
 import com.trackit.app.data.wedding.WeddingDocumentPresets
+import com.trackit.app.data.wedding.WeddingTaskPresets
 import com.trackit.app.util.CategoryIconMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -56,7 +58,8 @@ class ProfileManagementViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val preferencesManager: PreferencesManager,
     private val weddingProfileRepository: WeddingProfileRepository,
-    private val weddingDocumentRepository: WeddingDocumentRepository
+    private val weddingDocumentRepository: WeddingDocumentRepository,
+    private val weddingTaskRepository: WeddingTaskRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileManagementUiState())
@@ -94,6 +97,13 @@ class ProfileManagementViewModel @Inject constructor(
                         religionDetail = weddingProfile.religionDetail
                     )
                     weddingDocumentRepository.insertAll(docs)
+                    // 4. Auto-seed tugas timeline sesuai adat
+                    val tasks = WeddingTaskPresets.getPreset(
+                        weddingProfileId = weddingProfile.id,
+                        culturalPresetGroom = weddingProfile.culturalPresetGroom,
+                        culturalPresetBride = weddingProfile.culturalPresetBride
+                    )
+                    weddingTaskRepository.insertAll(tasks)
                 } else {
                     val newId = profileRepository.insert(profile)
                     // Seed default categories untuk expense profile

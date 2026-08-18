@@ -26,6 +26,8 @@ import com.trackit.app.ui.settings.SettingsScreen
 import com.trackit.app.ui.wedding.budget.WeddingBudgetScreen
 import com.trackit.app.ui.wedding.dashboard.WeddingDashboardScreen
 import com.trackit.app.ui.wedding.documents.WeddingDocumentsScreen
+import com.trackit.app.ui.wedding.guests.WeddingGuestsScreen
+import com.trackit.app.ui.wedding.tasks.WeddingTasksScreen
 
 data class WeddingBottomNavItem(
     val route: String,
@@ -93,10 +95,16 @@ fun WeddingNavHost(
                 )
             }
             composable(Screen.WeddingTasks.route) {
-                WeddingComingSoonScreen(title = "Timeline & Tugas")
+                WeddingTasksScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.WeddingGuests.route) {
-                WeddingComingSoonScreen(title = "Manajemen Tamu")
+                WeddingGuestsScreen(
+                    weddingProfileId = weddingProfileId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.WeddingBudget.route) {
                 WeddingBudgetScreen(
