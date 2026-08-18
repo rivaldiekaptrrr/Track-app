@@ -145,7 +145,12 @@ class MainActivity : FragmentActivity() {
                     isBiometricAvailable = remember { checkBiometricAvailability() }
                     
                     val bypassBiometric by preferencesManager.bypassBiometricOnce.collectAsState(initial = false)
-                    val isBiometricEnabled by preferencesManager.isBiometricEnabled.collectAsState(initial = true)
+                    val isBiometricEnabled by preferencesManager.isBiometricEnabled.collectAsState(initial = null)
+
+                    if (isBiometricEnabled == null) {
+                        // Wait for preferences to load from DataStore
+                        return@Surface
+                    }
 
                     LaunchedEffect(bypassBiometric) {
                         if (bypassBiometric) {
@@ -154,7 +159,7 @@ class MainActivity : FragmentActivity() {
                         }
                     }
 
-                    if (!isBiometricAvailable || !isBiometricEnabled) {
+                    if (!isBiometricAvailable || isBiometricEnabled == false) {
                         // Skip biometric if not available or disabled by user
                         isAuthenticated = true
                     }
