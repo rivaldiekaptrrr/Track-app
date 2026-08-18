@@ -32,6 +32,7 @@ class PreferencesManager @Inject constructor(
         val DAILY_REMINDER_TIME = androidx.datastore.preferences.core.stringPreferencesKey("daily_reminder_time")
         val EXPENSE_ONLY_MODE = booleanPreferencesKey("expense_only_mode")
         val THEME_MODE = intPreferencesKey("theme_mode")
+        val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
     }
 
     val isTtsEnabled: Flow<Boolean> = context.dataStore.data
@@ -52,6 +53,11 @@ class PreferencesManager @Inject constructor(
     val bypassBiometricOnce: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[BYPASS_BIOMETRIC_ONCE] ?: false
+        }
+        
+    val isBiometricEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[BIOMETRIC_ENABLED] ?: true // Default to true
         }
 
     val isDailyReminderEnabled: Flow<Boolean> = context.dataStore.data
@@ -96,6 +102,12 @@ class PreferencesManager @Inject constructor(
     suspend fun setBypassBiometricOnce(bypass: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[BYPASS_BIOMETRIC_ONCE] = bypass
+        }
+    }
+
+    suspend fun setBiometricEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[BIOMETRIC_ENABLED] = enabled
         }
     }
 

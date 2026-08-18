@@ -22,7 +22,8 @@ data class SettingsUiState(
     val isDailyReminderEnabled: Boolean = false,
     val dailyReminderTime: String = "20:00",
     val isExpenseOnlyMode: Boolean = false,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val isBiometricEnabled: Boolean = true
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -41,12 +42,21 @@ class SettingsViewModel @Inject constructor(
         loadDailyReminderPreferences()
         loadExpenseOnlyMode()
         loadThemeMode()
+        loadBiometricPreference()
     }
 
     private fun loadTtsPreference() {
         viewModelScope.launch {
             preferencesManager.isTtsEnabled.collect { isEnabled ->
                 _uiState.update { it.copy(isTtsEnabled = isEnabled) }
+            }
+        }
+    }
+
+    private fun loadBiometricPreference() {
+        viewModelScope.launch {
+            preferencesManager.isBiometricEnabled.collect { isEnabled ->
+                _uiState.update { it.copy(isBiometricEnabled = isEnabled) }
             }
         }
     }
@@ -105,6 +115,12 @@ class SettingsViewModel @Inject constructor(
     fun toggleTts(enabled: Boolean) {
         viewModelScope.launch {
             preferencesManager.setTtsEnabled(enabled)
+        }
+    }
+
+    fun toggleBiometric(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setBiometricEnabled(enabled)
         }
     }
 
