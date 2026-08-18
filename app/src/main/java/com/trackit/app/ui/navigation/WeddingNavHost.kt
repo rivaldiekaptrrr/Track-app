@@ -35,7 +35,9 @@ data class WeddingBottomNavItem(
 fun WeddingNavHost(
     navController: NavHostController,
     weddingProfileId: String,
-    onNavigateToMainProfile: () -> Unit
+    onNavigateToMainProfile: () -> Unit,
+    onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit
 ) {
     val bottomNavItems = listOf(
         WeddingBottomNavItem(Screen.WeddingDashboard.route, "Beranda", Icons.Default.Home),
@@ -104,7 +106,27 @@ fun WeddingNavHost(
                 WeddingComingSoonScreen(title = "Vendor Hub")
             }
             composable(Screen.Settings.route) {
-                SettingsScreen(onNavigateBack = { navController.popBackStack() })
+                SettingsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onExportPdf = onExportPdf,
+                    onExportCsv = onExportCsv,
+                    onNavigateToCustomKeywords = {
+                        navController.navigate(Screen.CustomKeywords.route)
+                    },
+                    onNavigateToCategoryBudget = {
+                        navController.navigate(Screen.CategoryBudget.route)
+                    }
+                )
+            }
+            composable(Screen.CustomKeywords.route) {
+                com.trackit.app.ui.settings.CustomKeywordScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.CategoryBudget.route) {
+                com.trackit.app.ui.budget.CategoryBudgetScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }

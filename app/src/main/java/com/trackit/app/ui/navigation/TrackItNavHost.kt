@@ -43,7 +43,9 @@ fun TrackItNavHost(
             weddingProfileId = activeProfile.weddingProfileId,
             onNavigateToMainProfile = {
                 // User can switch back via Profile Management
-            }
+            },
+            onExportPdf = onExportPdf,
+            onExportCsv = onExportCsv
         )
         return
     }
