@@ -22,7 +22,7 @@ class VoiceWidgetProvider : AppWidgetProvider() {
             
             // Intent to launch TransparentVoiceActivity
             val intent = Intent(context, TransparentVoiceActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             
             val pendingIntent = PendingIntent.getActivity(

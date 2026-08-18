@@ -389,7 +389,7 @@ class TransparentVoiceActivity : ComponentActivity() {
 
     private fun finishActivityCleanly() {
         runOnUiThread {
-            finish()
+            finishAndRemoveTask()
         }
     }
 

@@ -37,6 +37,8 @@
         <activity
             android:name=".ui.voice.TransparentVoiceActivity"
             android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
             android:theme="@style/Theme.Transparent" />
 
         <!-- Quick Settings Tile for Voice Recording -->
