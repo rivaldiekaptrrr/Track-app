@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.trackit.app.ui.settings.ExportDialog
-import com.trackit.app.ui.settings.GDriveRestoreDialog
+import com.trackit.app.ui.settings.ExportReportDialog
+import com.trackit.app.ui.settings.RestoreGDriveDialog
 import com.trackit.app.util.BackupManager
 import com.trackit.app.util.GDriveBackupManager
 import kotlinx.coroutines.launch
@@ -134,8 +134,9 @@ fun WeddingSettingsScreen(
     }
 
     if (showExportDialog) {
-        ExportDialog(
+        ExportReportDialog(
             onDismiss = { showExportDialog = false },
+            isExpenseOnlyMode = false,
             onExportPdf = { title, startDate, endDate, typeFilter ->
                 onExportPdf(title, startDate, endDate, typeFilter)
                 showExportDialog = false
@@ -148,11 +149,11 @@ fun WeddingSettingsScreen(
     }
 
     if (showGDriveRestoreDialog) {
-        GDriveRestoreDialog(
+        RestoreGDriveDialog(
             onDismiss = { showGDriveRestoreDialog = false },
-            onRestoreLocal = {
+            onRestoreSuccess = {
                 showGDriveRestoreDialog = false
-                restoreLauncher.launch(arrayOf("application/octet-stream", "application/json", "*/*"))
+                Toast.makeText(context, "✅ Restore berhasil! Silakan tutup aplikasi dari Recent Apps lalu buka kembali.", Toast.LENGTH_LONG).show()
             }
         )
     }

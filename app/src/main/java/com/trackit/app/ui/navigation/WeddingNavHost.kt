@@ -41,13 +41,6 @@ fun WeddingNavHost(
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit
 ) {
-    val bottomNavItems = listOf(
-        WeddingBottomNavItem(Screen.WeddingDashboard.route, "Beranda", Icons.Default.Home),
-        WeddingBottomNavItem(Screen.WeddingTasks.route, "Tugas", Icons.Default.CheckCircle),
-        WeddingBottomNavItem(Screen.WeddingGuests.route, "Tamu", Icons.Default.People),
-        WeddingBottomNavItem(Screen.WeddingBudget.route, "Anggaran", Icons.Default.AccountBalance),
-    )
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 

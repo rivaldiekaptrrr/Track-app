@@ -1,3 +1,10 @@
+## Catatan Rilis v2.0.1
+
+- **[Perbaikan Bug] Navigasi Wedding Planner:** Memperbaiki masalah pada *Bottom Navigation Bar* di mana tombol "Tugas" kadang mengarahkan ke "Pengaturan", dan tombol "Beranda" mengarahkan ke "Tamu". Navigasi sekarang jauh lebih stabil.
+- **[Peningkatan] Halaman Pengaturan Khusus:** Menambahkan halaman "Pengaturan Wedding" yang didedikasikan khusus untuk mode Wedding Planner. Pengguna kini tidak akan melihat opsi-opsi dari Expense Tracker (seperti Pagu Kategori Anggaran) saat berada di mode Wedding.
+
+---
+
 ## Catatan Rilis v2.0.0
 
 - **[Fitur Baru] Mode Wedding Planner 🎉:** Update besar yang menghadirkan fitur perencanaan pernikahan langsung di dalam TrackIt! Mode ini dapat diaktifkan dari Pengaturan.
