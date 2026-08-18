@@ -32,13 +32,7 @@ import com.trackit.app.ui.wedding.vendor.WeddingVendorScreen
 import com.trackit.app.ui.wedding.seserahan.WeddingSeserahanScreen
 import com.trackit.app.ui.wedding.committee.WeddingCommitteeScreen
 import com.trackit.app.ui.wedding.rundown.WeddingRundownScreen
-
-data class WeddingBottomNavItem(
-    val route: String,
-    val label: String,
-    val icon: ImageVector
-)
-
+import com.trackit.app.ui.wedding.settings.WeddingSettingsScreen
 @Composable
 fun WeddingNavHost(
     navController: NavHostController,
@@ -60,24 +54,63 @@ fun WeddingNavHost(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                bottomNavItems.forEach { item ->
-                    NavigationBarItem(
-                        selected = currentRoute == item.route,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(Screen.WeddingDashboard.route) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(item.icon, contentDescription = item.label) },
-                        label = { Text(item.label) }
-                    )
-                }
-                // Settings
                 NavigationBarItem(
-                    selected = currentRoute == Screen.Settings.route,
-                    onClick = { navController.navigate(Screen.Settings.route) },
+                    selected = currentRoute == Screen.WeddingDashboard.route,
+                    onClick = {
+                        navController.navigate(Screen.WeddingDashboard.route) {
+                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Beranda") },
+                    label = { Text("Beranda") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.WeddingTasks.route,
+                    onClick = {
+                        navController.navigate(Screen.WeddingTasks.route) {
+                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Tugas") },
+                    label = { Text("Tugas") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.WeddingGuests.route,
+                    onClick = {
+                        navController.navigate(Screen.WeddingGuests.route) {
+                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.People, contentDescription = "Tamu") },
+                    label = { Text("Tamu") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.WeddingBudget.route,
+                    onClick = {
+                        navController.navigate(Screen.WeddingBudget.route) {
+                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.AccountBalance, contentDescription = "Anggaran") },
+                    label = { Text("Anggaran") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.WeddingSettings.route,
+                    onClick = { 
+                        navController.navigate(Screen.WeddingSettings.route) {
+                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Pengaturan") },
                     label = { Text("Pengaturan") }
                 )
@@ -150,17 +183,12 @@ fun WeddingNavHost(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-            composable(Screen.Settings.route) {
-                SettingsScreen(
+            composable(Screen.WeddingSettings.route) {
+                WeddingSettingsScreen(
                     onNavigateBack = { navController.popBackStack() },
+                    onNavigateToMainProfile = onNavigateToMainProfile,
                     onExportPdf = onExportPdf,
-                    onExportCsv = onExportCsv,
-                    onNavigateToCustomKeywords = {
-                        navController.navigate(Screen.CustomKeywords.route)
-                    },
-                    onNavigateToCategoryBudget = {
-                        navController.navigate(Screen.CategoryBudget.route)
-                    }
+                    onExportCsv = onExportCsv
                 )
             }
             composable(Screen.CustomKeywords.route) {

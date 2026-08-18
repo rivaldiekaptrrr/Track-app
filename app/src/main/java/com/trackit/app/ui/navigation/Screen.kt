@@ -28,5 +28,6 @@ sealed class Screen(val route: String) {
     data object WeddingSeserahan : Screen("wedding_seserahan")
     data object WeddingCommittee : Screen("wedding_committee")
     data object WeddingRundown : Screen("wedding_rundown")
+    data object WeddingSettings : Screen("wedding_settings")
 }
 
