@@ -27,10 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.trackit.app.data.local.PreferencesManager
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.TransactionEntity
 import com.trackit.app.data.repository.CategoryRepository
@@ -111,8 +114,15 @@ class TransparentVoiceActivity : ComponentActivity() {
         }
         
         setContent {
-            // Menggunakan MaterialTheme bawaan Compose agar tidak merusak status bar transparansi
-            MaterialTheme {
+            val themeMode by preferencesManager.themeMode.collectAsState(initial = com.trackit.app.data.local.ThemeMode.SYSTEM)
+            val darkTheme = when (themeMode) {
+                com.trackit.app.data.local.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                com.trackit.app.data.local.ThemeMode.LIGHT -> false
+                com.trackit.app.data.local.ThemeMode.DARK -> true
+            }
+            
+            // Menggunakan TrackItTheme dengan disableStatusBarModifier agar tidak merusak status bar transparansi
+            TrackItTheme(darkTheme = darkTheme, disableStatusBarModifier = true) {
                 val showSelector by showCategorySelector
                 val parseResult by pendingParseResult
                 val categories by availableCategories

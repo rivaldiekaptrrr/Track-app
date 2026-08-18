@@ -9,6 +9,7 @@ import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -110,7 +111,14 @@ class MainActivity : FragmentActivity() {
         }
 
         setContent {
-            TrackItTheme {
+            val themeMode by preferencesManager.themeMode.collectAsState(initial = com.trackit.app.data.local.ThemeMode.SYSTEM)
+            val darkTheme = when (themeMode) {
+                com.trackit.app.data.local.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                com.trackit.app.data.local.ThemeMode.LIGHT -> false
+                com.trackit.app.data.local.ThemeMode.DARK -> true
+            }
+            
+            TrackItTheme(darkTheme = darkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

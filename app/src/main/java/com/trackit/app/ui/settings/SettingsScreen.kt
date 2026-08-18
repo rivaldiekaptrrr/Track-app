@@ -496,6 +496,92 @@ fun SettingsScreen(
                 }
             }
 
+            // Tampilan & Tema
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Palette,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Tampilan",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Theme Selection
+                    var themeDropdownExpanded by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { themeDropdownExpanded = true }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Tema Aplikasi",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                when (uiState.themeMode) {
+                                    com.trackit.app.data.local.ThemeMode.SYSTEM -> "Mengikuti Sistem"
+                                    com.trackit.app.data.local.ThemeMode.LIGHT -> "Terang"
+                                    com.trackit.app.data.local.ThemeMode.DARK -> "Gelap"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Box {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            DropdownMenu(
+                                expanded = themeDropdownExpanded,
+                                onDismissRequest = { themeDropdownExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Mengikuti Sistem") },
+                                    onClick = {
+                                        viewModel.setThemeMode(com.trackit.app.data.local.ThemeMode.SYSTEM)
+                                        themeDropdownExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Terang") },
+                                    onClick = {
+                                        viewModel.setThemeMode(com.trackit.app.data.local.ThemeMode.LIGHT)
+                                        themeDropdownExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Gelap") },
+                                    onClick = {
+                                        viewModel.setThemeMode(com.trackit.app.data.local.ThemeMode.DARK)
+                                        themeDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Mode Khusus Pengeluaran
             Card(
                 shape = RoundedCornerShape(16.dp),

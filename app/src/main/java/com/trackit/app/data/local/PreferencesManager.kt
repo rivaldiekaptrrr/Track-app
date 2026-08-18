@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -11,6 +12,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+
+enum class ThemeMode {
+    SYSTEM, LIGHT, DARK
+}
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -26,6 +31,7 @@ class PreferencesManager @Inject constructor(
         val DAILY_REMINDER_ENABLED = booleanPreferencesKey("daily_reminder_enabled")
         val DAILY_REMINDER_TIME = androidx.datastore.preferences.core.stringPreferencesKey("daily_reminder_time")
         val EXPENSE_ONLY_MODE = booleanPreferencesKey("expense_only_mode")
+        val THEME_MODE = intPreferencesKey("theme_mode")
     }
 
     val isTtsEnabled: Flow<Boolean> = context.dataStore.data
@@ -61,6 +67,12 @@ class PreferencesManager @Inject constructor(
     val isExpenseOnlyMode: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[EXPENSE_ONLY_MODE] ?: false
+        }
+
+    val themeMode: Flow<ThemeMode> = context.dataStore.data
+        .map { preferences ->
+            val ordinal = preferences[THEME_MODE] ?: ThemeMode.SYSTEM.ordinal
+            ThemeMode.values().getOrElse(ordinal) { ThemeMode.SYSTEM }
         }
 
     suspend fun setTtsEnabled(enabled: Boolean) {
@@ -102,6 +114,12 @@ class PreferencesManager @Inject constructor(
     suspend fun setExpenseOnlyMode(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[EXPENSE_ONLY_MODE] = enabled
+        }
+    }
+
+    suspend fun setThemeMode(mode: ThemeMode) {
+        context.dataStore.edit { preferences ->
+            preferences[THEME_MODE] = mode.ordinal
         }
     }
 }

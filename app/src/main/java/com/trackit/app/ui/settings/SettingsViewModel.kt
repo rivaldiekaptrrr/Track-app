@@ -3,6 +3,7 @@ package com.trackit.app.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trackit.app.data.local.PreferencesManager
+import com.trackit.app.data.local.ThemeMode
 import com.trackit.app.data.local.entity.ProfileEntity
 import com.trackit.app.data.repository.BudgetRepository
 import com.trackit.app.data.repository.ProfileRepository
@@ -20,7 +21,8 @@ data class SettingsUiState(
     val activeProfileId: Long = 1L,
     val isDailyReminderEnabled: Boolean = false,
     val dailyReminderTime: String = "20:00",
-    val isExpenseOnlyMode: Boolean = false
+    val isExpenseOnlyMode: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,6 +40,7 @@ class SettingsViewModel @Inject constructor(
         loadBudgetForActiveProfile()
         loadDailyReminderPreferences()
         loadExpenseOnlyMode()
+        loadThemeMode()
     }
 
     private fun loadTtsPreference() {
@@ -128,6 +131,20 @@ class SettingsViewModel @Inject constructor(
     fun toggleExpenseOnlyMode(enabled: Boolean) {
         viewModelScope.launch {
             preferencesManager.setExpenseOnlyMode(enabled)
+        }
+    }
+
+    private fun loadThemeMode() {
+        viewModelScope.launch {
+            preferencesManager.themeMode.collect { mode ->
+                _uiState.update { it.copy(themeMode = mode) }
+            }
+        }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch {
+            preferencesManager.setThemeMode(mode)
         }
     }
 }

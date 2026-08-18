@@ -63,6 +63,7 @@ private val LightColorScheme = lightColorScheme(
 fun TrackItTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
+    disableStatusBarModifier: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -75,7 +76,7 @@ fun TrackItTheme(
     }
 
     val view = LocalView.current
-    if (!view.isInEditMode) {
+    if (!view.isInEditMode && !disableStatusBarModifier) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.surface.toArgb()
