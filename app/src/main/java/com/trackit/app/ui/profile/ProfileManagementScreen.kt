@@ -28,9 +28,11 @@ import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.ProfileEntity
 import com.trackit.app.data.local.entity.TransactionEntity
+import com.trackit.app.data.local.entity.WeddingProfileEntity
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.TransactionRepository
+import com.trackit.app.data.repository.WeddingProfileRepository
 import com.trackit.app.util.CategoryIconMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -50,7 +52,8 @@ class ProfileManagementViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val weddingProfileRepository: WeddingProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileManagementUiState())
@@ -73,15 +76,24 @@ class ProfileManagementViewModel @Inject constructor(
         }
     }
 
-    fun saveProfile(profile: ProfileEntity) {
+    fun saveProfile(profile: ProfileEntity, weddingProfile: WeddingProfileEntity? = null) {
         viewModelScope.launch {
             if (profile.id == 0L) {
-                val newId = profileRepository.insert(profile)
-                // Seed default categories for new profile
-                val defaults = com.trackit.app.data.local.TrackItDatabase
-                    .getDefaultCategories()
-                    .map { it.copy(profileId = newId) }
-                categoryRepository.insertAll(defaults)
+                if (profile.mode == "WEDDING" && weddingProfile != null) {
+                    // Create wedding profile first, get its ID
+                    weddingProfileRepository.insert(weddingProfile)
+                    val newProfileId = profileRepository.insert(
+                        profile.copy(weddingProfileId = weddingProfile.id)
+                    )
+                    // No need to seed expense categories for wedding profiles
+                } else {
+                    val newId = profileRepository.insert(profile)
+                    // Seed default categories for new expense profile
+                    val defaults = com.trackit.app.data.local.TrackItDatabase
+                        .getDefaultCategories()
+                        .map { it.copy(profileId = newId) }
+                    categoryRepository.insertAll(defaults)
+                }
             } else {
                 profileRepository.update(profile)
             }
@@ -262,8 +274,8 @@ fun ProfileManagementScreen(
         ProfileFormDialog(
             profile = selectedProfile!!,
             onDismiss = { showDialog = false },
-            onSave = { updated ->
-                viewModel.saveProfile(updated)
+            onSave = { updated, weddingProfile ->
+                viewModel.saveProfile(updated, weddingProfile)
                 showDialog = false
             }
         )
@@ -300,17 +312,45 @@ fun ProfileManagementScreen(
 fun ProfileFormDialog(
     profile: ProfileEntity,
     onDismiss: () -> Unit,
-    onSave: (ProfileEntity) -> Unit
+    onSave: (ProfileEntity, WeddingProfileEntity?) -> Unit
 ) {
     var name by remember { mutableStateOf(profile.name) }
     var selectedIcon by remember { mutableStateOf(profile.iconName) }
     var selectedColor by remember { mutableStateOf(profile.colorHex) }
+    var selectedMode by remember { mutableStateOf(profile.mode) } // "EXPENSE" or "WEDDING"
+    
+    // Wedding onboarding fields
+    var groomName by remember { mutableStateOf("") }
+    var brideName by remember { mutableStateOf("") }
+    var budgetCap by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (profile.id == 0L) "Buat Profil Baru" else "Edit Profil") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
+                // === Mode Selector (only for new profile) ===
+                if (profile.id == 0L) {
+                    Text("Tipe Profil", style = MaterialTheme.typography.labelMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = selectedMode == "EXPENSE",
+                            onClick = { selectedMode = "EXPENSE" },
+                            label = { Text("💰 Expense Tracker") }
+                        )
+                        FilterChip(
+                            selected = selectedMode == "WEDDING",
+                            onClick = {
+                                selectedMode = "WEDDING"
+                                selectedIcon = "favorite"
+                                selectedColor = "#C62828"
+                            },
+                            label = { Text("💒 Wedding Planner") }
+                        )
+                    }
+                }
+
                 // Preview
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -391,7 +431,21 @@ fun ProfileFormDialog(
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onSave(profile.copy(name = name.trim(), iconName = selectedIcon, colorHex = selectedColor))
+                        val savedProfile = profile.copy(
+                            name = name.trim(),
+                            iconName = selectedIcon,
+                            colorHex = selectedColor,
+                            mode = selectedMode
+                        )
+                        val weddingProfile = if (selectedMode == "WEDDING") {
+                            WeddingProfileEntity(
+                                groomName = groomName.ifBlank { name.trim() },
+                                brideName = brideName.ifBlank { "Pasangan" },
+                                weddingDate = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000), // Default 1 tahun
+                                totalBudgetCap = budgetCap.toDoubleOrNull() ?: 0.0
+                            )
+                        } else null
+                        onSave(savedProfile, weddingProfile)
                     }
                 }
             ) {

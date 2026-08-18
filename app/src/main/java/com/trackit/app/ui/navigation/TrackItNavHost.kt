@@ -12,6 +12,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.trackit.app.ui.budget.CategoryBudgetScreen
 import com.trackit.app.ui.chart.ChartScreen
@@ -29,7 +30,25 @@ fun TrackItNavHost(
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit
 ) {
-    // Routes where bottom navbar should be hidden
+    // Shared DashboardViewModel for profile data
+    val dashboardViewModel: DashboardViewModel = hiltViewModel()
+    val dashboardUiState by dashboardViewModel.uiState.collectAsStateWithLifecycle()
+
+    // === SMART ROUTER: Wedding mode check ===
+    val activeProfile = dashboardUiState.activeProfile
+    if (activeProfile?.mode == "WEDDING" && activeProfile.weddingProfileId != null) {
+        val weddingNavController = rememberNavController()
+        WeddingNavHost(
+            navController = weddingNavController,
+            weddingProfileId = activeProfile.weddingProfileId,
+            onNavigateToMainProfile = {
+                // User can switch back via Profile Management
+            }
+        )
+        return
+    }
+
+    // === EXPENSE TRACKER (default) ===
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val hideNavBarRoutes = listOf(
@@ -42,10 +61,6 @@ fun TrackItNavHost(
         Screen.CategoryBudget.route
     )
     val shouldShowNavBar = hideNavBarRoutes.none { currentRoute?.startsWith(it.substringBefore("{")) == true }
-
-    // Shared DashboardViewModel for profile data in navbar
-    val dashboardViewModel: DashboardViewModel = hiltViewModel()
-    val dashboardUiState by dashboardViewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         bottomBar = {

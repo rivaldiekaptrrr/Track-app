@@ -9,9 +9,21 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.trackit.app.data.local.dao.BudgetSettingDao
 import com.trackit.app.data.local.dao.CategoryDao
 import com.trackit.app.data.local.dao.TransactionDao
+import com.trackit.app.data.local.dao.WeddingDocumentDao
+import com.trackit.app.data.local.dao.WeddingExpenseDao
+import com.trackit.app.data.local.dao.WeddingGuestDao
+import com.trackit.app.data.local.dao.WeddingPaymentTermDao
+import com.trackit.app.data.local.dao.WeddingProfileDao
+import com.trackit.app.data.local.dao.WeddingTaskDao
 import com.trackit.app.data.local.entity.BudgetSettingEntity
 import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.TransactionEntity
+import com.trackit.app.data.local.entity.WeddingDocumentEntity
+import com.trackit.app.data.local.entity.WeddingExpenseEntity
+import com.trackit.app.data.local.entity.WeddingGuestEntity
+import com.trackit.app.data.local.entity.WeddingPaymentTermEntity
+import com.trackit.app.data.local.entity.WeddingProfileEntity
+import com.trackit.app.data.local.entity.WeddingTaskEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,9 +34,15 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         BudgetSettingEntity::class,
         com.trackit.app.data.local.entity.ProfileEntity::class,
-        com.trackit.app.data.local.entity.CategoryBudgetEntity::class
+        com.trackit.app.data.local.entity.CategoryBudgetEntity::class,
+        WeddingProfileEntity::class,
+        WeddingTaskEntity::class,
+        WeddingDocumentEntity::class,
+        WeddingExpenseEntity::class,
+        WeddingPaymentTermEntity::class,
+        WeddingGuestEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -34,6 +52,12 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun budgetSettingDao(): BudgetSettingDao
     abstract fun profileDao(): com.trackit.app.data.local.dao.ProfileDao
     abstract fun categoryBudgetDao(): com.trackit.app.data.local.dao.CategoryBudgetDao
+    abstract fun weddingProfileDao(): WeddingProfileDao
+    abstract fun weddingTaskDao(): WeddingTaskDao
+    abstract fun weddingDocumentDao(): WeddingDocumentDao
+    abstract fun weddingExpenseDao(): WeddingExpenseDao
+    abstract fun weddingPaymentTermDao(): WeddingPaymentTermDao
+    abstract fun weddingGuestDao(): WeddingGuestDao
 
     companion object {
         /**
@@ -105,6 +129,112 @@ abstract class TrackItDatabase : RoomDatabase() {
                         FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
                     )
                 """)
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add mode & weddingProfileId columns to profiles table
+                db.execSQL("ALTER TABLE profiles ADD COLUMN mode TEXT NOT NULL DEFAULT 'EXPENSE'")
+                db.execSQL("ALTER TABLE profiles ADD COLUMN weddingProfileId TEXT")
+
+                // Create wedding_profiles table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_profiles` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `groomName` TEXT NOT NULL,
+                        `brideName` TEXT NOT NULL,
+                        `weddingDate` INTEGER NOT NULL,
+                        `totalBudgetCap` REAL NOT NULL DEFAULT 0,
+                        `religionType` TEXT NOT NULL DEFAULT 'ISLAM',
+                        `religionDetail` TEXT,
+                        `culturalPresetGroom` TEXT,
+                        `culturalPresetBride` TEXT,
+                        `createdAt` INTEGER NOT NULL
+                    )
+                """)
+
+                // Create wedding_tasks table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_tasks` (
+                        `taskId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `phaseMonth` INTEGER NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `description` TEXT,
+                        `pic` TEXT NOT NULL DEFAULT 'BOTH',
+                        `isCompleted` INTEGER NOT NULL DEFAULT 0,
+                        `dueDate` INTEGER,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_tasks_weddingProfileId` ON `wedding_tasks` (`weddingProfileId`)")
+
+                // Create wedding_documents table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_documents` (
+                        `docId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `docName` TEXT NOT NULL,
+                        `ownerType` TEXT NOT NULL DEFAULT 'BOTH',
+                        `isCompleted` INTEGER NOT NULL DEFAULT 0,
+                        `localFilePath` TEXT,
+                        `adminCost` REAL NOT NULL DEFAULT 0,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_documents_weddingProfileId` ON `wedding_documents` (`weddingProfileId`)")
+
+                // Create wedding_expenses table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_expenses` (
+                        `expenseId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `category` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `totalEstimated` REAL NOT NULL,
+                        `totalPaid` REAL NOT NULL DEFAULT 0,
+                        `paidBySource` TEXT NOT NULL DEFAULT 'BERSAMA',
+                        `paymentStatus` TEXT NOT NULL DEFAULT 'UNPAID',
+                        `notes` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_expenses_weddingProfileId` ON `wedding_expenses` (`weddingProfileId`)")
+
+                // Create wedding_payment_terms table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_payment_terms` (
+                        `termId` TEXT NOT NULL PRIMARY KEY,
+                        `expenseId` TEXT NOT NULL,
+                        `termName` TEXT NOT NULL,
+                        `amount` REAL NOT NULL,
+                        `dueDate` INTEGER NOT NULL,
+                        `isPaid` INTEGER NOT NULL DEFAULT 0,
+                        `paidDate` INTEGER,
+                        FOREIGN KEY(`expenseId`) REFERENCES `wedding_expenses`(`expenseId`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_payment_terms_expenseId` ON `wedding_payment_terms` (`expenseId`)")
+
+                // Create wedding_guests table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `wedding_guests` (
+                        `guestId` TEXT NOT NULL PRIMARY KEY,
+                        `weddingProfileId` TEXT NOT NULL,
+                        `guestName` TEXT NOT NULL,
+                        `phoneNumber` TEXT,
+                        `groupAllocation` TEXT NOT NULL DEFAULT 'TEMAN_CPP',
+                        `sessionTarget` TEXT NOT NULL DEFAULT 'KEDUANYA',
+                        `estimatedPax` INTEGER NOT NULL DEFAULT 2,
+                        `rsvpStatus` TEXT NOT NULL DEFAULT 'PENDING',
+                        FOREIGN KEY(`weddingProfileId`) REFERENCES `wedding_profiles`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_wedding_guests_weddingProfileId` ON `wedding_guests` (`weddingProfileId`)")
             }
         }
 

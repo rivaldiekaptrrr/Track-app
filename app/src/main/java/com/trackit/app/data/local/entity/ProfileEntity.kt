@@ -10,5 +10,8 @@ data class ProfileEntity(
     val name: String,
     val iconName: String = "person",
     val colorHex: String = "#1565C0",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val mode: String = "EXPENSE", // "EXPENSE" or "WEDDING"
+    val weddingProfileId: String? = null // FK to wedding_profiles.id
 )
+

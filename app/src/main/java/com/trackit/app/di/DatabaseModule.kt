@@ -6,6 +6,12 @@ import com.trackit.app.data.local.TrackItDatabase
 import com.trackit.app.data.local.dao.BudgetSettingDao
 import com.trackit.app.data.local.dao.CategoryDao
 import com.trackit.app.data.local.dao.TransactionDao
+import com.trackit.app.data.local.dao.WeddingDocumentDao
+import com.trackit.app.data.local.dao.WeddingExpenseDao
+import com.trackit.app.data.local.dao.WeddingGuestDao
+import com.trackit.app.data.local.dao.WeddingPaymentTermDao
+import com.trackit.app.data.local.dao.WeddingProfileDao
+import com.trackit.app.data.local.dao.WeddingTaskDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,7 +31,14 @@ object DatabaseModule {
             TrackItDatabase::class.java,
             "trackit_database"
         )
-        .addMigrations(TrackItDatabase.MIGRATION_1_2, TrackItDatabase.MIGRATION_2_3, TrackItDatabase.MIGRATION_3_4, TrackItDatabase.MIGRATION_4_5, TrackItDatabase.MIGRATION_5_6)
+        .addMigrations(
+            TrackItDatabase.MIGRATION_1_2,
+            TrackItDatabase.MIGRATION_2_3,
+            TrackItDatabase.MIGRATION_3_4,
+            TrackItDatabase.MIGRATION_4_5,
+            TrackItDatabase.MIGRATION_5_6,
+            TrackItDatabase.MIGRATION_6_7
+        )
         .build()
     }
 
@@ -48,4 +61,29 @@ object DatabaseModule {
     @Provides
     fun provideCategoryBudgetDao(database: TrackItDatabase): com.trackit.app.data.local.dao.CategoryBudgetDao =
         database.categoryBudgetDao()
+
+    @Provides
+    fun provideWeddingProfileDao(database: TrackItDatabase): WeddingProfileDao =
+        database.weddingProfileDao()
+
+    @Provides
+    fun provideWeddingTaskDao(database: TrackItDatabase): WeddingTaskDao =
+        database.weddingTaskDao()
+
+    @Provides
+    fun provideWeddingDocumentDao(database: TrackItDatabase): WeddingDocumentDao =
+        database.weddingDocumentDao()
+
+    @Provides
+    fun provideWeddingExpenseDao(database: TrackItDatabase): WeddingExpenseDao =
+        database.weddingExpenseDao()
+
+    @Provides
+    fun provideWeddingPaymentTermDao(database: TrackItDatabase): WeddingPaymentTermDao =
+        database.weddingPaymentTermDao()
+
+    @Provides
+    fun provideWeddingGuestDao(database: TrackItDatabase): WeddingGuestDao =
+        database.weddingGuestDao()
 }
+

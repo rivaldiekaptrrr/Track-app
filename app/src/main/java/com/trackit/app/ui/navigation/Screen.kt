@@ -17,4 +17,13 @@ sealed class Screen(val route: String) {
     data object CustomKeywords : Screen("custom_keywords")
     data object ProfileManagement : Screen("profile_management")
     data object CategoryBudget : Screen("category_budget")
+
+    // Wedding Planner Screens
+    data object WeddingDashboard : Screen("wedding_dashboard")
+    data object WeddingTasks : Screen("wedding_tasks")
+    data object WeddingDocuments : Screen("wedding_documents")
+    data object WeddingBudget : Screen("wedding_budget")
+    data object WeddingGuests : Screen("wedding_guests")
+    data object WeddingVendors : Screen("wedding_vendors")
 }
+
