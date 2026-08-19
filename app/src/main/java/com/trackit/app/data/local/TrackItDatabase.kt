@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
         WeddingEventEntity::class,
         WeddingRundownItemEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -353,6 +353,14 @@ abstract class TrackItDatabase : RoomDatabase() {
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quote TEXT")
+            }
+        }
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quoteEnabled INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quoteFontSize TEXT NOT NULL DEFAULT 'SEDANG'")
+                db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quoteFontStyle TEXT NOT NULL DEFAULT 'ITALIC'")
             }
         }
 

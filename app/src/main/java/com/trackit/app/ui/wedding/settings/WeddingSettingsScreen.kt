@@ -19,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trackit.app.data.local.ThemeMode
 import com.trackit.app.ui.settings.ExportReportDialog
 import com.trackit.app.ui.settings.RestoreGDriveDialog
-import com.trackit.app.ui.settings.SettingsViewModel
 import com.trackit.app.util.BackupManager
 import com.trackit.app.util.GDriveBackupManager
 import kotlinx.coroutines.launch
@@ -36,13 +36,18 @@ fun WeddingSettingsScreen(
     onNavigateToMainProfile: () -> Unit,
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
+    weddingProfileId: String = "",
+    viewModel: WeddingSettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
     var showGDriveRestoreDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(weddingProfileId) {
+        if (weddingProfileId.isNotBlank()) viewModel.loadForProfile(weddingProfileId)
+    }
 
     val gDriveSignInLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -240,6 +245,140 @@ fun WeddingSettingsScreen(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // === Kustomisasi Quotes ===
+            Text(
+                text = "Quotes Dashboard",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 12.dp)
+            )
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Toggle On/Off
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "Tampilkan Quotes",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Tampilkan teks inspirasi di dashboard",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = uiState.quoteEnabled,
+                            onCheckedChange = { viewModel.toggleQuoteEnabled(it) }
+                        )
+                    }
+
+                    if (uiState.quoteEnabled) {
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
+
+                        // Input teks quotes
+                        Text(
+                            "Teks Quotes",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = uiState.quoteText,
+                            onValueChange = { viewModel.updateQuoteText(it) },
+                            placeholder = { Text("Tulis teks motivasi atau kata-kata cinta...") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 2,
+                            maxLines = 4,
+                            shape = RoundedCornerShape(12.dp),
+                            trailingIcon = {
+                                IconButton(onClick = { viewModel.saveQuoteText() }) {
+                                    Icon(
+                                        Icons.Default.Save,
+                                        contentDescription = "Simpan",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Ukuran Font
+                        Text(
+                            "Ukuran Font",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf("KECIL" to "Kecil", "SEDANG" to "Sedang", "BESAR" to "Besar").forEach { (key, label) ->
+                                ThemeModeOption(
+                                    label = label,
+                                    isSelected = uiState.quoteFontSize == key,
+                                    onClick = { viewModel.setQuoteFontSize(key) }
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Gaya Font (multi-select chip)
+                        Text(
+                            "Gaya Font",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf(
+                                "NORMAL" to "Normal",
+                                "BOLD" to "Bold",
+                                "ITALIC" to "Italic",
+                                "BOLD_ITALIC" to "B+I"
+                            ).forEach { (key, label) ->
+                                ThemeModeOption(
+                                    label = label,
+                                    isSelected = uiState.quoteFontStyle == key,
+                                    onClick = { viewModel.setQuoteFontStyle(key) }
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

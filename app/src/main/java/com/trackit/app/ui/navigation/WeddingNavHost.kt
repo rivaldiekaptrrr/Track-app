@@ -124,7 +124,9 @@ fun WeddingNavHost(
                     onNavigateToVendors = { navController.navigate(Screen.WeddingVendors.route) },
                     onNavigateToSeserahan = { navController.navigate(Screen.WeddingSeserahan.route) },
                     onNavigateToCommittee = { navController.navigate(Screen.WeddingCommittee.route) },
-                    onNavigateToRundown = { navController.navigate(Screen.WeddingRundown.route) }
+                    onNavigateToRundown = { navController.navigate(Screen.WeddingRundown.route) },
+                    onNavigateToSettings = { navController.navigate(Screen.WeddingSettings.route) },
+                    onNavigateToProfile = { navController.navigate(Screen.ProfileManagement.route) }
                 )
             }
             composable(Screen.WeddingTasks.route) {
@@ -180,7 +182,8 @@ fun WeddingNavHost(
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToMainProfile = onNavigateToMainProfile,
                     onExportPdf = onExportPdf,
-                    onExportCsv = onExportCsv
+                    onExportCsv = onExportCsv,
+                    weddingProfileId = weddingProfileId
                 )
             }
             composable(Screen.CustomKeywords.route) {

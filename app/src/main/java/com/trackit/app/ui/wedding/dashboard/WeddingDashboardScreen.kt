@@ -171,17 +171,36 @@ fun WeddingDashboardScreen(
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
                             }
-                            
-                            Spacer(Modifier.height(32.dp))
 
                             // === Customizable Quote ===
-                            Text(
-                                text = "\"${profile?.quote ?: "Perjalanan cinta yang luar biasa dimulai dari sini."}\"",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            val weddingProfile = uiState.weddingProfile
+                            if (weddingProfile?.quoteEnabled != false) {
+                                Spacer(Modifier.height(24.dp))
+                                val quoteText = weddingProfile?.quote?.takeIf { it.isNotBlank() }
+                                    ?: "Perjalanan cinta yang luar biasa dimulai dari sini."
+                                val quoteFontSize = when (weddingProfile?.quoteFontSize) {
+                                    "KECIL" -> 11.sp
+                                    "BESAR" -> 16.sp
+                                    else -> 13.sp // SEDANG
+                                }
+                                val quoteFontWeight = when (weddingProfile?.quoteFontStyle) {
+                                    "BOLD", "BOLD_ITALIC" -> FontWeight.Bold
+                                    else -> FontWeight.Normal
+                                }
+                                val quoteFontStyle = when (weddingProfile?.quoteFontStyle) {
+                                    "ITALIC", "BOLD_ITALIC" -> androidx.compose.ui.text.font.FontStyle.Italic
+                                    else -> androidx.compose.ui.text.font.FontStyle.Normal
+                                }
+                                Text(
+                                    text = "\"$quoteText\"",
+                                    fontSize = quoteFontSize,
+                                    fontWeight = quoteFontWeight,
+                                    fontStyle = quoteFontStyle,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }

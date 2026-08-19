@@ -19,6 +19,12 @@ data class WeddingProfileEntity(
     // JAWA, SUNDA, BATAK, MINANG, BUGIS_MAKASSAR, BALI, BETAWI, TIONGHOA, MODERN, LAINNYA
     val culturalPresetGroom: String? = null,
     val culturalPresetBride: String? = null,
+    // Quote settings
     val quote: String? = null,
+    val quoteEnabled: Boolean = true,
+    // KECIL / SEDANG / BESAR
+    val quoteFontSize: String = "SEDANG",
+    // NORMAL / BOLD / ITALIC / BOLD_ITALIC
+    val quoteFontStyle: String = "ITALIC",
     val createdAt: Long = System.currentTimeMillis()
 )
