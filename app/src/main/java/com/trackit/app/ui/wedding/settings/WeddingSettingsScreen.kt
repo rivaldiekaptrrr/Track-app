@@ -17,8 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.trackit.app.data.local.ThemeMode
 import com.trackit.app.ui.settings.ExportReportDialog
 import com.trackit.app.ui.settings.RestoreGDriveDialog
+import com.trackit.app.ui.settings.SettingsViewModel
 import com.trackit.app.util.BackupManager
 import com.trackit.app.util.GDriveBackupManager
 import kotlinx.coroutines.launch
@@ -31,7 +34,9 @@ fun WeddingSettingsScreen(
     onNavigateToMainProfile: () -> Unit,
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
@@ -85,23 +90,160 @@ fun WeddingSettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                text = "Akun & Profil",
+                text = "Notifikasi & Pengingat",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 12.dp)
             )
-            SettingsItem(
-                icon = Icons.Default.SwitchAccount,
-                title = "Ganti Profil / Mode",
-                subtitle = "Pindah ke Tracker Pengeluaran atau Profil Lainnya",
-                onClick = onNavigateToMainProfile
-            )
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Pengingat Harian",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Mengingatkan progres To-Do List pernikahan",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = uiState.isDailyReminderEnabled,
+                        onCheckedChange = { viewModel.toggleDailyReminder(it) }
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Ekspor & Cadangan",
+                text = "Tampilan & Keamanan",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 12.dp)
+            )
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Kunci Keamanan",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Gunakan sidik jari untuk mengunci aplikasi",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = uiState.isBiometricEnabled,
+                        onCheckedChange = { viewModel.toggleBiometric(it) }
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Tema Aplikasi",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ThemeModeOption(
+                            label = "Terang",
+                            isSelected = uiState.themeMode == ThemeMode.LIGHT,
+                            onClick = { viewModel.setThemeMode(ThemeMode.LIGHT) }
+                        )
+                        ThemeModeOption(
+                            label = "Gelap",
+                            isSelected = uiState.themeMode == ThemeMode.DARK,
+                            onClick = { viewModel.setThemeMode(ThemeMode.DARK) }
+                        )
+                        ThemeModeOption(
+                            label = "Otomatis",
+                            isSelected = uiState.themeMode == ThemeMode.SYSTEM,
+                            onClick = { viewModel.setThemeMode(ThemeMode.SYSTEM) }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Data & Cadangan",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -218,5 +360,28 @@ private fun SettingsItem(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
+    }
+    }
+}
+
+@Composable
+fun ThemeModeOption(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = label,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

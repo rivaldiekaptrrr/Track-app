@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trackit.app.data.local.entity.WeddingProfileEntity
 import com.trackit.app.data.local.entity.WeddingTaskEntity
+import com.trackit.app.data.local.entity.ProfileEntity
 import com.trackit.app.data.local.PreferencesManager
+import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.WeddingCommitteeRepository
 import com.trackit.app.data.repository.WeddingDocumentRepository
 import com.trackit.app.data.repository.WeddingExpenseRepository
@@ -19,6 +21,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class WeddingDashboardUiState(
+    val activeProfile: ProfileEntity? = null,
+    val allProfiles: List<ProfileEntity> = emptyList(),
     val weddingProfile: WeddingProfileEntity? = null,
     val daysUntilWedding: Long = 0,
     val taskProgress: Float = 0f,       // selesai / total
@@ -47,6 +51,7 @@ data class WeddingDashboardUiState(
 @HiltViewModel
 class WeddingDashboardViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
+    private val profileRepository: ProfileRepository,
     private val weddingProfileRepository: WeddingProfileRepository,
     private val taskRepository: WeddingTaskRepository,
     private val documentRepository: WeddingDocumentRepository,
@@ -62,9 +67,14 @@ class WeddingDashboardViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            preferencesManager.activeProfileId.collectLatest { _ ->
+            combine(
+                profileRepository.getAllProfiles(),
+                preferencesManager.activeProfileId
+            ) { profiles, activeId ->
+                val activeProfile = profiles.find { it.id == activeId }
+                _uiState.update { it.copy(allProfiles = profiles, activeProfile = activeProfile) }
                 loadDashboard()
-            }
+            }.collect()
         }
     }
 
@@ -137,5 +147,11 @@ class WeddingDashboardViewModel @Inject constructor(
 
     private fun loadDashboard() {
         _uiState.update { it.copy(isLoading = false) }
+    }
+
+    fun switchProfile(profileId: Long) {
+        viewModelScope.launch {
+            preferencesManager.setActiveProfileId(profileId)
+        }
     }
 }

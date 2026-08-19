@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.window.Dialog
+import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.CurrencyUtils
 import kotlin.math.roundToInt
 
@@ -36,9 +39,12 @@ fun WeddingDashboardScreen(
     onNavigateToSeserahan: () -> Unit = {},
     onNavigateToCommittee: () -> Unit = {},
     onNavigateToRundown: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     viewModel: WeddingDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showProfileSwitcher by remember { mutableStateOf(false) }
 
     LaunchedEffect(weddingProfileId) {
         viewModel.loadForProfile(weddingProfileId)
@@ -83,7 +89,50 @@ fun WeddingDashboardScreen(
                             )
                             .padding(24.dp)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        // === Top Right Icons (Settings & Profile) ===
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 8.dp, y = (-8).dp), // Adjust slightly to top right
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Settings Icon
+                            IconButton(
+                                onClick = onNavigateToSettings,
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Settings,
+                                    contentDescription = "Pengaturan Wedding",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                            
+                            // Dynamic Profile Icon (like Expense Tracker)
+                            val activeProf = uiState.activeProfile
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(CategoryIconMapper.parseColor(activeProf?.colorHex ?: "#1565C0"))
+                                    .combinedClickable(
+                                        onClick = onNavigateToProfile,
+                                        onLongClick = { showProfileSwitcher = true }
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(activeProf?.iconName ?: "favorite"),
+                                    contentDescription = "Profil",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        // === Hero Texts ===
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
                             Text(
                                 text = "${profile?.groomName ?: ""} & ${profile?.brideName ?: ""}",
                                 style = MaterialTheme.typography.titleLarge,
@@ -438,6 +487,77 @@ private fun BentoStatCard(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    // === Profile Switcher Dialog (Instagram Style) ===
+    if (showProfileSwitcher && uiState.allProfiles.isNotEmpty()) {
+        Dialog(onDismissRequest = { showProfileSwitcher = false }) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        "Ganti Profil / Mode",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    uiState.allProfiles.forEach { p ->
+                        val isActive = p.id == uiState.activeProfile?.id
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isActive) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
+                                .clickable {
+                                    if (!isActive) viewModel.switchProfile(p.id)
+                                    showProfileSwitcher = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(CategoryIconMapper.parseColor(p.colorHex)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(p.iconName),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    p.name,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                if (isActive) {
+                                    Text(
+                                        "Aktif sekarang",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                            if (isActive) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
