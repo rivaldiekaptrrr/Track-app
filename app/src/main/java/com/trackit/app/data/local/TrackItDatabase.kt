@@ -350,6 +350,12 @@ abstract class TrackItDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quote TEXT")
+            }
+        }
+
         fun getDefaultCategories(): List<CategoryEntity> = listOf(
             // Expense Categories
             CategoryEntity(name = "Makanan", iconName = "restaurant", colorHex = "#E8963B", type = "EXPENSE"),
