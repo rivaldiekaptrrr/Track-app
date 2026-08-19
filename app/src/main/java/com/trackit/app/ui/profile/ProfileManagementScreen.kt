@@ -167,6 +167,7 @@ fun ProfileManagementScreen(
     var showDeleteConfirm by remember { mutableStateOf<ProfileEntity?>(null) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         topBar = {
             TopAppBar(
                 title = { Text("Manajemen Profil", fontWeight = FontWeight.SemiBold) },
@@ -176,7 +177,7 @@ fun ProfileManagementScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = Color.Transparent
                 )
             )
         },
@@ -223,9 +224,10 @@ fun ProfileManagementScreen(
                     label = "profile_card_color"
                 )
 
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = containerColor),
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isActive) 2.dp else 1.dp),
+                    colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { viewModel.switchProfile(profile.id) }
@@ -233,13 +235,13 @@ fun ProfileManagementScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Profile Icon Circle
                         Box(
                             modifier = Modifier
-                                .size(52.dp)
+                                .size(56.dp)
                                 .clip(CircleShape)
                                 .background(CategoryIconMapper.parseColor(profile.colorHex)),
                             contentAlignment = Alignment.Center
@@ -248,7 +250,7 @@ fun ProfileManagementScreen(
                                 imageVector = CategoryIconMapper.getIcon(profile.iconName),
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(16.dp))
@@ -256,14 +258,21 @@ fun ProfileManagementScreen(
                             Text(
                                 text = profile.name,
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.Bold,
+                                color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
                             if (isActive) {
-                                Text(
-                                    "✓ Aktif sekarang",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Spacer(Modifier.height(4.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        "Aktif Sekarang",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
 
@@ -272,13 +281,13 @@ fun ProfileManagementScreen(
                             selectedProfile = profile
                             showDialog = true
                         }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
                         }
 
                         // Delete button (only show if more than 1 profile)
                         if (uiState.profiles.size > 1) {
                             IconButton(onClick = { showDeleteConfirm = profile }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
                             }
                         }
                     }
@@ -350,9 +359,13 @@ fun ProfileFormDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (profile.id == 0L) "Buat Profil Baru" else "Edit Profil") },
+        shape = RoundedCornerShape(24.dp),
+        title = { Text(if (profile.id == 0L) "Buat Profil Baru" else "Edit Profil", fontWeight = FontWeight.Bold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
                 // === Mode Selector (only for new profile) ===
                 if (profile.id == 0L) {
