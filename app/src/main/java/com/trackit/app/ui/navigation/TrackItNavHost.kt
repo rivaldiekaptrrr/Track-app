@@ -34,15 +34,18 @@ fun TrackItNavHost(
     val dashboardViewModel: DashboardViewModel = hiltViewModel()
     val dashboardUiState by dashboardViewModel.uiState.collectAsStateWithLifecycle()
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     // === SMART ROUTER: Wedding mode check ===
     val activeProfile = dashboardUiState.activeProfile
-    if (activeProfile?.mode == "WEDDING" && activeProfile.weddingProfileId != null) {
+    if (activeProfile?.mode == "WEDDING" && activeProfile.weddingProfileId != null && currentRoute != Screen.ProfileManagement.route) {
         val weddingNavController = rememberNavController()
         WeddingNavHost(
             navController = weddingNavController,
             weddingProfileId = activeProfile.weddingProfileId,
             onNavigateToMainProfile = {
-                // User can switch back via Profile Management
+                navController.navigate(Screen.ProfileManagement.route)
             },
             onExportPdf = onExportPdf,
             onExportCsv = onExportCsv
@@ -51,8 +54,7 @@ fun TrackItNavHost(
     }
 
     // === EXPENSE TRACKER (default) ===
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+
     val hideNavBarRoutes = listOf(
         Screen.AddTransaction.route,
         "add_transaction?startVoice={startVoice}",
