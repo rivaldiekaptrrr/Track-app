@@ -19,5 +19,6 @@ data class WeddingProfileEntity(
     // JAWA, SUNDA, BATAK, MINANG, BUGIS_MAKASSAR, BALI, BETAWI, TIONGHOA, MODERN, LAINNYA
     val culturalPresetGroom: String? = null,
     val culturalPresetBride: String? = null,
+    val quote: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

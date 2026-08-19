@@ -79,7 +79,7 @@ fun WeddingDashboardScreen(
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
@@ -92,49 +92,71 @@ fun WeddingDashboardScreen(
                             )
                             .padding(24.dp)
                     ) {
-                        // === Top Right Icons (Profile) ===
+                        // === Top Bar (Date & Profile Pill) ===
                         Row(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 8.dp, y = (-8).dp), // Adjust slightly to top right
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Dynamic Profile Icon (like Expense Tracker)
+                            // Current Date
+                            val currentDate = java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale("id", "ID")).format(java.util.Date())
+                            Text(
+                                text = currentDate,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            // Dynamic Profile Pill (Names + Icon + Dropdown)
                             val activeProf = uiState.activeProfile
-                            Box(
+                            val names = "${profile?.groomName ?: ""} & ${profile?.brideName ?: ""}".trim().removePrefix("&").removeSuffix("&").trim()
+                            Row(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(CategoryIconMapper.parseColor(activeProf?.colorHex ?: "#1565C0"))
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
                                     .combinedClickable(
                                         onClick = onNavigateToProfile,
                                         onLongClick = { 
                                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                                             showProfileSwitcher = true 
                                         }
-                                    ),
-                                contentAlignment = Alignment.Center
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
+                                Text(
+                                    text = if (names.isEmpty()) "Profil" else names,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontWeight = FontWeight.Bold
+                                )
                                 Icon(
                                     imageVector = CategoryIconMapper.getIcon(activeProf?.iconName ?: "favorite"),
-                                    contentDescription = "Profil",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
+                                    contentDescription = "Ikon Profil",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "Ganti Profil",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
 
-                        // === Hero Texts ===
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                            Text(
-                                text = "${profile?.groomName ?: ""} & ${profile?.brideName ?: ""}",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(Modifier.height(16.dp))
-                            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
+                        Spacer(Modifier.height(32.dp))
+
+                        // === Hero Texts (Centered Countdown) ===
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.Bottom,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
                                 Text(
                                     text = "${uiState.daysUntilWedding}",
                                     style = MaterialTheme.typography.displayLarge,
@@ -149,6 +171,17 @@ fun WeddingDashboardScreen(
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
                             }
+                            
+                            Spacer(Modifier.height(32.dp))
+
+                            // === Customizable Quote ===
+                            Text(
+                                text = "\"${profile?.quote ?: "Perjalanan cinta yang luar biasa dimulai dari sini."}\"",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }

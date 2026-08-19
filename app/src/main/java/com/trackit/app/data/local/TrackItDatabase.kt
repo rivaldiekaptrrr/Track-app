@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
         WeddingEventEntity::class,
         WeddingRundownItemEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {

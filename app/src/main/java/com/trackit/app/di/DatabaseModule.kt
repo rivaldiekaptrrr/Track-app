@@ -44,7 +44,8 @@ object DatabaseModule {
             TrackItDatabase.MIGRATION_5_6,
             TrackItDatabase.MIGRATION_6_7,
             TrackItDatabase.MIGRATION_7_8,
-            TrackItDatabase.MIGRATION_8_9
+            TrackItDatabase.MIGRATION_8_9,
+            TrackItDatabase.MIGRATION_9_10
         )
         .build()
     }
