@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -27,7 +28,7 @@ import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.CurrencyUtils
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun WeddingDashboardScreen(
     weddingProfileId: String,
@@ -369,6 +370,79 @@ fun WeddingDashboardScreen(
             }
         }
     }
+
+    // === Profile Switcher Dialog (Instagram Style) ===
+    if (showProfileSwitcher && uiState.allProfiles.isNotEmpty()) {
+        Dialog(onDismissRequest = { showProfileSwitcher = false }) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        "Ganti Profil / Mode",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    uiState.allProfiles.forEach { p ->
+                        val isActive = p.id == uiState.activeProfile?.id
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isActive) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
+                                .clickable {
+                                    if (!isActive) viewModel.switchProfile(p.id)
+                                    showProfileSwitcher = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(CategoryIconMapper.parseColor(p.colorHex)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(p.iconName),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    p.name,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                if (isActive) {
+                                    Text(
+                                        "Aktif sekarang",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                            if (isActive) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -488,77 +562,6 @@ private fun BentoStatCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    // === Profile Switcher Dialog (Instagram Style) ===
-    if (showProfileSwitcher && uiState.allProfiles.isNotEmpty()) {
-        Dialog(onDismissRequest = { showProfileSwitcher = false }) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "Ganti Profil / Mode",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    uiState.allProfiles.forEach { p ->
-                        val isActive = p.id == uiState.activeProfile?.id
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isActive) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
-                                .clickable {
-                                    if (!isActive) viewModel.switchProfile(p.id)
-                                    showProfileSwitcher = false
-                                }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(CategoryIconMapper.parseColor(p.colorHex)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = CategoryIconMapper.getIcon(p.iconName),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    p.name,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                if (isActive) {
-                                    Text(
-                                        "Aktif sekarang",
-                                        color = MaterialTheme.colorScheme.primary,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            }
-                            if (isActive) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
-}
 }
