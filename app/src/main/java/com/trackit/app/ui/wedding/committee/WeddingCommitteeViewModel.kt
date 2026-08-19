@@ -10,16 +10,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 val COMMITTEE_SIDES = listOf(
-    "KELUARGA_CPP" to "👨 Keluarga CPP",
-    "KELUARGA_CPW" to "👰 Keluarga CPW",
-    "TEMAN_CPP" to "👬 Teman CPP",
-    "TEMAN_CPW" to "👭 Teman CPW"
+    "KELUARGA_CPP" to "Keluarga CPP",
+    "KELUARGA_CPW" to "Keluarga CPW",
+    "TEMAN_CPP" to "Teman CPP",
+    "TEMAN_CPW" to "Teman CPW"
 )
 
 val UNIFORM_STATUSES = listOf(
-    "BELUM_DIBAGI" to "⏳ Belum Dibagi",
-    "SEDANG_JAHIT" to "🧵 Sedang Dijahit",
-    "SIAP_PAKAI" to "✅ Siap Pakai"
+    "BELUM_DIBAGI" to "Belum Dibagi",
+    "SEDANG_JAHIT" to "Sedang Dijahit",
+    "SIAP_PAKAI" to "Siap Pakai"
 )
 
 data class WeddingCommitteeUiState(

@@ -187,15 +187,18 @@ private fun CommitteeMemberItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (!member.phoneNumber.isNullOrBlank()) {
                         Text("·", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("📞 ${member.phoneNumber}", style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.Default.Phone, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(member.phoneNumber, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 if (!member.uniformDescription.isNullOrBlank()) {
                     Spacer(Modifier.height(4.dp))
-                    Text("👗 ${member.uniformDescription}${if (member.fabricMeters > 0) " · ${member.fabricMeters}m" else ""}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Default.Checkroom, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${member.uniformDescription}${if (member.fabricMeters > 0) " · ${member.fabricMeters}m" else ""}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
 

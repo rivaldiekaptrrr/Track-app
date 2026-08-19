@@ -173,8 +173,8 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
                 )
                 Spacer(Modifier.height(6.dp))
                 val statusText = if (uiState.isOverBudget)
-                    "⚠️ Melebihi pagu ${CurrencyUtils.formatRupiah(uiState.totalEstimated - uiState.totalBudgetCap)}"
-                else "✅ Sisa pagu ${CurrencyUtils.formatRupiah(uiState.remaining)}"
+                    "Melebihi pagu ${CurrencyUtils.formatRupiah(uiState.totalEstimated - uiState.totalBudgetCap)}"
+                else "Sisa pagu ${CurrencyUtils.formatRupiah(uiState.remaining)}"
                 Text(statusText, style = MaterialTheme.typography.labelSmall,
                     color = if (uiState.isOverBudget) MaterialTheme.colorScheme.onErrorContainer
                             else MaterialTheme.colorScheme.onPrimaryContainer)
@@ -235,9 +235,9 @@ private fun ExpenseItem(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val statusLabel = when (expense.paymentStatus) {
-        "FULLY_PAID" -> "✅ Lunas"
-        "PARTIAL_DP" -> "⏳ Sebagian DP"
-        else -> "❌ Belum Bayar"
+        "FULLY_PAID" -> "Lunas"
+        "PARTIAL_DP" -> "Sebagian DP"
+        else -> "Belum Bayar"
     }
     var showPayDialog by remember { mutableStateOf(false) }
     val catLabel = EXPENSE_CATEGORIES.find { it.first == expense.category }?.second ?: expense.category
@@ -279,8 +279,10 @@ private fun ExpenseItem(
             AnimatedVisibility(visible = isExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                 Column(modifier = Modifier.padding(top = 10.dp)) {
                     if (!expense.notes.isNullOrBlank()) {
-                        Text("📝 ${expense.notes}", style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Default.Notes, null, modifier = Modifier.size(14.dp).padding(top = 2.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(expense.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         Spacer(Modifier.height(6.dp))
                     }
                     val sourceLabel = FUND_SOURCES.find { it.first == expense.paidBySource }?.second ?: expense.paidBySource

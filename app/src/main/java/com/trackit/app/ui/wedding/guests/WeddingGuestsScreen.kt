@@ -200,7 +200,7 @@ private fun GuestFilters(
                 FilterChip(selected = uiState.filterRsvp == "ALL",
                     onClick = { onRsvpFilter("ALL") }, label = { Text("Semua RSVP") })
             }
-            items(listOf("PENDING" to "⏳ Pending", "ATTENDING" to "✅ Hadir", "DECLINED" to "❌ Tidak Hadir")) { (key, label) ->
+            items(listOf("PENDING" to "Menunggu", "ATTENDING" to "Hadir", "DECLINED" to "Tidak Hadir")) { (key, label) ->
                 FilterChip(selected = uiState.filterRsvp == key,
                     onClick = { onRsvpFilter(key) }, label = { Text(label) })
             }
@@ -222,9 +222,9 @@ private fun GuestItem(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val rsvpLabel = when (guest.rsvpStatus) {
-        "ATTENDING" -> "✅ Hadir"
-        "DECLINED" -> "❌ Tidak"
-        else -> "⏳ Pending"
+        "ATTENDING" -> "Hadir"
+        "DECLINED" -> "Tidak Hadir"
+        else -> "Menunggu"
     }
     val groupLabel = GUEST_GROUPS.find { it.first == guest.groupAllocation }?.second ?: guest.groupAllocation
     val sessionLabel = GUEST_SESSIONS.find { it.first == guest.sessionTarget }?.second ?: guest.sessionTarget
@@ -281,7 +281,7 @@ private fun GuestItem(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
                 ExposedDropdownMenu(expanded = rsvpExpanded, onDismissRequest = { rsvpExpanded = false }) {
-                    listOf("PENDING" to "⏳ Pending", "ATTENDING" to "✅ Hadir", "DECLINED" to "❌ Tidak Hadir")
+                    listOf("PENDING" to "Menunggu", "ATTENDING" to "Hadir", "DECLINED" to "Tidak Hadir")
                         .forEach { (key, label) ->
                             DropdownMenuItem(text = { Text(label) }, onClick = {
                                 onRsvpChange(key); rsvpExpanded = false
@@ -313,7 +313,7 @@ private fun CateringCalculatorTab(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text("🍽️ Kalkulator Katering",
+            Text("Kalkulator Katering",
                 style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text("Berdasarkan PRD §8 — rumus yang sudah dikoreksi",
                 style = MaterialTheme.typography.bodySmall,
@@ -394,7 +394,7 @@ private fun CateringCalculatorTab(
             Card(shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("📐 Rumus yang Dipakai", style = MaterialTheme.typography.labelMedium,
+                    Text("Rumus yang Dipakai", style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(6.dp))
                     Text("Total Porsi = Σ pax × (1 − buffer%)",

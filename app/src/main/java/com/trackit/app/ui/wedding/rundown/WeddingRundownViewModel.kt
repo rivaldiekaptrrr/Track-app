@@ -70,7 +70,7 @@ class WeddingRundownViewModel @Inject constructor(
         }
     }
 
-    // ── Events ─────────────────────────────────────────────────────────────
+    // Events─────────────────────────────────────────────────────────────
     fun addEvent(name: String, eventDate: Long, location: String?) {
         viewModelScope.launch {
             val newEvent = WeddingEventEntity(

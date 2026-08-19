@@ -10,10 +10,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 val SESERAHAN_ITEM_STATUSES = listOf(
-    "BELUM_BELI" to "🛒 Belum Beli",
-    "DIBELI" to "✅ Sudah Beli",
-    "WRAPPING" to "🎁 Sedang Wrapping",
-    "SIAP" to "🌟 Siap"
+    "BELUM_BELI" to "Belum Beli",
+    "DIBELI" to "Sudah Beli",
+    "WRAPPING" to "Sedang Wrapping",
+    "SIAP" to "Siap"
 )
 
 data class WeddingSeserahanUiState(

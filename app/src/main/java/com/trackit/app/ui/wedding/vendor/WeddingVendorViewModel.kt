@@ -10,22 +10,22 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 val VENDOR_CATEGORIES = listOf(
-    "VENUE" to "🏛️ Venue & Gedung",
-    "CATERING" to "🍽️ Katering",
-    "DECOR" to "💐 Dekorasi",
-    "MUA" to "💄 MUA & Busana",
-    "DOKUMENTASI" to "📷 Foto & Video",
-    "MUSIK" to "🎵 Musik & Hiburan",
-    "WO" to "📋 Wedding Organizer",
-    "SOUVENIR" to "🎁 Souvenir",
-    "LAINNYA" to "📦 Lainnya"
+    "VENUE" to "Venue & Gedung",
+    "CATERING" to "Katering",
+    "DECOR" to "Dekorasi",
+    "MUA" to "MUA & Busana",
+    "DOKUMENTASI" to "Foto & Video",
+    "MUSIK" to "Musik & Hiburan",
+    "WO" to "Wedding Organizer",
+    "SOUVENIR" to "Souvenir",
+    "LAINNYA" to "Lainnya"
 )
 
 val VENDOR_STATUSES = listOf(
-    "PROSPEK" to "⭐ Prospek",
-    "TANDA_JADI" to "🤝 Tanda Jadi",
-    "KONTRAK" to "📝 Kontrak",
-    "SELESAI" to "✅ Selesai"
+    "PROSPEK" to "Prospek",
+    "TANDA_JADI" to "Tanda Jadi",
+    "KONTRAK" to "Kontrak",
+    "SELESAI" to "Selesai"
 )
 
 data class WeddingVendorUiState(

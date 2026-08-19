@@ -33,9 +33,9 @@ fun WeddingSeserahanScreen(
 
     val filters = listOf(
         "ALL" to "Semua",
-        "SESERAHAN_CPP" to "🎀 Seserahan (CPP→CPW)",
-        "BALASAN_CPW" to "💝 Balasan (CPW→CPP)",
-        "MAHAR" to "💍 Mahar"
+        "SESERAHAN_CPP" to "Seserahan (CPP→CPW)",
+        "BALASAN_CPW" to "Balasan (CPW→CPP)",
+        "MAHAR" to "Mahar"
     )
 
     Scaffold(
@@ -113,7 +113,12 @@ fun WeddingSeserahanScreen(
                     item {
                         Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🎁", style = MaterialTheme.typography.displaySmall)
+                                Icon(
+                                    imageVector = Icons.Default.Inventory2,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                )
                                 Spacer(Modifier.height(8.dp))
                                 Text("Belum ada item", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 TextButton(onClick = { showAddDialog = true }) { Text("Tambah Item") }
@@ -181,9 +186,9 @@ private fun SeserahanItem(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val directionLabel = when (item.direction) {
-        "SESERAHAN_CPP" -> "🎀 Seserahan"
-        "BALASAN_CPW" -> "💝 Balasan"
-        else -> "💍 Mahar"
+        "SESERAHAN_CPP" -> "Seserahan"
+        "BALASAN_CPW" -> "Balasan"
+        else -> "Mahar"
     }
 
     ElevatedCard(
@@ -211,8 +216,10 @@ private fun SeserahanItem(
                 }
                 if (!item.notes.isNullOrBlank()) {
                     Spacer(Modifier.height(6.dp))
-                    Text("📝 ${item.notes}", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Default.Description, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(item.notes, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
 
@@ -254,9 +261,9 @@ private fun AddSeserahanItemDialog(
     var notes by remember { mutableStateOf("") }
 
     val dirOptions = listOf(
-        "SESERAHAN_CPP" to "🎀 Seserahan (CPP→CPW)",
-        "BALASAN_CPW" to "💝 Balasan (CPW→CPP)",
-        "MAHAR" to "💍 Mahar"
+        "SESERAHAN_CPP" to "Seserahan (CPP→CPW)",
+        "BALASAN_CPW" to "Balasan (CPW→CPP)",
+        "MAHAR" to "Mahar"
     )
 
     AlertDialog(

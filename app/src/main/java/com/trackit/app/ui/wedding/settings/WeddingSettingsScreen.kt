@@ -300,7 +300,7 @@ fun WeddingSettingsScreen(
             onDismiss = { showGDriveRestoreDialog = false },
             onRestoreSuccess = {
                 showGDriveRestoreDialog = false
-                Toast.makeText(context, "✅ Restore berhasil! Silakan tutup aplikasi dari Recent Apps lalu buka kembali.", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Restore berhasil! Silakan tutup aplikasi dari Recent Apps lalu buka kembali.", Toast.LENGTH_LONG).show()
             }
         )
     }

@@ -254,14 +254,14 @@ fun WeddingDashboardScreen(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         BentoStatCard(
                             modifier = Modifier.weight(1f),
-                            emoji = "👥",
+                            icon = Icons.Default.Groups,
                             value = "${uiState.totalGuests}",
                             label = "Tamu Diundang",
                             onClick = onNavigateToGuests
                         )
                         BentoStatCard(
                             modifier = Modifier.weight(1f),
-                            emoji = "🏪",
+                            icon = Icons.Default.Storefront,
                             value = "${uiState.contractedVendors}/${uiState.totalVendors}",
                             label = "Vendor Deal",
                             onClick = onNavigateToVendors
@@ -270,14 +270,14 @@ fun WeddingDashboardScreen(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         BentoStatCard(
                             modifier = Modifier.weight(1f),
-                            emoji = "🎁",
+                            icon = Icons.Default.CardGiftcard,
                             value = "${uiState.readySeserahanItems}/${uiState.totalSeserahanItems}",
                             label = "Seserahan Siap",
                             onClick = onNavigateToSeserahan
                         )
                         BentoStatCard(
                             modifier = Modifier.weight(1f),
-                            emoji = "👗",
+                            icon = Icons.Default.Checkroom,
                             value = "${uiState.uniformReadyCount}/${uiState.totalCommitteeMembers}",
                             label = "Panitia Siap",
                             onClick = onNavigateToCommittee
@@ -530,7 +530,7 @@ private fun BentoProgressCard(
 @Composable
 private fun BentoStatCard(
     modifier: Modifier = Modifier,
-    emoji: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     value: String,
     label: String,
     onClick: () -> Unit
@@ -547,7 +547,7 @@ private fun BentoStatCard(
             verticalArrangement = Arrangement.Center
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(emoji, fontSize = 24.sp)
+                Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = value,

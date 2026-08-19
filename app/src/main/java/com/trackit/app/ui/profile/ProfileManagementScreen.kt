@@ -376,7 +376,8 @@ fun ProfileFormDialog(
                         FilterChip(
                             selected = selectedMode == "EXPENSE",
                             onClick = { selectedMode = "EXPENSE" },
-                            label = { Text("💰 Expense Tracker") }
+                            leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, null, Modifier.size(16.dp)) },
+                            label = { Text("Expense Tracker") }
                         )
                         FilterChip(
                             selected = selectedMode == "WEDDING",
@@ -385,7 +386,8 @@ fun ProfileFormDialog(
                                 selectedIcon = "favorite"
                                 selectedColor = "#C62828"
                             },
-                            label = { Text("💒 Wedding Planner") }
+                            leadingIcon = { Icon(Icons.Default.Favorite, null, Modifier.size(16.dp)) },
+                            label = { Text("Wedding Planner") }
                         )
                     }
                 }

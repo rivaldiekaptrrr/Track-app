@@ -73,7 +73,12 @@ fun WeddingRundownScreen(
             // Empty state
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
-                    Text("📋", style = MaterialTheme.typography.displayMedium)
+                    Icon(
+                        imageVector = Icons.Default.Assignment,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
                     Spacer(Modifier.height(16.dp))
                     Text("Belum ada event", style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold)
@@ -131,7 +136,12 @@ fun WeddingRundownScreen(
                         item {
                             Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("🕐", style = MaterialTheme.typography.displaySmall)
+                                    Icon(
+                                        imageVector = Icons.Default.Schedule,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
                                     Spacer(Modifier.height(8.dp))
                                     Text("Belum ada sesi rundown", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     TextButton(onClick = { showAddItemDialog = true }) { Text("Tambah Sesi") }
@@ -303,9 +313,12 @@ private fun RundownItemRow(
                     Spacer(Modifier.height(4.dp))
                 }
                 if (!item.mcScript.isNullOrBlank()) {
-                    Text("🎙️ ${item.mcScript}", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3)
+                    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Default.Mic, null, modifier = Modifier.size(14.dp).padding(top = 2.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(item.mcScript, style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3)
+                    }
                 }
             }
 

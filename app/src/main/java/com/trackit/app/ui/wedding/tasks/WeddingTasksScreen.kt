@@ -83,11 +83,11 @@ fun WeddingTasksScreen(
                 item {
                     val filters = listOf(
                         "ALL" to "Semua",
-                        "GROOM" to "👨 CPP",
-                        "BRIDE" to "👰 CPW",
-                        "BOTH" to "👫 Bersama",
-                        "FAMILY" to "👨‍👩‍👧 Panitia",
-                        "WO" to "🏢 WO"
+                        "GROOM" to "CPP",
+                        "BRIDE" to "CPW",
+                        "BOTH" to "Bersama",
+                        "FAMILY" to "Panitia",
+                        "WO" to "WO"
                     )
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
