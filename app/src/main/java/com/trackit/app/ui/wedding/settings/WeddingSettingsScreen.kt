@@ -361,7 +361,6 @@ private fun SettingsItem(
             )
         }
     }
-    }
 }
 
 @Composable
