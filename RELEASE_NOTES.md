@@ -1,3 +1,2 @@
-- **[Perbaikan Bug] Klik Profil:** Memperbaiki tombol pintasan profil di pojok kanan atas Dashboard Wedding Planner agar dapat ditekan (klik pendek) dan mengarahkan pengguna ke layar Manajemen Profil.
-- **[Fitur Baru] Kustomisasi Quotes:** Pengguna kini dapat mengkustomisasi kutipan (quotes) di Dashboard Wedding melalui Pengaturan Wedding, lengkap dengan opsi mengaktifkan/nonaktifkan serta menyesuaikan ukuran dan gaya font.
-- **[Perbaikan Bug] List Box Manajemen Profil:** Memperbaiki warna latar belakang list box profil non-aktif agar menggunakan warna padat (solid) untuk mencegah ketidakkonsistenan warna.
+- **[Perbaikan Bug] Voice Widget di Mode Wedding:** Mengatasi masalah Voice Widget yang tidak dapat memproses kategori pengeluaran saat digunakan di mode Wedding Planner. Sistem kini otomatis mengalihkan penyimpanan dari Voice Widget ke profil keuangan utama Anda (Pribadi) secara mulus.
+- **[Perbaikan Bug] Pop-up Cadangan Lokal Looping:** Memperbaiki bug kritis di mana pop-up "Cadangan Lokal Ditemukan" muncul terus-menerus (looping) dan memicu restart tiada henti saat profil Wedding diaktifkan.

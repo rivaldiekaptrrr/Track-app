@@ -101,10 +101,15 @@ class MainActivity : FragmentActivity() {
         var showRestoreDialog by mutableStateOf(false)
         lifecycleScope.launch {
             val activeProfileId = preferencesManager.activeProfileId.first()
-            val transactions = transactionRepository.getAllTransactions(activeProfileId).first()
-            if (transactions.isEmpty() && BackupManager.getAutoBackupFile() != null) {
-                showRestoreDialog = true
-                isSafeToAutoBackup = false
+            val activeProfile = profileRepository.getProfileById(activeProfileId)
+            if (activeProfile?.mode == "EXPENSE") {
+                val transactions = transactionRepository.getAllTransactions(activeProfileId).first()
+                if (transactions.isEmpty() && BackupManager.getAutoBackupFile() != null) {
+                    showRestoreDialog = true
+                    isSafeToAutoBackup = false
+                } else {
+                    isSafeToAutoBackup = true
+                }
             } else {
                 isSafeToAutoBackup = true
             }

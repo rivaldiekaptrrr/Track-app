@@ -55,6 +55,7 @@ class TransparentVoiceActivity : ComponentActivity() {
     @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var categoryRepository: CategoryRepository
     @Inject lateinit var preferencesManager: PreferencesManager
+    @Inject lateinit var profileRepository: com.trackit.app.data.repository.ProfileRepository
     
     private var tts: TextToSpeech? = null
     private var isTtsReady = false
@@ -144,7 +145,15 @@ class TransparentVoiceActivity : ComponentActivity() {
         }
         
         lifecycleScope.launch {
-            profileId = preferencesManager.activeProfileId.first()
+            val activeId = preferencesManager.activeProfileId.first()
+            val activeProfile = profileRepository.getProfileById(activeId)
+            if (activeProfile?.mode == "WEDDING") {
+                val allProfiles = profileRepository.getAllProfiles().first()
+                val fallbackProfile = allProfiles.find { it.mode == "EXPENSE" } ?: allProfiles.firstOrNull()
+                profileId = fallbackProfile?.id ?: 1L
+            } else {
+                profileId = activeId
+            }
             
             // Langsung jalankan pop up voice recognizer
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
