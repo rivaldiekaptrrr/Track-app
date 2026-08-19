@@ -36,6 +36,7 @@ fun WeddingRundownScreen(
     LaunchedEffect(weddingProfileId) { viewModel.loadForProfile(weddingProfileId) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         topBar = {
             TopAppBar(
                 title = {
@@ -59,7 +60,7 @@ fun WeddingRundownScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -183,29 +184,42 @@ private fun EventHeaderCard(
         SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID")).format(Date(event.eventDate))
     }
 
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(event.eventName, style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("📅 $dateStr", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                    color = MaterialTheme.colorScheme.onSurface)
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.DateRange, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(4.dp))
+                    Text(dateStr, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 if (!event.eventLocation.isNullOrBlank()) {
-                    Text("📍 ${event.eventLocation}", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                    Spacer(Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Place, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(4.dp))
+                        Text(event.eventLocation, style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
-            IconButton(onClick = { showRenameDialog = true }) {
-                Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, null,
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
+            Column(horizontalAlignment = Alignment.End) {
+                IconButton(onClick = { showRenameDialog = true }) {
+                    Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.primary)
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, null,
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
+                }
             }
         }
     }
@@ -243,57 +257,65 @@ private fun RundownItemRow(
         } catch (e: Exception) { "??:??" }
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        // Time column
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(64.dp)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(item.timeStart, style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Text(endTime, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("${item.durationMinutes}m", style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-
-        // Timeline vertical line
-        Box(
-            modifier = Modifier
-                .width(2.dp)
-                .height(64.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-        )
-        Spacer(Modifier.width(12.dp))
-
-        // Content
-        Column(modifier = Modifier.weight(1f)) {
-            Text(item.sessionTitle, style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold)
-            if (!item.pic.isNullOrBlank()) {
-                Text("PIC: ${item.pic}", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary)
+            // Time column
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(64.dp)
+            ) {
+                Text(item.timeStart, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(endTime, style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${item.durationMinutes}m", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (!item.mcScript.isNullOrBlank()) {
-                Text("🎙️ ${item.mcScript}", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2)
-            }
-        }
 
-        IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Default.Delete, null,
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.4f),
-                modifier = Modifier.size(16.dp))
+            // Timeline vertical line
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(64.dp)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
+            )
+            Spacer(Modifier.width(16.dp))
+
+            // Content
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.sessionTitle, style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                if (!item.pic.isNullOrBlank()) {
+                    Surface(color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                        Text("PIC: ${item.pic}", style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+                if (!item.mcScript.isNullOrBlank()) {
+                    Text("🎙️ ${item.mcScript}", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3)
+                }
+            }
+
+            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Default.Delete, null,
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp))
+            }
         }
     }
-    Divider(modifier = Modifier.padding(start = 92.dp, end = 16.dp), thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

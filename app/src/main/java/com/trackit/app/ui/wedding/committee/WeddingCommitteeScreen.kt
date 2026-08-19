@@ -31,6 +31,7 @@ fun WeddingCommitteeScreen(
     LaunchedEffect(weddingProfileId) { viewModel.loadForProfile(weddingProfileId) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         topBar = {
             TopAppBar(
                 title = {
@@ -45,7 +46,7 @@ fun WeddingCommitteeScreen(
                 },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
                 actions = { IconButton(onClick = { showAddDialog = true }) { Icon(Icons.Default.PersonAdd, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -76,23 +77,28 @@ fun WeddingCommitteeScreen(
                 // Fabric total info card
                 if (uiState.totalFabric > 0) {
                     item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
-                            Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                                Column {
-                                    Text("Total Kain", style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Total Kain", style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(4.dp))
                                     Text("${uiState.totalFabric} meter", fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface)
                                 }
-                                Column {
-                                    Text("Seragam Siap", style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Seragam Siap", style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(4.dp))
                                     Text("${uiState.readyCount}/${uiState.members.size}", fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface)
                                 }
                             }
                         }
@@ -149,37 +155,42 @@ private fun CommitteeMemberItem(
         "SIAP_PAKAI" -> Color(0xFF2E7D32)
         "SEDANG_JAHIT" -> Color(0xFFE65100)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp),
-        shape = RoundedCornerShape(10.dp)
+    }    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                modifier = Modifier.size(40.dp), shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.tertiaryContainer
+                modifier = Modifier.size(48.dp), shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(member.memberName.take(1).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer)
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary)
                 }
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(member.memberName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                Text(member.memberName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
                 Text(member.role, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(sideLabel, style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (!member.phoneNumber.isNullOrBlank()) {
+                        Text("·", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("📞 ${member.phoneNumber}", style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 if (!member.uniformDescription.isNullOrBlank()) {
+                    Spacer(Modifier.height(4.dp))
                     Text("👗 ${member.uniformDescription}${if (member.fabricMeters > 0) " · ${member.fabricMeters}m" else ""}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -188,11 +199,12 @@ private fun CommitteeMemberItem(
 
             Column(horizontalAlignment = Alignment.End) {
                 ExposedDropdownMenuBox(expanded = statusExpanded, onExpandedChange = { statusExpanded = it }) {
-                    Surface(color = statusColor.copy(alpha = 0.12f), shape = RoundedCornerShape(6.dp),
+                    Surface(color = statusColor.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.menuAnchor()) {
                         Text(uniformStatusInfo?.second ?: member.uniformStatus,
                             style = MaterialTheme.typography.labelSmall, color = statusColor,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp))
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp))
                     }
                     ExposedDropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
                         UNIFORM_STATUSES.forEach { (key, label) ->
@@ -200,11 +212,11 @@ private fun CommitteeMemberItem(
                         }
                     }
                 }
-                Spacer(Modifier.height(4.dp))
-                IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
+                Spacer(Modifier.height(8.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Default.Delete, null,
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-                        modifier = Modifier.size(14.dp))
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                        modifier = Modifier.size(20.dp))
                 }
             }
         }

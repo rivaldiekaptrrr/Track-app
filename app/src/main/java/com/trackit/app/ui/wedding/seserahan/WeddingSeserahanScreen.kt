@@ -39,6 +39,7 @@ fun WeddingSeserahanScreen(
     )
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         topBar = {
             TopAppBar(
                 title = {
@@ -53,7 +54,7 @@ fun WeddingSeserahanScreen(
                 },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
                 actions = { IconButton(onClick = { showAddDialog = true }) { Icon(Icons.Default.Add, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -147,11 +148,17 @@ fun WeddingSeserahanScreen(
 private fun SeserahanSummaryCard(
     modifier: Modifier, label: String, count: Int, amount: Double, color: Color
 ) {
-    Card(modifier = modifier, shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))) {
-        Column(modifier = Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$count item", style = MaterialTheme.typography.labelSmall, color = color)
+    ElevatedCard(modifier = modifier, shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Surface(color = color.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)) {
+                Text("$count item", style = MaterialTheme.typography.labelSmall, color = color,
+                    fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+            }
+            Spacer(Modifier.height(6.dp))
             Text(label, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(2.dp))
             Text(CurrencyUtils.formatRupiahShort(amount),
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -179,45 +186,56 @@ private fun SeserahanItem(
         else -> "💍 Mahar"
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp),
-        shape = RoundedCornerShape(10.dp)
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.itemName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(directionLabel, style = MaterialTheme.typography.labelSmall,
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), shape = RoundedCornerShape(6.dp)) {
+                        Text(directionLabel, style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
+                    Text("${item.quantity}x", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("${item.quantity}x", style = MaterialTheme.typography.labelSmall)
                     if (item.estimatedPrice > 0) {
                         Text(CurrencyUtils.formatRupiah(item.estimatedPrice * item.quantity),
                             style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
                 }
                 if (!item.notes.isNullOrBlank()) {
-                    Text(item.notes, style = MaterialTheme.typography.labelSmall,
+                    Spacer(Modifier.height(6.dp))
+                    Text("📝 ${item.notes}", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
-            ExposedDropdownMenuBox(expanded = statusExpanded, onExpandedChange = { statusExpanded = it }) {
-                Surface(color = statusColor.copy(alpha = 0.12f), shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.menuAnchor()) {
-                    Text(statusInfo?.second ?: item.status, style = MaterialTheme.typography.labelSmall,
-                        color = statusColor, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-                }
-                ExposedDropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
-                    SESERAHAN_ITEM_STATUSES.forEach { (key, label) ->
-                        DropdownMenuItem(text = { Text(label) }, onClick = { onStatusChange(key); statusExpanded = false })
+            Column(horizontalAlignment = Alignment.End) {
+                ExposedDropdownMenuBox(expanded = statusExpanded, onExpandedChange = { statusExpanded = it }) {
+                    Surface(color = statusColor.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.menuAnchor()) {
+                        Text(statusInfo?.second ?: item.status, style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = statusColor, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp))
+                    }
+                    ExposedDropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
+                        SESERAHAN_ITEM_STATUSES.forEach { (key, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { onStatusChange(key); statusExpanded = false })
+                        }
                     }
                 }
-            }
-
-            IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Default.Delete, null,
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-                    modifier = Modifier.size(16.dp))
+                Spacer(Modifier.height(4.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Delete, null,
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                        modifier = Modifier.size(18.dp))
+                }
             }
         }
     }

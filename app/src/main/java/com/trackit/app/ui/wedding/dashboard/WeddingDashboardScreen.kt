@@ -45,7 +45,7 @@ fun WeddingDashboardScreen(
     }
 
     if (uiState.isLoading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
         return
@@ -53,284 +53,314 @@ fun WeddingDashboardScreen(
 
     val profile = uiState.weddingProfile
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 24.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)) // Subtle off-white/gray bg
     ) {
-        // === COUNTDOWN HEADER ===
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            )
-                        )
-                    )
-                    .padding(vertical = 32.dp, horizontal = 24.dp)
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "💒",
-                        fontSize = 40.sp
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "${profile?.groomName ?: ""} & ${profile?.brideName ?: ""}",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = "${uiState.daysUntilWedding}",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "hari lagi",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // === PROGRESS SECTION ===
-        item {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
-                Text(
-                    "Progres Persiapan",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                WeddingProgressItem(
-                    label = "Kesiapan Tugas",
-                    progress = uiState.taskProgress,
-                    icon = Icons.Default.CheckCircle,
-                    color = MaterialTheme.colorScheme.primary,
-                    onClick = onNavigateToTasks
-                )
-                Spacer(Modifier.height(10.dp))
-                WeddingProgressItem(
-                    label = "Berkas Lengkap",
-                    progress = uiState.docProgress,
-                    icon = Icons.Default.Description,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    onClick = onNavigateToDocuments
-                )
-                Spacer(Modifier.height(10.dp))
-                WeddingProgressItem(
-                    label = "Vendor Terbayar",
-                    progress = uiState.vendorProgress,
-                    icon = Icons.Default.Store,
-                    color = Color(0xFF43A047),
-                    onClick = onNavigateToBudget
-                )
-            }
-        }
-
-        // === SPRINT 4 STAT CARDS ===
-        item {
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text("Ringkasan Persiapan",
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 10.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatMiniCard(
-                        modifier = Modifier.weight(1f),
-                        emoji = "👥",
-                        value = "${uiState.totalGuests}",
-                        label = "Tamu",
-                        sublabel = "${uiState.totalPax} pax",
-                        onClick = onNavigateToGuests
-                    )
-                    StatMiniCard(
-                        modifier = Modifier.weight(1f),
-                        emoji = "🏪",
-                        value = "${uiState.contractedVendors}/${uiState.totalVendors}",
-                        label = "Vendor",
-                        sublabel = "terkontrak",
-                        onClick = onNavigateToVendors
-                    )
-                    StatMiniCard(
-                        modifier = Modifier.weight(1f),
-                        emoji = "🎁",
-                        value = "${uiState.readySeserahanItems}/${uiState.totalSeserahanItems}",
-                        label = "Seserahan",
-                        sublabel = "siap",
-                        onClick = onNavigateToSeserahan
-                    )
-                    StatMiniCard(
-                        modifier = Modifier.weight(1f),
-                        emoji = "👗",
-                        value = "${uiState.uniformReadyCount}/${uiState.totalCommitteeMembers}",
-                        label = "Panitia",
-                        sublabel = "seragam",
-                        onClick = onNavigateToCommittee
-                    )
-                }
-            }
-        }
-
-        // === BUDGET WIDGET ===
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                onClick = onNavigateToBudget
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AccountBalance, null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Anggaran Pernikahan", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        BudgetInfoItem("Pagu Total", CurrencyUtils.formatRupiah(uiState.totalBudgetCap))
-                        BudgetInfoItem("Sudah Bayar", CurrencyUtils.formatRupiah(uiState.totalPaid))
-                        BudgetInfoItem("Sisa Hutang", CurrencyUtils.formatRupiah((uiState.totalEstimated - uiState.totalPaid).coerceAtLeast(0.0)))
-                    }
-                    Spacer(Modifier.height(12.dp))
-
-                    val isOverBudget = uiState.totalEstimated > uiState.totalBudgetCap && uiState.totalBudgetCap > 0
-                    Surface(
-                        color = if (isOverBudget) MaterialTheme.colorScheme.errorContainer else Color(0xFF1B5E20).copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = if (isOverBudget) "⚠️ Estimasi melebihi pagu anggaran!" else "✅ Anggaran masih aman",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (isOverBudget) MaterialTheme.colorScheme.onErrorContainer else Color(0xFF2E7D32),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // === UPCOMING TASKS ===
-        if (uiState.upcomingTasks.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // === HERO COUNTDOWN (2x2 Span equivalent) ===
             item {
-                Text(
-                    "Tugas Mendekat",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-                )
-            }
-            items(uiState.upcomingTasks) { task ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(12.dp)
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Circle,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(10.dp)
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(task.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                            Text(
-                                "PIC: ${task.pic}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                        MaterialTheme.colorScheme.secondaryContainer
+                                    )
+                                )
                             )
+                            .padding(24.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "${profile?.groomName ?: ""} & ${profile?.brideName ?: ""}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
+                                Text(
+                                    text = "${uiState.daysUntilWedding}",
+                                    style = MaterialTheme.typography.displayLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Hari Lagi",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // === QUICK ACTIONS ===
-        item {
-            Text(
-                "Aksi Cepat",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                QuickActionCard(
-                    label = "Tambah Pengeluaran",
-                    icon = Icons.Default.Add,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToBudget
-                )
-                QuickActionCard(
-                    label = "Tamu & RSVP",
-                    icon = Icons.Default.People,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToGuests
-                )
-                QuickActionCard(
-                    label = "Rundown",
-                    icon = Icons.Default.Schedule,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToRundown
-                )
+            // === BENTO GRID 1: QUICK ACTIONS ===
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    BentoActionCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Add,
+                        label = "Catat\nPengeluaran",
+                        bgColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        onClick = onNavigateToBudget
+                    )
+                    BentoActionCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.People,
+                        label = "Kelola\nTamu",
+                        bgColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        onClick = onNavigateToGuests
+                    )
+                    BentoActionCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Event,
+                        label = "Cek\nRundown",
+                        bgColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        onClick = onNavigateToRundown
+                    )
+                }
             }
-            Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                QuickActionCard(
-                    label = "Vendor Hub",
-                    icon = Icons.Default.Store,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToVendors
-                )
-                QuickActionCard(
-                    label = "Seserahan",
-                    icon = Icons.Default.Favorite,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToSeserahan
-                )
-                QuickActionCard(
-                    label = "Panitia",
-                    icon = Icons.Default.Group,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToCommittee
-                )
+
+            // === BENTO GRID 2: PROGRESS (2x1 and 1x1 mix) ===
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Left Column (Tasks & Docs)
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        BentoProgressCard(
+                            label = "Tugas Selesai",
+                            progress = uiState.taskProgress,
+                            color = MaterialTheme.colorScheme.primary,
+                            onClick = onNavigateToTasks
+                        )
+                        BentoProgressCard(
+                            label = "Berkas KUA",
+                            progress = uiState.docProgress,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            onClick = onNavigateToDocuments
+                        )
+                    }
+                    // Right Column (Budget Summary)
+                    ElevatedCard(
+                        modifier = Modifier.weight(1f).height(192.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                        onClick = onNavigateToBudget
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp).fillMaxSize(),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = Color(0xFF43A047), modifier = Modifier.size(32.dp))
+                            Column {
+                                Text("Vendor Terbayar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "${(uiState.vendorProgress * 100).roundToInt()}%",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF43A047)
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                LinearProgressIndicator(
+                                    progress = { uiState.vendorProgress },
+                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                    color = Color(0xFF43A047),
+                                    trackColor = Color(0xFF43A047).copy(alpha = 0.2f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // === BENTO GRID 3: STATS (2x2 Grid) ===
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        BentoStatCard(
+                            modifier = Modifier.weight(1f),
+                            emoji = "👥",
+                            value = "${uiState.totalGuests}",
+                            label = "Tamu Diundang",
+                            onClick = onNavigateToGuests
+                        )
+                        BentoStatCard(
+                            modifier = Modifier.weight(1f),
+                            emoji = "🏪",
+                            value = "${uiState.contractedVendors}/${uiState.totalVendors}",
+                            label = "Vendor Deal",
+                            onClick = onNavigateToVendors
+                        )
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        BentoStatCard(
+                            modifier = Modifier.weight(1f),
+                            emoji = "🎁",
+                            value = "${uiState.readySeserahanItems}/${uiState.totalSeserahanItems}",
+                            label = "Seserahan Siap",
+                            onClick = onNavigateToSeserahan
+                        )
+                        BentoStatCard(
+                            modifier = Modifier.weight(1f),
+                            emoji = "👗",
+                            value = "${uiState.uniformReadyCount}/${uiState.totalCommitteeMembers}",
+                            label = "Panitia Siap",
+                            onClick = onNavigateToCommittee
+                        )
+                    }
+                }
+            }
+
+            // === BENTO WIDGET: FINANCIAL SUMMARY ===
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                    onClick = onNavigateToBudget
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.MonetizationOn, null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Text("Ringkasan Anggaran", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(20.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Column {
+                                Text("Pagu Total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(CurrencyUtils.formatRupiah(uiState.totalBudgetCap), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("Sisa Hutang", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    CurrencyUtils.formatRupiah((uiState.totalEstimated - uiState.totalPaid).coerceAtLeast(0.0)),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // === UPCOMING TASKS (List) ===
+            if (uiState.upcomingTasks.isNotEmpty()) {
+                item {
+                    Text(
+                        "Tugas Mendekat",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    )
+                }
+                items(uiState.upcomingTasks) { task ->
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp))
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(task.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "PIC: ${task.pic}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun WeddingProgressItem(
+private fun BentoActionCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    bgColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.height(100.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = bgColor),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, null, tint = contentColor, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                lineHeight = 14.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun BentoProgressCard(
     label: String,
     progress: Float,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
     color: Color,
     onClick: () -> Unit
 ) {
@@ -339,16 +369,19 @@ private fun WeddingProgressItem(
         animationSpec = tween(800),
         label = "progress_$label"
     )
-    Card(
+    ElevatedCard(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = Modifier.fillMaxWidth().height(88.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp).fillMaxSize(),
+            verticalArrangement = Arrangement.Center
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     "${(animatedProgress * 100).roundToInt()}%",
                     style = MaterialTheme.typography.labelMedium,
@@ -356,13 +389,13 @@ private fun WeddingProgressItem(
                     color = color
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
                 color = color,
                 trackColor = color.copy(alpha = 0.15f)
             )
@@ -371,71 +404,40 @@ private fun WeddingProgressItem(
 }
 
 @Composable
-private fun BudgetInfoItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(4.dp))
-        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        modifier = modifier
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp).fillMaxWidth()
-        ) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.height(6.dp))
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatMiniCard(
+private fun BentoStatCard(
     modifier: Modifier = Modifier,
     emoji: String,
     value: String,
     label: String,
-    sublabel: String,
     onClick: () -> Unit
 ) {
-    Card(
+    ElevatedCard(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        modifier = modifier
+        modifier = modifier.height(100.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp).fillMaxWidth()
+            modifier = Modifier.padding(16.dp).fillMaxSize(),
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(emoji, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(2.dp))
-            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(sublabel, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(emoji, fontSize = 24.sp)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

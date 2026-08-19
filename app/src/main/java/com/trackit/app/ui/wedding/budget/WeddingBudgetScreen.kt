@@ -42,6 +42,7 @@ fun WeddingBudgetScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         topBar = {
             TopAppBar(
                 title = { Text("Anggaran Pernikahan", fontWeight = FontWeight.Bold) },
@@ -51,7 +52,7 @@ fun WeddingBudgetScreen(
                         Icon(Icons.Default.Add, null)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -150,16 +151,13 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
     val progress = if (uiState.totalBudgetCap > 0)
         (uiState.totalEstimated / uiState.totalBudgetCap).toFloat().coerceIn(0f, 1f) else 0f
 
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (uiState.isOverBudget)
-                MaterialTheme.colorScheme.errorContainer
-            else MaterialTheme.colorScheme.primaryContainer
-        )
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 BudgetFigure("Pagu Anggaran", CurrencyUtils.formatRupiah(uiState.totalBudgetCap))
                 BudgetFigure("Total Estimasi", CurrencyUtils.formatRupiah(uiState.totalEstimated))
@@ -197,11 +195,13 @@ private fun BudgetFigure(label: String, value: String) {
 @Composable
 private fun SplitBillCard(bySource: Map<String, Double>) {
     val total = bySource.values.sum()
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text("Split-Bill (Sumber Dana)", style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(10.dp))
@@ -242,12 +242,14 @@ private fun ExpenseItem(
     var showPayDialog by remember { mutableStateOf(false) }
     val catLabel = EXPENSE_CATEGORIES.find { it.first == expense.category }?.second ?: expense.category
 
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         onClick = onToggle
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(expense.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)

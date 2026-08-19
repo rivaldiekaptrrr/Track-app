@@ -39,6 +39,7 @@ fun WeddingGuestsScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         topBar = {
             TopAppBar(
                 title = {
@@ -63,7 +64,7 @@ fun WeddingGuestsScreen(
                         Icon(Icons.Default.PersonAdd, null)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -135,12 +136,13 @@ fun WeddingGuestsScreen(
 
 @Composable
 private fun GuestSummaryCard(uiState: WeddingGuestsUiState) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 GuestFigure("Total Tamu", "${uiState.totalGuests}")
                 GuestFigure("Est. Pax", "${uiState.totalPax}")
@@ -148,16 +150,16 @@ private fun GuestSummaryCard(uiState: WeddingGuestsUiState) {
             }
             Spacer(Modifier.height(12.dp))
             Text("Distribusi per Kelompok", style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(6.dp))
             uiState.byGroup.forEach { (group, pax) ->
                 val label = GUEST_GROUPS.find { it.first == group }?.second ?: group
                 Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                     Text(label, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("$pax pax", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -168,9 +170,9 @@ private fun GuestSummaryCard(uiState: WeddingGuestsUiState) {
 private fun GuestFigure(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer)
+            color = MaterialTheme.colorScheme.onSurface)
         Text(label, style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer)
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -227,11 +229,13 @@ private fun GuestItem(
     val groupLabel = GUEST_GROUPS.find { it.first == guest.groupAllocation }?.second ?: guest.groupAllocation
     val sessionLabel = GUEST_SESSIONS.find { it.first == guest.sessionTarget }?.second ?: guest.sessionTarget
 
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp),
-        shape = RoundedCornerShape(10.dp)
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             // Avatar initial
             Surface(
                 modifier = Modifier.size(40.dp),
