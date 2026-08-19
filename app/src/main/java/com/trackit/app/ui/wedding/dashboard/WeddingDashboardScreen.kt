@@ -47,6 +47,7 @@ fun WeddingDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showProfileSwitcher by remember { mutableStateOf(false) }
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     LaunchedEffect(weddingProfileId) {
         viewModel.loadForProfile(weddingProfileId)
@@ -91,7 +92,7 @@ fun WeddingDashboardScreen(
                             )
                             .padding(24.dp)
                     ) {
-                        // === Top Right Icons (Settings & Profile) ===
+                        // === Top Right Icons (Profile) ===
                         Row(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -99,18 +100,6 @@ fun WeddingDashboardScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Settings Icon
-                            IconButton(
-                                onClick = onNavigateToSettings,
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = "Pengaturan Wedding",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                                )
-                            }
-                            
                             // Dynamic Profile Icon (like Expense Tracker)
                             val activeProf = uiState.activeProfile
                             Box(
@@ -120,7 +109,10 @@ fun WeddingDashboardScreen(
                                     .background(CategoryIconMapper.parseColor(activeProf?.colorHex ?: "#1565C0"))
                                     .combinedClickable(
                                         onClick = onNavigateToProfile,
-                                        onLongClick = { showProfileSwitcher = true }
+                                        onLongClick = { 
+                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            showProfileSwitcher = true 
+                                        }
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {

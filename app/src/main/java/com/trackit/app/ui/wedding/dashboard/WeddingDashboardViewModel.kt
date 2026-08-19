@@ -106,7 +106,7 @@ class WeddingDashboardViewModel @Inject constructor(
 
                 Triple(
                     profile, days,
-                    WeddingDashboardUiState(
+                    _uiState.value.copy(
                         weddingProfile = profile,
                         daysUntilWedding = days,
                         taskProgress = if (totalTasks > 0) doneTasks.toFloat() / totalTasks else 0f,
