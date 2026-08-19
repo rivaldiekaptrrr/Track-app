@@ -221,7 +221,7 @@ fun ProfileManagementScreen(
                 val isActive = profile.id == uiState.activeProfileId
                 val containerColor by animateColorAsState(
                     targetValue = if (isActive) MaterialTheme.colorScheme.primaryContainer
-                                  else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                  else MaterialTheme.colorScheme.surface,
                     animationSpec = tween(300),
                     label = "profile_card_color"
                 )
