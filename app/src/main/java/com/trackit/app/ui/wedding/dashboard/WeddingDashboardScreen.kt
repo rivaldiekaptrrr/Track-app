@@ -562,6 +562,5 @@ private fun BentoStatCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        }
     }
 }
