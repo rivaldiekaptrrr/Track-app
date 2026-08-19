@@ -7,11 +7,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,6 +46,7 @@ import com.trackit.app.ui.wedding.seserahan.WeddingSeserahanScreen
 import com.trackit.app.ui.wedding.committee.WeddingCommitteeScreen
 import com.trackit.app.ui.wedding.rundown.WeddingRundownScreen
 import com.trackit.app.ui.wedding.settings.WeddingSettingsScreen
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeddingNavHost(
     navController: NavHostController,
@@ -43,6 +57,9 @@ fun WeddingNavHost(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    var showMenuSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
         bottomBar = {
@@ -72,18 +89,6 @@ fun WeddingNavHost(
                     label = { Text("Tugas") }
                 )
                 NavigationBarItem(
-                    selected = currentRoute == Screen.WeddingGuests.route,
-                    onClick = {
-                        navController.navigate(Screen.WeddingGuests.route) {
-                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    icon = { Icon(Icons.Default.People, contentDescription = "Tamu") },
-                    label = { Text("Tamu") }
-                )
-                NavigationBarItem(
                     selected = currentRoute == Screen.WeddingBudget.route,
                     onClick = {
                         navController.navigate(Screen.WeddingBudget.route) {
@@ -96,16 +101,10 @@ fun WeddingNavHost(
                     label = { Text("Anggaran") }
                 )
                 NavigationBarItem(
-                    selected = currentRoute == Screen.WeddingSettings.route,
-                    onClick = { 
-                        navController.navigate(Screen.WeddingSettings.route) {
-                            popUpTo(Screen.WeddingDashboard.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Pengaturan") },
-                    label = { Text("Pengaturan") }
+                    selected = false,
+                    onClick = { showMenuSheet = true },
+                    icon = { Icon(Icons.Default.GridView, contentDescription = "Menu") },
+                    label = { Text("Menu") }
                 )
             }
         }
@@ -198,6 +197,71 @@ fun WeddingNavHost(
                 com.trackit.app.ui.profile.ProfileManagementScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
+            }
+        }
+    }
+
+    if (showMenuSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showMenuSheet = false },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            WeddingMenuGrid(
+                onNavigate = { route ->
+                    showMenuSheet = false
+                    navController.navigate(route) {
+                        popUpTo(Screen.WeddingDashboard.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun WeddingMenuGrid(onNavigate: (String) -> Unit) {
+    val menuItems = listOf(
+        Triple(Screen.WeddingGuests.route, "Tamu", Icons.Default.People),
+        Triple(Screen.WeddingVendors.route, "Vendor", Icons.Default.Store),
+        Triple(Screen.WeddingSeserahan.route, "Seserahan", Icons.Default.Redeem),
+        Triple(Screen.WeddingCommittee.route, "Panitia", Icons.Default.Groups),
+        Triple(Screen.WeddingRundown.route, "Rundown", Icons.Default.Event),
+        Triple(Screen.WeddingDocuments.route, "Dokumen", Icons.Default.Folder),
+        Triple(Screen.WeddingSettings.route, "Pengaturan", Icons.Default.Settings)
+    )
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = "Menu Lainnya",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(bottom = 32.dp)
+        ) {
+            items(menuItems) { item ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable { onNavigate(item.first) }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(item.third, contentDescription = item.second, tint = MaterialTheme.colorScheme.primary)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(item.second, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                }
             }
         }
     }
