@@ -341,6 +341,12 @@ fun ProfileFormDialog(
     var groomName by remember { mutableStateOf("") }
     var brideName by remember { mutableStateOf("") }
     var budgetCap by remember { mutableStateOf("") }
+    var religionType by remember { mutableStateOf("ISLAM") }
+    var culturalPresetGroom by remember { mutableStateOf("MODERN") }
+    var culturalPresetBride by remember { mutableStateOf("MODERN") }
+    
+    val religions = listOf("ISLAM", "KRISTEN", "KATOLIK", "HINDU", "BUDDHA", "KONGHUCU")
+    val cultures = listOf("MODERN", "JAWA", "SUNDA", "BATAK", "MINANG", "BUGIS", "BALI", "TIONGHOA")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -420,25 +426,89 @@ fun ProfileFormDialog(
                 }
 
                 // Icon Picker
-                Text("Ikon", style = MaterialTheme.typography.labelMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(profileIcons) { iconName ->
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (selectedIcon == iconName) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceVariant
+                if (selectedMode == "EXPENSE") {
+                    Text("Ikon", style = MaterialTheme.typography.labelMedium)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(profileIcons) { iconName ->
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (selectedIcon == iconName) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .clickable { selectedIcon = iconName },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(iconName),
+                                    contentDescription = null,
+                                    tint = if (selectedIcon == iconName) MaterialTheme.colorScheme.onPrimaryContainer
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                .clickable { selectedIcon = iconName },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = CategoryIconMapper.getIcon(iconName),
-                                contentDescription = null,
-                                tint = if (selectedIcon == iconName) MaterialTheme.colorScheme.onPrimaryContainer
-                                       else MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        }
+                    }
+                }
+
+                // === Wedding Detail Fields ===
+                if (selectedMode == "WEDDING") {
+                    Divider(Modifier.padding(vertical = 8.dp))
+                    Text("Detail Pengantin", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    
+                    OutlinedTextField(
+                        value = groomName,
+                        onValueChange = { groomName = it },
+                        label = { Text("Nama Mempelai Pria (CPP)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = brideName,
+                        onValueChange = { brideName = it },
+                        label = { Text("Nama Mempelai Wanita (CPW)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = budgetCap,
+                        onValueChange = { budgetCap = it },
+                        label = { Text("Anggaran Maksimal (Rp)") },
+                        placeholder = { Text("Contoh: 150000000") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Text("Agama", style = MaterialTheme.typography.labelMedium)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(religions) { rel ->
+                            FilterChip(
+                                selected = religionType == rel,
+                                onClick = { religionType = rel },
+                                label = { Text(rel) }
+                            )
+                        }
+                    }
+
+                    Text("Adat Pria (CPP)", style = MaterialTheme.typography.labelMedium)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(cultures) { cul ->
+                            FilterChip(
+                                selected = culturalPresetGroom == cul,
+                                onClick = { culturalPresetGroom = cul },
+                                label = { Text(cul) }
+                            )
+                        }
+                    }
+
+                    Text("Adat Wanita (CPW)", style = MaterialTheme.typography.labelMedium)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(cultures) { cul ->
+                            FilterChip(
+                                selected = culturalPresetBride == cul,
+                                onClick = { culturalPresetBride = cul },
+                                label = { Text(cul) }
                             )
                         }
                     }
@@ -460,7 +530,10 @@ fun ProfileFormDialog(
                                 groomName = groomName.ifBlank { name.trim() },
                                 brideName = brideName.ifBlank { "Pasangan" },
                                 weddingDate = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000), // Default 1 tahun
-                                totalBudgetCap = budgetCap.toDoubleOrNull() ?: 0.0
+                                totalBudgetCap = budgetCap.toDoubleOrNull() ?: 0.0,
+                                religionType = religionType,
+                                culturalPresetGroom = culturalPresetGroom,
+                                culturalPresetBride = culturalPresetBride
                             )
                         } else null
                         onSave(savedProfile, weddingProfile)
