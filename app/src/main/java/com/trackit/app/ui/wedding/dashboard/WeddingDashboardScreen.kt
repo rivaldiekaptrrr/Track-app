@@ -483,6 +483,24 @@ fun WeddingDashboardScreen(
                                 )
                             }
                         }
+                        if (p != uiState.allProfiles.last()) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(
+                        onClick = {
+                            showProfileSwitcher = false
+                            onNavigateToProfile()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.ManageAccounts, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Kelola Profil", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
