@@ -155,7 +155,9 @@ private fun CommitteeMemberItem(
         "SIAP_PAKAI" -> Color(0xFF2E7D32)
         "SEDANG_JAHIT" -> Color(0xFFE65100)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }    ElevatedCard(
+    }
+    
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
