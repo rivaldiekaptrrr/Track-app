@@ -79,9 +79,13 @@ fun LoginScreen(
             val account = task.getResult(ApiException::class.java)
             account?.idToken?.let { idToken ->
                 viewModel.loginWithGoogle(idToken)
-            }
+            } ?: viewModel.setError("Gagal mendapatkan token Google.")
         } catch (e: ApiException) {
-            // Ignore if user cancelled
+            // Status code 10 = DEVELOPER_ERROR (SHA-1 belum terdaftar di Firebase)
+            // Status code 12501 = user cancelled
+            if (e.statusCode != 12501) {
+                viewModel.setError("Google Sign-In error (code: ${e.statusCode}). Pastikan SHA-1 sudah terdaftar di Firebase Console.")
+            }
         }
     }
 
