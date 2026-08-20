@@ -117,65 +117,86 @@ class SyncManager @Inject constructor(
         syncJob?.cancel()
     }
     
-    suspend fun pushTransaction(transaction: TransactionEntity) {
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        
-        // Use createdAt as unique firestore document ID to avoid local SQLite ID collisions between phones
-        val docId = "${transaction.createdAt}_${transaction.profileId}"
-        firestore.collection("users").document(userId)
-            .collection("transactions").document(docId)
-            .set(transaction)
-            .await()
+    fun pushTransaction(transaction: TransactionEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            
+            // Use createdAt as unique firestore document ID to avoid local SQLite ID collisions between phones
+            val docId = "${transaction.createdAt}_${transaction.profileId}"
+            try {
+                firestore.collection("users").document(userId)
+                    .collection("transactions").document(docId)
+                    .set(transaction)
+                    .await()
+            } catch (e: Exception) {
+                // Background sync failed, ignore as it will be retried when app restarts or sync re-enabled
+            }
+        }
     }
     
-    suspend fun deleteTransaction(transaction: TransactionEntity) {
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        
-        val docId = "${transaction.createdAt}_${transaction.profileId}"
-        firestore.collection("users").document(userId)
-            .collection("transactions").document(docId)
-            .delete()
-            .await()
-    }
-
-    suspend fun pushWeddingExpense(expense: WeddingExpenseEntity) {
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        firestore.collection("users").document(userId).collection("wedding_expenses").document(expense.expenseId).set(expense)
-    }
-
-    suspend fun deleteWeddingExpense(expense: WeddingExpenseEntity) {
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        firestore.collection("users").document(userId).collection("wedding_expenses").document(expense.expenseId).delete()
-    }
-
-    suspend fun pushWeddingTask(task: WeddingTaskEntity) {
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        firestore.collection("users").document(userId).collection("wedding_tasks").document(task.taskId).set(task)
-    }
-
-    suspend fun deleteWeddingTask(task: WeddingTaskEntity) {
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        firestore.collection("users").document(userId).collection("wedding_tasks").document(task.taskId).delete()
-    }
-
-    suspend fun performInitialSync() {
-
-        if (!syncPreferences.isOnlineMode.first()) return
-        val userId = authRepository.currentUser?.uid ?: return
-        
-        // Push all local transactions to cloud
-        val localTransactions = transactionDao.getAllTransactions(1).first() // Profile 1 default
-        for (transaction in localTransactions) {
+    fun deleteTransaction(transaction: TransactionEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            
             val docId = "${transaction.createdAt}_${transaction.profileId}"
-            firestore.collection("users").document(userId)
-                .collection("transactions").document(docId)
-                .set(transaction)
+            try {
+                firestore.collection("users").document(userId)
+                    .collection("transactions").document(docId)
+                    .delete()
+                    .await()
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun pushWeddingExpense(expense: WeddingExpenseEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            try { firestore.collection("users").document(userId).collection("wedding_expenses").document(expense.expenseId).set(expense).await() } catch (e: Exception) {}
+        }
+    }
+
+    fun deleteWeddingExpense(expense: WeddingExpenseEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            try { firestore.collection("users").document(userId).collection("wedding_expenses").document(expense.expenseId).delete().await() } catch (e: Exception) {}
+        }
+    }
+
+    fun pushWeddingTask(task: WeddingTaskEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            try { firestore.collection("users").document(userId).collection("wedding_tasks").document(task.taskId).set(task).await() } catch (e: Exception) {}
+        }
+    }
+
+    fun deleteWeddingTask(task: WeddingTaskEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            try { firestore.collection("users").document(userId).collection("wedding_tasks").document(task.taskId).delete().await() } catch (e: Exception) {}
+        }
+    }
+
+    fun performInitialSync() {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            
+            // Push all local transactions to cloud
+            val localTransactions = transactionDao.getAllTransactions(1).first() // Profile 1 default
+            for (transaction in localTransactions) {
+                val docId = "${transaction.createdAt}_${transaction.profileId}"
+                try {
+                    firestore.collection("users").document(userId)
+                        .collection("transactions").document(docId)
+                        .set(transaction).await()
+                } catch (e: Exception) {}
+            }
         }
     }
 }
