@@ -127,28 +127,30 @@ class SyncManager @Inject constructor(
             val isOnline = syncPreferences.isOnlineMode.first()
             val userId = authRepository.currentUser?.uid
             
-            // Show toast on Main thread for debugging
-            launch(Dispatchers.Main) {
-                Toast.makeText(context, "Sync Start: online=$isOnline, uid=${userId?.take(5)}", Toast.LENGTH_SHORT).show()
+            DebugLogger.log("Sync Start: online=$isOnline, uid=${userId?.take(5)}")
+            
+            if (!isOnline) {
+                DebugLogger.log("Sync Aborted: isOnlineMode is false")
+                return@launch
+            }
+            if (userId == null) {
+                DebugLogger.log("Sync Aborted: userId is null")
+                return@launch
             }
             
-            if (!isOnline) return@launch
-            if (userId == null) return@launch
-            
             val docId = "${transaction.createdAt}_${transaction.profileId}"
+            DebugLogger.log("Attempting to write doc: $docId")
+            
             try {
                 firestore.collection("users").document(userId)
                     .collection("transactions").document(docId)
                     .set(transaction)
                     .await()
                     
-                launch(Dispatchers.Main) {
-                    Toast.makeText(context, "Sync SUCCESS to Firestore!", Toast.LENGTH_SHORT).show()
-                }
+                DebugLogger.log("Sync SUCCESS to Firestore for doc: $docId")
             } catch (e: Exception) {
-                launch(Dispatchers.Main) {
-                    Toast.makeText(context, "Sync ERROR: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                DebugLogger.log("Sync ERROR: ${e.message}")
+                e.printStackTrace()
             }
         }
     }

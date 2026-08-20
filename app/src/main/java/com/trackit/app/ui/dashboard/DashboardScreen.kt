@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
+import com.trackit.app.util.DebugLogger
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.drawWithContent
@@ -78,7 +79,23 @@ fun DashboardScreen(
         }
     }
 
-    Scaffold() { padding ->
+    var showDebugTerminal by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Dashboard") },
+                actions = {
+                    IconButton(onClick = { showDebugTerminal = !showDebugTerminal }) {
+                        Icon(Icons.Default.Terminal, contentDescription = "Debug Terminal")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+    ) { padding ->
         if (uiState.isLoading) {
             Box(
                 modifier = Modifier
@@ -259,6 +276,70 @@ fun DashboardScreen(
                     }
                 }
             )
+        }
+    }
+
+    if (showDebugTerminal) {
+        DebugTerminalOverlay(onClose = { showDebugTerminal = false })
+    }
+}
+
+@Composable
+fun DebugTerminalOverlay(onClose: () -> Unit) {
+    val logs by DebugLogger.logs.collectAsStateWithLifecycle()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable(onClick = onClose),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f)
+                .clickable(enabled = false) {}, // Prevent clicks from closing when clicking inside
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Terminal / Debug Logs", color = Color.White, fontWeight = FontWeight.Bold)
+                    Row {
+                        TextButton(onClick = { DebugLogger.clear() }) {
+                            Text("Clear", color = Color.Gray)
+                        }
+                        IconButton(onClick = onClose) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                        }
+                    }
+                }
+                Divider(color = Color.DarkGray)
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(top = 8.dp),
+                    reverseLayout = true
+                ) {
+                    items(logs) { log ->
+                        Text(
+                            text = log,
+                            color = if (log.contains("ERROR") || log.contains("Aborted")) Color.Red else if (log.contains("SUCCESS")) Color.Green else Color.LightGray,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                fontSize = 11.sp
+                            ),
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
