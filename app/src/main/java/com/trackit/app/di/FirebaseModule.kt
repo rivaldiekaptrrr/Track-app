@@ -18,5 +18,12 @@ object FirebaseModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+    fun provideFirebaseFirestore(): FirebaseFirestore {
+        val firestore = FirebaseFirestore.getInstance()
+        val settings = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
+            .setPersistenceEnabled(false) // Disable local cache to prevent infinite hang from corrupted cache
+            .build()
+        firestore.firestoreSettings = settings
+        return firestore
+    }
 }
