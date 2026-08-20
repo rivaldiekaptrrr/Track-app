@@ -77,15 +77,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF0F0F1A),
-                        Color(0xFF1A1A2E),
-                        Color(0xFF16213E)
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -100,13 +92,13 @@ fun LoginScreen(
                 text = if (isRegisterMode) "Buat Akun" else "Masuk",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = if (isRegisterMode) "Daftarkan akun cloud Anda" else "Login untuk sinkronisasi multi-perangkat",
                 fontSize = 14.sp,
-                color = Color(0xFF94A3B8),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
@@ -116,7 +108,9 @@ fun LoginScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -126,9 +120,9 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email", color = Color(0xFF94A3B8)) },
+                        label = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         leadingIcon = {
-                            Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF6366F1))
+                            Icon(Icons.Default.Email, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
@@ -136,10 +130,10 @@ fun LoginScreen(
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = Color(0xFF6366F1),
-                            unfocusedBorderColor = Color(0xFF334155)
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         ),
                         singleLine = true
                     )
@@ -148,16 +142,16 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password", color = Color(0xFF94A3B8)) },
+                        label = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF6366F1))
+                            Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = null,
-                                    tint = Color(0xFF94A3B8)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         },
@@ -168,10 +162,10 @@ fun LoginScreen(
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = Color(0xFF6366F1),
-                            unfocusedBorderColor = Color(0xFF334155)
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         ),
                         singleLine = true
                     )
@@ -195,20 +189,20 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .height(50.dp),
                         enabled = email.isNotBlank() && password.isNotBlank() && !uiState.isLoading,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
                         } else {
                             Text(
                                 text = if (isRegisterMode) "Daftar" else "Masuk",
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -223,7 +217,7 @@ fun LoginScreen(
                     ) {
                         Text(
                             text = if (isRegisterMode) "Sudah punya akun? Masuk" else "Belum punya akun? Daftar",
-                            color = Color(0xFF6366F1),
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 13.sp
                         )
                     }
@@ -237,14 +231,14 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF334155))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
                 Text(
                     " atau ",
-                    color = Color(0xFF94A3B8),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF334155))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -256,13 +250,15 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 enabled = !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Lanjutkan dengan Google",
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
+                    fontWeight = FontWeight.Medium
                 )
             }
 
@@ -273,8 +269,8 @@ fun LoginScreen(
                 onClick = onSkip,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF94A3B8)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Text("Lewati, gunakan mode Offline", fontSize = 13.sp)
             }
