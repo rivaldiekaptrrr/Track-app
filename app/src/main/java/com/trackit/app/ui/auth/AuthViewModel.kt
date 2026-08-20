@@ -36,10 +36,11 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState(isLoading = true)
             when (val result = authRepository.signInWithEmail(email, password)) {
                 is AuthResult.Success -> {
-                    syncPreferences.setUserId(result.user.uid)
+                    val uid = result.user.uid
+                    syncPreferences.setUserId(uid)
                     syncPreferences.setOnlineMode(true)
                     syncManager.startSync()
-                    syncManager.performInitialSync()
+                    syncManager.performInitialSync(uid)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -54,10 +55,11 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState(isLoading = true)
             when (val result = authRepository.registerWithEmail(email, password)) {
                 is AuthResult.Success -> {
-                    syncPreferences.setUserId(result.user.uid)
+                    val uid = result.user.uid
+                    syncPreferences.setUserId(uid)
                     syncPreferences.setOnlineMode(true)
                     syncManager.startSync()
-                    syncManager.performInitialSync()
+                    syncManager.performInitialSync(uid)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -72,10 +74,11 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState(isLoading = true)
             when (val result = authRepository.signInWithGoogle(idToken)) {
                 is AuthResult.Success -> {
-                    syncPreferences.setUserId(result.user.uid)
+                    val uid = result.user.uid
+                    syncPreferences.setUserId(uid)
                     syncPreferences.setOnlineMode(true)
                     syncManager.startSync()
-                    syncManager.performInitialSync()
+                    syncManager.performInitialSync(uid)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {

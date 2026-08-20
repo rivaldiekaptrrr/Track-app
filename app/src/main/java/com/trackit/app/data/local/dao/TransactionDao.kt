@@ -34,6 +34,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE profileId = :profileId ORDER BY date DESC, createdAt DESC")
     fun getAllTransactions(profileId: Long): Flow<List<TransactionEntity>>
 
+    @Query("SELECT * FROM transactions ORDER BY date DESC, createdAt DESC")
+    fun getAllTransactionsAllProfiles(): Flow<List<TransactionEntity>>
+
     @Query("""
         SELECT * FROM transactions 
         WHERE date >= :startOfMonth AND date < :endOfMonth AND profileId = :profileId

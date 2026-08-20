@@ -182,14 +182,12 @@ class SyncManager @Inject constructor(
         }
     }
 
-    fun performInitialSync() {
+    // Dipanggil langsung dengan userId untuk menghindari race condition dengan DataStore
+    fun performInitialSync(userId: String) {
         syncScope.launch {
-            if (!syncPreferences.isOnlineMode.first()) return@launch
-            val userId = authRepository.currentUser?.uid ?: return@launch
-            
-            // Push all local transactions to cloud
-            val localTransactions = transactionDao.getAllTransactions(1).first() // Profile 1 default
-            for (transaction in localTransactions) {
+            // Ambil SEMUA transaksi dari semua profile (bukan hardcode profileId = 1)
+            val allTransactions = transactionDao.getAllTransactionsAllProfiles().first()
+            for (transaction in allTransactions) {
                 val docId = "${transaction.createdAt}_${transaction.profileId}"
                 try {
                     firestore.collection("users").document(userId)
