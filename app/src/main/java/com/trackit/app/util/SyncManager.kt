@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -140,17 +141,24 @@ class SyncManager @Inject constructor(
             
             val docId = "${transaction.createdAt}_${transaction.profileId}"
             DebugLogger.log("Attempting to write doc: $docId")
-            
-            try {
-                firestore.collection("users").document(userId)
-                    .collection("transactions").document(docId)
-                    .set(transaction)
-                    .await()
-                    
-                DebugLogger.log("Sync SUCCESS to Firestore for doc: $docId")
-            } catch (e: Exception) {
-                DebugLogger.log("Sync ERROR: ${e.message}")
-                e.printStackTrace()
+
+            // Ganti .await() dengan timeout 10 detik untuk mendeteksi infinite hang
+            val result = withTimeoutOrNull(10_000L) {
+                try {
+                    firestore.collection("users").document(userId)
+                        .collection("transactions").document(docId)
+                        .set(transaction)
+                        .await()
+                    "SUCCESS"
+                } catch (e: Exception) {
+                    "ERROR: ${e.message}"
+                }
+            }
+
+            when {
+                result == null -> DebugLogger.log("Sync TIMEOUT: Firebase tidak merespon dalam 10 detik. Kemungkinan gRPC terblokir oleh jaringan.")
+                result.startsWith("ERROR") -> DebugLogger.log("Sync $result")
+                else -> DebugLogger.log("Sync SUCCESS to Firestore for doc: $docId")
             }
         }
     }
