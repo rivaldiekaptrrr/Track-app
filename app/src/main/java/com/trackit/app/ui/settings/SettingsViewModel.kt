@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.trackit.app.data.local.PreferencesManager
 import com.trackit.app.data.local.ThemeMode
 import com.trackit.app.data.local.entity.ProfileEntity
+import com.trackit.app.data.repository.AuthRepository
 import com.trackit.app.data.repository.BudgetRepository
 import com.trackit.app.data.repository.ProfileRepository
+import com.trackit.app.util.SyncPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -23,14 +25,18 @@ data class SettingsUiState(
     val dailyReminderTime: String = "20:00",
     val isExpenseOnlyMode: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val isBiometricEnabled: Boolean = true
+    val isBiometricEnabled: Boolean = true,
+    val isOnlineMode: Boolean = false,
+    val currentUserEmail: String? = null
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val authRepository: AuthRepository,
+    private val syncPreferences: SyncPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -43,6 +49,7 @@ class SettingsViewModel @Inject constructor(
         loadExpenseOnlyMode()
         loadThemeMode()
         loadBiometricPreference()
+        loadCloudSyncState()
     }
 
     private fun loadTtsPreference() {
@@ -161,6 +168,28 @@ class SettingsViewModel @Inject constructor(
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
             preferencesManager.setThemeMode(mode)
+        }
+    }
+
+    private fun loadCloudSyncState() {
+        viewModelScope.launch {
+            syncPreferences.isOnlineMode.collect { isOnline ->
+                _uiState.update {
+                    it.copy(
+                        isOnlineMode = isOnline,
+                        currentUserEmail = if (isOnline) authRepository.currentUser?.email else null
+                    )
+                }
+            }
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository.signOut()
+            syncPreferences.setOnlineMode(false)
+            syncPreferences.setUserId(null)
+            _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
         }
     }
 }

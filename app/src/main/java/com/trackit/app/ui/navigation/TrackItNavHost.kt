@@ -22,6 +22,7 @@ import com.trackit.app.ui.profile.ProfileManagementScreen
 import com.trackit.app.ui.settings.CustomKeywordScreen
 import com.trackit.app.ui.settings.SettingsScreen
 import com.trackit.app.ui.transaction.AddEditTransactionScreen
+import com.trackit.app.ui.auth.LoginScreen
 
 @Composable
 fun TrackItNavHost(
@@ -150,6 +151,9 @@ fun TrackItNavHost(
                     },
                     onNavigateToCategoryBudget = {
                         navController.navigate(Screen.CategoryBudget.route)
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(Screen.Login.route)
                     }
                 )
             }
@@ -169,6 +173,21 @@ fun TrackItNavHost(
             composable(Screen.CategoryBudget.route) {
                 CategoryBudgetScreen(
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
+                    onSkip = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
                 )
             }
         }
