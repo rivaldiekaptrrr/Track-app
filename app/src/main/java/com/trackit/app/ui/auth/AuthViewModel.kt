@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.trackit.app.data.repository.AuthRepository
 import com.trackit.app.data.repository.AuthResult
 import com.trackit.app.util.SyncPreferences
+import com.trackit.app.util.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,8 @@ data class AuthUiState(
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -36,6 +38,8 @@ class AuthViewModel @Inject constructor(
                 is AuthResult.Success -> {
                     syncPreferences.setUserId(result.user.uid)
                     syncPreferences.setOnlineMode(true)
+                    syncManager.startSync()
+                    syncManager.performInitialSync()
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -52,6 +56,8 @@ class AuthViewModel @Inject constructor(
                 is AuthResult.Success -> {
                     syncPreferences.setUserId(result.user.uid)
                     syncPreferences.setOnlineMode(true)
+                    syncManager.startSync()
+                    syncManager.performInitialSync()
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -68,6 +74,8 @@ class AuthViewModel @Inject constructor(
                 is AuthResult.Success -> {
                     syncPreferences.setUserId(result.user.uid)
                     syncPreferences.setOnlineMode(true)
+                    syncManager.startSync()
+                    syncManager.performInitialSync()
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -82,6 +90,7 @@ class AuthViewModel @Inject constructor(
             authRepository.signOut()
             syncPreferences.setOnlineMode(false)
             syncPreferences.setUserId(null)
+            syncManager.stopSync()
         }
     }
 

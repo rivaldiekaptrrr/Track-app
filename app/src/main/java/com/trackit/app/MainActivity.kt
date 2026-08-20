@@ -61,6 +61,7 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var database: com.trackit.app.data.local.TrackItDatabase
     @Inject lateinit var profileRepository: ProfileRepository
     @Inject lateinit var preferencesManager: com.trackit.app.data.local.PreferencesManager
+    @Inject lateinit var syncManager: com.trackit.app.util.SyncManager
 
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
@@ -287,6 +288,11 @@ class MainActivity : FragmentActivity() {
                 super.onAuthenticationFailed()
                 onError("Autentikasi gagal. Coba lagi.")
             }
+        }
+
+        // Start cloud sync listener if online mode is enabled
+        lifecycleScope.launch {
+            syncManager.startSync()
         }
 
         val biometricPrompt = BiometricPrompt(this, executor, callback)

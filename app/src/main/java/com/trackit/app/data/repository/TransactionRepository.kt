@@ -6,10 +6,12 @@ import com.trackit.app.data.local.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.trackit.app.util.SyncManager
 
 @Singleton
 class TransactionRepository @Inject constructor(
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val syncManager: SyncManager
 ) {
     fun getAllTransactions(profileId: Long): Flow<List<TransactionEntity>> =
         transactionDao.getAllTransactions(profileId)
@@ -50,17 +52,29 @@ class TransactionRepository @Inject constructor(
     suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity> =
         transactionDao.getRecurringTransactions(profileId)
 
-    suspend fun insert(transaction: TransactionEntity): Long =
-        transactionDao.insert(transaction)
+    suspend fun insert(transaction: TransactionEntity): Long {
+        val id = transactionDao.insert(transaction)
+        syncManager.pushTransaction(transaction.copy(id = id))
+        return id
+    }
 
-    suspend fun update(transaction: TransactionEntity) =
+    suspend fun update(transaction: TransactionEntity) {
         transactionDao.update(transaction)
+        syncManager.pushTransaction(transaction)
+    }
 
-    suspend fun delete(transaction: TransactionEntity) =
+    suspend fun delete(transaction: TransactionEntity) {
         transactionDao.delete(transaction)
+        syncManager.deleteTransaction(transaction)
+    }
 
-    suspend fun deleteById(id: Long) =
+    suspend fun deleteById(id: Long) {
+        val transaction = transactionDao.getById(id)
         transactionDao.deleteById(id)
+        if (transaction != null) {
+            syncManager.deleteTransaction(transaction)
+        }
+    }
 
     suspend fun getById(id: Long): TransactionEntity? =
         transactionDao.getById(id)
