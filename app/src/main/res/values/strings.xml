@@ -32,5 +32,5 @@
     <string name="shortcut_voice_short">Catat Suara</string>
     <string name="shortcut_voice_long">Catat dengan Suara</string>
     <!-- Placeholder Web Client ID to fix compile errors on CI/CD or missing SHA-1 -->
-    <string name="default_web_client_id" translatable="false">YOUR_WEB_CLIENT_ID_HERE</string>
+    <string name="default_web_client_id" translatable="false">213242376634-l9vfpl7tdgbh0he3en8sa8r8n5mhnp48.apps.googleusercontent.com</string>
 </resources>
