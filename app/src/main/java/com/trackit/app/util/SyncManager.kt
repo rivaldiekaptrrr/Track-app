@@ -17,8 +17,13 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import android.content.Context
+import android.widget.Toast
+import dagger.hilt.android.qualifiers.ApplicationContext
+
 @Singleton
 class SyncManager @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val firestore: FirebaseFirestore,
     private val transactionDao: TransactionDao,
     private val weddingExpenseDao: WeddingExpenseDao,
@@ -119,18 +124,31 @@ class SyncManager @Inject constructor(
     
     fun pushTransaction(transaction: TransactionEntity) {
         syncScope.launch {
-            if (!syncPreferences.isOnlineMode.first()) return@launch
-            val userId = authRepository.currentUser?.uid ?: return@launch
+            val isOnline = syncPreferences.isOnlineMode.first()
+            val userId = authRepository.currentUser?.uid
             
-            // Use createdAt as unique firestore document ID to avoid local SQLite ID collisions between phones
+            // Show toast on Main thread for debugging
+            launch(Dispatchers.Main) {
+                Toast.makeText(context, "Sync Start: online=$isOnline, uid=${userId?.take(5)}", Toast.LENGTH_SHORT).show()
+            }
+            
+            if (!isOnline) return@launch
+            if (userId == null) return@launch
+            
             val docId = "${transaction.createdAt}_${transaction.profileId}"
             try {
                 firestore.collection("users").document(userId)
                     .collection("transactions").document(docId)
                     .set(transaction)
                     .await()
+                    
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Sync SUCCESS to Firestore!", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
-                // Background sync failed, ignore as it will be retried when app restarts or sync re-enabled
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Sync ERROR: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
