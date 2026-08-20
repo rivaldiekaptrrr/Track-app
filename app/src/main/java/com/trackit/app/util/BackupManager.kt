@@ -29,13 +29,13 @@ object BackupManager {
             if (dbFile.exists()) {
                 // Ensure the database is closed or flushed? 
                 // For Room, it's better to use a checkpoint or just copy if app is idle.
-                copyFile(dbFile, backupFile)
+                CryptoUtil.encryptFile(dbFile, backupFile)
                 
                 // Also copy -wal and -shm files if they exist (Write-Ahead Logging)
                 val walFile = File(dbFile.path + "-wal")
                 val shmFile = File(dbFile.path + "-shm")
-                if (walFile.exists()) copyFile(walFile, File(backupFile.path + "-wal"))
-                if (shmFile.exists()) copyFile(shmFile, File(backupFile.path + "-shm"))
+                if (walFile.exists()) CryptoUtil.encryptFile(walFile, File(backupFile.path + "-wal"))
+                if (shmFile.exists()) CryptoUtil.encryptFile(shmFile, File(backupFile.path + "-shm"))
 
                 shareFile(context, backupFile)
             } else {
@@ -54,9 +54,7 @@ object BackupManager {
             // In a real app, you'd need to restart the app after this.
             
             context.contentResolver.openInputStream(backupUri)?.use { inputStream ->
-                FileOutputStream(dbFile).use { outputStream ->
-                    inputStream.copyTo(outputStream)
-                }
+                CryptoUtil.decryptStream(inputStream, dbFile)
             }
             
             // Delete WAL and SHM files to ensure the new main DB file is used
@@ -81,13 +79,13 @@ object BackupManager {
 
             val backupFile = File(trackItDir, AUTO_BACKUP_FILE)
             
-            copyFile(dbFile, backupFile)
+            CryptoUtil.encryptFile(dbFile, backupFile)
             
             // Backup WAL and SHM if exists
             val walFile = File(dbFile.path + "-wal")
             val shmFile = File(dbFile.path + "-shm")
-            if (walFile.exists()) copyFile(walFile, File(backupFile.path + "-wal"))
-            if (shmFile.exists()) copyFile(shmFile, File(backupFile.path + "-shm"))
+            if (walFile.exists()) CryptoUtil.encryptFile(walFile, File(backupFile.path + "-wal"))
+            if (shmFile.exists()) CryptoUtil.encryptFile(shmFile, File(backupFile.path + "-shm"))
         } catch (e: Exception) {
             // Silently fail or log for auto backup
             e.printStackTrace()
@@ -109,13 +107,13 @@ object BackupManager {
             File(dbFile.path + "-wal").delete()
             File(dbFile.path + "-shm").delete()
 
-            copyFile(backupFile, dbFile)
+            CryptoUtil.decryptFile(backupFile, dbFile)
             
             // Restore WAL and SHM if exists
             val walBackup = File(backupFile.path + "-wal")
             val shmBackup = File(backupFile.path + "-shm")
-            if (walBackup.exists()) copyFile(walBackup, File(dbFile.path + "-wal"))
-            if (shmBackup.exists()) copyFile(shmBackup, File(dbFile.path + "-shm"))
+            if (walBackup.exists()) CryptoUtil.decryptFile(walBackup, File(dbFile.path + "-wal"))
+            if (shmBackup.exists()) CryptoUtil.decryptFile(shmBackup, File(dbFile.path + "-shm"))
 
             Toast.makeText(context, "Data berhasil dipulihkan secara otomatis!", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
@@ -123,13 +121,7 @@ object BackupManager {
         }
     }
 
-    private fun copyFile(from: File, to: File) {
-        FileInputStream(from).channel.use { source ->
-            FileOutputStream(to).channel.use { destination ->
-                destination.transferFrom(source, 0, source.size())
-            }
-        }
-    }
+
 
     private fun shareFile(context: Context, file: File) {
         val uri = FileProvider.getUriForFile(
