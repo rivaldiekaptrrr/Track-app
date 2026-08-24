@@ -252,21 +252,17 @@ private fun CategoryBudgetCard(
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("Rp", fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
-                            value = item.inputAmount,
-                            onValueChange = onAmountChange,
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            placeholder = { Text("0") },
-                            shape = RoundedCornerShape(10.dp),
-                            singleLine = true
-                        )
-                    }
+                    OutlinedTextField(
+                        value = item.inputAmount,
+                        onValueChange = { onAmountChange(it.filter { c -> c.isDigit() }) },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("0") },
+                        prefix = { Text("Rp") },
+                        visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 

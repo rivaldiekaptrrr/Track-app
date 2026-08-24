@@ -255,6 +255,8 @@ private fun AddVendorDialog(
                     label = { Text("Instagram (@username)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = contractValue, onValueChange = { contractValue = it.filter { c -> c.isDigit() } },
                     label = { Text("Nilai Kontrak (Rp)") }, prefix = { Text("Rp") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = notes, onValueChange = { notes = it },
                     label = { Text("Catatan") }, modifier = Modifier.fillMaxWidth(), maxLines = 2)

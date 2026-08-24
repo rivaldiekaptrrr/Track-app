@@ -568,16 +568,16 @@ fun ProfileFormDialog(
                             OutlinedTextField(
                                 value = budgetCap,
                                 onValueChange = { newValue ->
-                                    val unformatted = newValue.replace(Regex("[^0-9]"), "")
-                                    budgetCap = if (unformatted.isEmpty()) "" else
-                                        java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(unformatted.toLongOrNull() ?: 0L)
+                                    budgetCap = newValue.filter { it.isDigit() }
                                 },
                                 label = { Text("Anggaran Maksimal (Rp)") },
                                 placeholder = { Text("Contoh: 150.000.000") },
+                                prefix = { Text("Rp") },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation()
                             )
 
                             // Dropdown Agama

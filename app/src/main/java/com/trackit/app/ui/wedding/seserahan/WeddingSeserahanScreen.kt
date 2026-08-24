@@ -297,6 +297,8 @@ private fun AddSeserahanItemDialog(
                 }
                 OutlinedTextField(value = price, onValueChange = { price = it.filter { c -> c.isDigit() } },
                     label = { Text("Estimasi Harga (Rp/item)") }, prefix = { Text("Rp") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = notes, onValueChange = { notes = it },
                     label = { Text("Catatan (opsional)") }, modifier = Modifier.fillMaxWidth(), maxLines = 2)

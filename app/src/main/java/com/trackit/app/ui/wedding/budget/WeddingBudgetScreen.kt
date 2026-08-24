@@ -369,6 +369,8 @@ private fun AddExpenseDialog(
                 OutlinedTextField(value = estimated,
                     onValueChange = { estimated = it.filter { c -> c.isDigit() }; submitted = false },
                     label = { Text("Total Estimasi (Rp)") }, prefix = { Text("Rp") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
                     isError = submitted && estimated.isBlank(),
                     supportingText = { if (submitted && estimated.isBlank()) Text("Estimasi wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
@@ -427,6 +429,8 @@ private fun AddPaymentDialog(
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = amount, onValueChange = { amount = it.filter { c -> c.isDigit() }; submitted = false },
                     label = { Text("Nominal (Rp)") }, prefix = { Text("Rp") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
                     isError = submitted && amount.isBlank(),
                     supportingText = { if (submitted && amount.isBlank()) Text("Nominal wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)

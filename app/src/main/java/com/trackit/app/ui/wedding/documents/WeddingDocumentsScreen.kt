@@ -282,6 +282,8 @@ private fun AddDocumentDialog(
                     onValueChange = { cost = it.filter { c -> c.isDigit() } },
                     label = { Text("Biaya Admin (opsional)") },
                     prefix = { Text("Rp") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
