@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.net.Uri
 import android.view.WindowManager
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.isSystemInDarkTheme

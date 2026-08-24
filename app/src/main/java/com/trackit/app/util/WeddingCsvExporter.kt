@@ -34,11 +34,6 @@ object WeddingCsvExporter {
         outputStream: java.io.OutputStream
     ) {
         try {
-            val safeName = profileName.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
-            val fileName = "Wedding_${safeName}_${fileNameFormat.format(Date())}.csv"
-            val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOCUMENTS)
-            val file = File(downloadsDir, fileName)
-
             val sb = StringBuilder()
             // BOM for Excel UTF-8 compatibility
             sb.append("\uFEFF")

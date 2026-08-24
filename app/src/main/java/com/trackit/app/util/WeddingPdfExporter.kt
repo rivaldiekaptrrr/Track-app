@@ -39,7 +39,7 @@ object WeddingPdfExporter {
     fun writeToStream(
         expenses: List<WeddingExpenseEntity>,
         profileName: String = "Anggaran Pernikahan",
-        outputStream: OutputStream
+        outputStream: java.io.OutputStream
     ) {
         val document = PdfDocument()
         val pageWidth = 595

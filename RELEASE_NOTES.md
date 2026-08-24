@@ -1,3 +1,4 @@
+- **HOTFIX v3.2.2**: Fix compile errors in MainActivity, WeddingPdfExporter, and WeddingCsvExporter
 - **HOTFIX v3.2.1**: Fix crash when saving Export PDF/Excel caused by unconfigured file paths directory.
 - Add Export PDF and Excel feature exclusively for Wedding Budget
 - PDF output now includes structured layout with 6 data columns and a summary
