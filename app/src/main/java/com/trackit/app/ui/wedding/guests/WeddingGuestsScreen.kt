@@ -303,38 +303,96 @@ private fun GuestFilters(
     onSessionFilter: (String) -> Unit,
     onRsvpFilter: (String) -> Unit
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-        // Group filter
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item {
-                FilterChip(selected = uiState.filterGroup == "ALL",
-                    onClick = { onGroupFilter("ALL") }, label = { Text("Semua Kelompok") })
-            }
-            items(uiState.availableGroups) { (key, label) ->
-                FilterChip(selected = uiState.filterGroup == key,
-                    onClick = { onGroupFilter(key) }, label = { Text(label) })
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Sesi
+        val sessionItems = listOf("ALL" to "Semua Sesi", "AKAD" to "Akad", "RESEPSI" to "Resepsi")
+        val selectedSession = sessionItems.find { it.first == uiState.filterSession }?.second ?: "Semua Sesi"
+        FilterDropdown(
+            label = "Sesi",
+            selectedValueLabel = selectedSession,
+            items = sessionItems,
+            onItemSelected = onSessionFilter,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Kelompok
+        val groupItems = listOf("ALL" to "Semua Kelompok") + uiState.availableGroups
+        val selectedGroup = groupItems.find { it.first == uiState.filterGroup }?.second ?: "Semua Kelompok"
+        FilterDropdown(
+            label = "Kelompok",
+            selectedValueLabel = selectedGroup,
+            items = groupItems,
+            onItemSelected = onGroupFilter,
+            modifier = Modifier.weight(1f)
+        )
+
+        // RSVP
+        val rsvpItems = listOf("ALL" to "Semua RSVP", "PENDING" to "Menunggu", "ATTENDING" to "Hadir", "DECLINED" to "Tidak Hadir")
+        val selectedRsvp = rsvpItems.find { it.first == uiState.filterRsvp }?.second ?: "Semua RSVP"
+        FilterDropdown(
+            label = "RSVP",
+            selectedValueLabel = selectedRsvp,
+            items = rsvpItems,
+            onItemSelected = onRsvpFilter,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun FilterDropdown(
+    label: String,
+    selectedValueLabel: String,
+    items: List<Pair<String, String>>,
+    onItemSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier
+                .clickable { expanded = true }
+                .fillMaxWidth(),
+            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = selectedValueLabel, 
+                        style = MaterialTheme.typography.bodySmall, 
+                        fontWeight = FontWeight.SemiBold, 
+                        maxLines = 1, 
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        // Session filter
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item {
-                FilterChip(selected = uiState.filterSession == "ALL",
-                    onClick = { onSessionFilter("ALL") }, label = { Text("Semua Sesi") })
-            }
-            items(listOf("AKAD" to "Akad", "RESEPSI" to "Resepsi")) { (key, label) ->
-                FilterChip(selected = uiState.filterSession == key,
-                    onClick = { onSessionFilter(key) }, label = { Text(label) })
-            }
-        }
-        // RSVP filter
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item {
-                FilterChip(selected = uiState.filterRsvp == "ALL",
-                    onClick = { onRsvpFilter("ALL") }, label = { Text("Semua RSVP") })
-            }
-            items(listOf("PENDING" to "Menunggu", "ATTENDING" to "Hadir", "DECLINED" to "Tidak Hadir")) { (key, label) ->
-                FilterChip(selected = uiState.filterRsvp == key,
-                    onClick = { onRsvpFilter(key) }, label = { Text(label) })
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            items.forEach { (key, itemLabel) ->
+                DropdownMenuItem(
+                    text = { Text(itemLabel) },
+                    onClick = {
+                        onItemSelected(key)
+                        expanded = false
+                    }
+                )
             }
         }
     }
