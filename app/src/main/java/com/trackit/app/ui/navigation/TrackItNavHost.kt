@@ -29,7 +29,9 @@ fun TrackItNavHost(
     navController: NavHostController,
     startDestination: String = Screen.Dashboard.route,
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
-    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit
+    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onExportWeddingPdf: (profileId: String, profileName: String) -> Unit = { _, _ -> },
+    onExportWeddingCsv: (profileId: String, profileName: String) -> Unit = { _, _ -> }
 ) {
     // Shared DashboardViewModel for profile data
     val dashboardViewModel: DashboardViewModel = hiltViewModel()
@@ -49,7 +51,9 @@ fun TrackItNavHost(
                 navController.navigate(Screen.ProfileManagement.route)
             },
             onExportPdf = onExportPdf,
-            onExportCsv = onExportCsv
+            onExportCsv = onExportCsv,
+            onExportWeddingPdf = onExportWeddingPdf,
+            onExportWeddingCsv = onExportWeddingCsv
         )
         return
     }

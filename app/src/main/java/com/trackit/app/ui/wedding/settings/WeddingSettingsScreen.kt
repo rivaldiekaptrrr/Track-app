@@ -32,6 +32,8 @@ fun WeddingSettingsScreen(
     onNavigateToMainProfile: () -> Unit,
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onExportWeddingPdf: (profileId: String, profileName: String) -> Unit = { _, _ -> },
+    onExportWeddingCsv: (profileId: String, profileName: String) -> Unit = { _, _ -> },
     onNavigateToLogin: () -> Unit = {},
     weddingProfileId: String = "",
     viewModel: WeddingSettingsViewModel = hiltViewModel()
@@ -448,7 +450,7 @@ fun WeddingSettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.PictureAsPdf,
-                title = "Ekspor Laporan (PDF/CSV)",
+                title = "Ekspor Laporan (PDF/Excel)",
                 subtitle = "Simpan laporan anggaran pernikahan",
                 onClick = { showExportDialog = true }
             )
@@ -541,16 +543,38 @@ fun WeddingSettingsScreen(
     }
 
     if (showExportDialog) {
-        ExportReportDialog(
-            onDismiss = { showExportDialog = false },
-            isExpenseOnlyMode = false,
-            onExportPdf = { title, startDate, endDate, typeFilter ->
-                onExportPdf(title, startDate, endDate, typeFilter)
-                showExportDialog = false
+        AlertDialog(
+            onDismissRequest = { showExportDialog = false },
+            title = { Text("Ekspor Laporan Anggaran", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Pilih format file untuk mengekspor seluruh data anggaran pernikahan Anda.")
             },
-            onExportCsv = { title, startDate, endDate, typeFilter ->
-                onExportCsv(title, startDate, endDate, typeFilter)
-                showExportDialog = false
+            confirmButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            onExportWeddingPdf(weddingProfileId, uiState.profileName.ifBlank { "Anggaran Pernikahan" })
+                            showExportDialog = false
+                        }
+                    ) {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("PDF")
+                    }
+                    Button(
+                        onClick = {
+                            onExportWeddingCsv(weddingProfileId, uiState.profileName.ifBlank { "Anggaran Pernikahan" })
+                            showExportDialog = false
+                        }
+                    ) {
+                        Icon(Icons.Default.TableChart, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Excel")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportDialog = false }) { Text("Batal") }
             }
         )
     }

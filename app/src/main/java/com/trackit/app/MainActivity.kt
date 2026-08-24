@@ -38,9 +38,12 @@ import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.DateUtils
 import com.trackit.app.util.PdfExporter
 import com.trackit.app.util.CsvExporter
+import com.trackit.app.util.WeddingPdfExporter
+import com.trackit.app.util.WeddingCsvExporter
 import com.trackit.app.worker.BudgetCheckWorker
 import com.trackit.app.worker.RecurringTransactionWorker
 import com.trackit.app.data.repository.ProfileRepository
+import com.trackit.app.data.repository.WeddingExpenseRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -62,6 +65,7 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var profileRepository: ProfileRepository
     @Inject lateinit var preferencesManager: com.trackit.app.data.local.PreferencesManager
     @Inject lateinit var syncManager: com.trackit.app.util.SyncManager
+    @Inject lateinit var weddingExpenseRepository: WeddingExpenseRepository
 
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
@@ -183,6 +187,12 @@ class MainActivity : FragmentActivity() {
                             },
                             onExportCsv = { title, startDate, endDate, typeFilter ->
                                 exportCsv(title, startDate, endDate, typeFilter)
+                            },
+                            onExportWeddingPdf = { profileId, profileName ->
+                                exportWeddingPdf(profileId, profileName)
+                            },
+                            onExportWeddingCsv = { profileId, profileName ->
+                                exportWeddingCsv(profileId, profileName)
                             }
                         )
 
@@ -398,6 +408,28 @@ class MainActivity : FragmentActivity() {
                 endDate = endDate,
                 typeFilter = typeFilter,
                 showIncomeColumn = !isExpenseOnly
+            )
+        }
+    }
+
+    private fun exportWeddingPdf(weddingProfileId: String, profileName: String) {
+        lifecycleScope.launch {
+            val expenses = weddingExpenseRepository.getAllByProfile(weddingProfileId).first()
+            WeddingPdfExporter.exportReport(
+                context = this@MainActivity,
+                expenses = expenses,
+                profileName = profileName
+            )
+        }
+    }
+
+    private fun exportWeddingCsv(weddingProfileId: String, profileName: String) {
+        lifecycleScope.launch {
+            val expenses = weddingExpenseRepository.getAllByProfile(weddingProfileId).first()
+            WeddingCsvExporter.exportReport(
+                context = this@MainActivity,
+                expenses = expenses,
+                profileName = profileName
             )
         }
     }

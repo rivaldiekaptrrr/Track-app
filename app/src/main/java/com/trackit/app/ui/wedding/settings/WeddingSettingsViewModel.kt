@@ -25,7 +25,8 @@ data class WeddingSettingsUiState(
     val quoteFontStyle: String = "ITALIC",
     val weddingDate: Long = 0,
     val isOnlineMode: Boolean = false,
-    val currentUserEmail: String? = null
+    val currentUserEmail: String? = null,
+    val profileName: String = ""
 )
 
 @HiltViewModel
@@ -88,6 +89,7 @@ class WeddingSettingsViewModel @Inject constructor(
                 if (profile != null) {
                     _uiState.update { state ->
                         state.copy(
+                            profileName = "${profile.groomName} & ${profile.brideName}",
                             quoteText = profile.quote ?: "",
                             quoteEnabled = profile.quoteEnabled,
                             quoteFontSize = profile.quoteFontSize,

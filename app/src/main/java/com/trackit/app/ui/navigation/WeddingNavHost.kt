@@ -53,7 +53,9 @@ fun WeddingNavHost(
     weddingProfileId: String,
     onNavigateToMainProfile: () -> Unit,
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
-    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit
+    onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onExportWeddingPdf: (profileId: String, profileName: String) -> Unit = { _, _ -> },
+    onExportWeddingCsv: (profileId: String, profileName: String) -> Unit = { _, _ -> }
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -183,6 +185,8 @@ fun WeddingNavHost(
                     onNavigateToMainProfile = onNavigateToMainProfile,
                     onExportPdf = onExportPdf,
                     onExportCsv = onExportCsv,
+                    onExportWeddingPdf = onExportWeddingPdf,
+                    onExportWeddingCsv = onExportWeddingCsv,
                     weddingProfileId = weddingProfileId
                 )
             }
