@@ -1,4 +1,4 @@
-- Standardize automatic currency formatting (Auto separator & "Rp" prefix)
-- Fix cursor jumping bug when typing currency amounts
-- Streamline Settings menu (separated global & wedding settings)
-- Add Cloud Sync status card to Wedding Settings
+- Add Export PDF and Excel feature exclusively for Wedding Budget
+- PDF output now includes structured layout with 6 data columns and a summary
+- Excel/CSV output includes 9 columns with dedicated Notes (Catatan) field
+- Improve Wedding Settings UI by explicitly showing "PDF/Excel" label
