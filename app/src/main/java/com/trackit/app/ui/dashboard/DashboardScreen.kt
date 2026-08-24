@@ -282,13 +282,6 @@ fun DashboardScreen(
                 }
             )
         }
-    }
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable
