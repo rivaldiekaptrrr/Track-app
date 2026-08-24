@@ -1,9 +1,6 @@
-﻿---
+---
 name: no-emoji-icons
-description: >
-  Enforce a strict rule of NO emoji/unicode characters used as icons or visual labels in Kotlin Compose UI code.
-  Always use proper Material Icons from the androidx.compose.material.icons package instead.
-  Apply this skill when reviewing or editing any screen, ViewModel, or component file.
+description: "Enforce a strict rule of NO emoji/unicode characters used as icons or visual labels in Kotlin Compose UI code. Always use proper Material Icons from the androidx.compose.material.icons package instead. Apply this skill when reviewing or editing any screen, ViewModel, or component file."
 ---
 
 # No Emoji Icons — Compose UI Rule
