@@ -23,10 +23,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trackit.app.data.local.ThemeMode
 import com.trackit.app.ui.settings.ExportReportDialog
-import com.trackit.app.ui.settings.RestoreGDriveDialog
-import com.trackit.app.util.BackupManager
-import com.trackit.app.util.GDriveBackupManager
-import kotlinx.coroutines.launch
 import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +32,7 @@ fun WeddingSettingsScreen(
     onNavigateToMainProfile: () -> Unit,
     onExportPdf: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
     onExportCsv: (title: String, startDate: Long, endDate: Long, typeFilter: String) -> Unit,
+    onNavigateToLogin: () -> Unit = {},
     weddingProfileId: String = "",
     viewModel: WeddingSettingsViewModel = hiltViewModel()
 ) {
@@ -43,39 +40,9 @@ fun WeddingSettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
-    var showGDriveRestoreDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(weddingProfileId) {
         if (weddingProfileId.isNotBlank()) viewModel.loadForProfile(weddingProfileId)
-    }
-
-    val gDriveSignInLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            if (task.isSuccessful) {
-                scope.launch {
-                    Toast.makeText(context, "Mencadangkan ke Google Drive...", Toast.LENGTH_SHORT).show()
-                    val backupResult = GDriveBackupManager.backupDatabase(context)
-                    if (backupResult.isSuccess) {
-                        Toast.makeText(context, "Backup berhasil disimpan di Google Drive", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(context, "Gagal backup: ${backupResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            } else {
-                Toast.makeText(context, "Login Google gagal", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        uri?.let { 
-            BackupManager.isRestoring = true
-            BackupManager.restoreDatabase(context, it)
-            Toast.makeText(context, "Silakan tutup aplikasi secara manual dari Recent Apps dan buka kembali.", Toast.LENGTH_LONG).show()
-        }
     }
 
     Scaffold(
@@ -485,26 +452,91 @@ fun WeddingSettingsScreen(
                 subtitle = "Simpan laporan anggaran pernikahan",
                 onClick = { showExportDialog = true }
             )
-            SettingsItem(
-                icon = Icons.Default.CloudUpload,
-                title = "Cadangkan ke Google Drive",
-                subtitle = "Amankan data ke penyimpanan awan",
-                onClick = {
-                    val client = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(
-                        context,
-                        com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(
-                            com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN
-                        ).requestEmail().requestScopes(com.google.android.gms.common.api.Scope("https://www.googleapis.com/auth/drive.file")).build()
-                    )
-                    gDriveSignInLauncher.launch(client.signInIntent)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Cloud Sync & Account Card
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Cloud,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Akses Pasangan (Cloud Sync)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (uiState.isOnlineMode && uiState.currentUserEmail != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Masuk sebagai",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    uiState.currentUserEmail ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = { viewModel.signOut() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(Icons.Default.Logout, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Keluar & Matikan Sinkronisasi")
+                        }
+                    } else {
+                        Text(
+                            "Aktifkan sinkronisasi cloud agar data Anda tersedia di perangkat pasangan secara real-time.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { onNavigateToLogin() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Login, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Masuk / Buat Akun")
+                        }
+                    }
                 }
-            )
-            SettingsItem(
-                icon = Icons.Default.Restore,
-                title = "Pulihkan dari Google Drive",
-                subtitle = "Kembalikan data yang telah dicadangkan",
-                onClick = { showGDriveRestoreDialog = true }
-            )
+            }
         }
     }
 
@@ -523,15 +555,6 @@ fun WeddingSettingsScreen(
         )
     }
 
-    if (showGDriveRestoreDialog) {
-        RestoreGDriveDialog(
-            onDismiss = { showGDriveRestoreDialog = false },
-            onRestoreSuccess = {
-                showGDriveRestoreDialog = false
-                Toast.makeText(context, "Restore berhasil! Silakan tutup aplikasi dari Recent Apps lalu buka kembali.", Toast.LENGTH_LONG).show()
-            }
-        )
-    }
 }
 
 @Composable

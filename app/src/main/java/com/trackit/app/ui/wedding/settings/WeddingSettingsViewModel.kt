@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.trackit.app.data.repository.AuthRepository
+import com.trackit.app.util.SyncPreferences
+
 data class WeddingSettingsUiState(
     val isDailyReminderEnabled: Boolean = false,
     val dailyReminderTime: String = "20:00",
@@ -20,13 +23,17 @@ data class WeddingSettingsUiState(
     val quoteEnabled: Boolean = true,
     val quoteFontSize: String = "SEDANG",
     val quoteFontStyle: String = "ITALIC",
-    val weddingDate: Long = 0
+    val weddingDate: Long = 0,
+    val isOnlineMode: Boolean = false,
+    val currentUserEmail: String? = null
 )
 
 @HiltViewModel
 class WeddingSettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
-    private val weddingProfileRepository: WeddingProfileRepository
+    private val weddingProfileRepository: WeddingProfileRepository,
+    private val authRepository: AuthRepository,
+    private val syncPreferences: SyncPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WeddingSettingsUiState())
@@ -49,6 +56,28 @@ class WeddingSettingsViewModel @Inject constructor(
             preferencesManager.isBiometricEnabled.collect { enabled ->
                 _uiState.update { it.copy(isBiometricEnabled = enabled) }
             }
+        }
+        loadCloudSyncState()
+    }
+
+    private fun loadCloudSyncState() {
+        viewModelScope.launch {
+            syncPreferences.isOnlineMode.collect { isOnline ->
+                _uiState.update {
+                    it.copy(
+                        isOnlineMode = isOnline,
+                        currentUserEmail = if (isOnline) authRepository.currentUser?.email else null
+                    )
+                }
+            }
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository.signOut()
+            syncPreferences.setOnlineMode(false)
+            _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
         }
     }
 
