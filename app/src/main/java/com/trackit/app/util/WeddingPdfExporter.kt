@@ -50,7 +50,7 @@ object WeddingPdfExporter {
 
         // ── Paints ──────────────────────────────────────────────────────────
         val headerPaint = Paint().apply {
-            color = Color.parseColor("#4A148C")
+            color = Color.parseColor("#0D47A1")
             style = Paint.Style.FILL
         }
         val titlePaint = Paint().apply {
@@ -63,7 +63,7 @@ object WeddingPdfExporter {
             textSize = 10f
         }
         val colHeaderPaint = Paint().apply {
-            color = Color.parseColor("#7B1FA2")
+            color = Color.parseColor("#1976D2")
             style = Paint.Style.FILL
         }
         val colTextPaint = Paint().apply {
@@ -72,7 +72,7 @@ object WeddingPdfExporter {
             isFakeBoldText = true
         }
         val rowEvenPaint = Paint().apply {
-            color = Color.parseColor("#F3E5F5")
+            color = Color.parseColor("#E3F2FD")
             style = Paint.Style.FILL
         }
         val cellTextPaint = Paint().apply {
@@ -84,15 +84,15 @@ object WeddingPdfExporter {
             textSize = 7.5f
         }
         val dividerPaint = Paint().apply {
-            color = Color.parseColor("#CE93D8")
+            color = Color.parseColor("#BBDEFB")
             strokeWidth = 0.5f
         }
         val summaryBgPaint = Paint().apply {
-            color = Color.parseColor("#EDE7F6")
+            color = Color.parseColor("#E1F5FE")
             style = Paint.Style.FILL
         }
         val summaryTextPaint = Paint().apply {
-            color = Color.parseColor("#4A148C")
+            color = Color.parseColor("#0D47A1")
             textSize = 9f
             isFakeBoldText = true
         }
