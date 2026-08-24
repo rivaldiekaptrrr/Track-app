@@ -1,4 +1,4 @@
-﻿package com.trackit.app.data.repository
+package com.trackit.app.data.repository
 
 import com.trackit.app.data.local.dao.WeddingGuestDao
 import com.trackit.app.data.local.entity.WeddingGuestEntity
@@ -17,4 +17,5 @@ class WeddingGuestRepository @Inject constructor(
     suspend fun insertAll(guests: List<WeddingGuestEntity>) = dao.insertAll(guests)
     suspend fun update(guest: WeddingGuestEntity) = dao.update(guest)
     suspend fun delete(guest: WeddingGuestEntity) = dao.delete(guest)
+    suspend fun renameGroup(profileId: String, oldGroup: String, newGroup: String) = dao.renameGroup(profileId, oldGroup, newGroup)
 }

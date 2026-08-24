@@ -31,16 +31,24 @@ data class WeddingGuestsUiState(
 ) {
     val filtered get() = guests.filter { g ->
         (filterGroup == "ALL" || g.groupAllocation == filterGroup) &&
-        (filterSession == "ALL" || g.sessionTarget == filterSession) &&
+        (filterSession == "ALL" || g.sessionTarget == filterSession || g.sessionTarget == "KEDUANYA") &&
         (filterRsvp == "ALL" || g.rsvpStatus == filterRsvp)
     }
 
-    val totalGuests get() = guests.size
-    val totalPax get() = guests.sumOf { it.estimatedPax }
-    val attendingCount get() = guests.count { it.rsvpStatus == "ATTENDING" }
+    val totalGuests get() = filtered.size
+    val totalPax get() = filtered.sumOf { it.estimatedPax }
+    val attendingCount get() = filtered.count { it.rsvpStatus == "ATTENDING" }
+
+    // Dynamic list of groups (Defaults + any custom added in DB)
+    val availableGroups: List<Pair<String, String>> get() {
+        val defaultMap = GUEST_GROUPS.toMap()
+        val existingGroupKeys = guests.map { it.groupAllocation }.distinct()
+        val allKeys = (defaultMap.keys + existingGroupKeys).distinct()
+        return allKeys.map { key -> key to (defaultMap[key] ?: key) }
+    }
 
     // Breakdown by group
-    val byGroup: Map<String, Int> get() = guests
+    val byGroup: Map<String, Int> get() = filtered
         .groupBy { it.groupAllocation }
         .mapValues { (_, list) -> list.sumOf { it.estimatedPax } }
 
@@ -73,7 +81,7 @@ val GUEST_GROUPS = listOf(
 val GUEST_SESSIONS = listOf(
     "AKAD" to "Akad",
     "RESEPSI" to "Resepsi",
-    "KEDUANYA" to "Akad + Resepsi"
+    "KEDUANYA" to "Akad & Resepsi"
 )
 
 @HiltViewModel
@@ -149,9 +157,17 @@ class WeddingGuestsViewModel @Inject constructor(
         viewModelScope.launch { repo.delete(guest) }
     }
 
+    fun renameGroup(weddingProfileId: String, oldGroup: String, newGroup: String) {
+        viewModelScope.launch {
+            repo.renameGroup(weddingProfileId, oldGroup, newGroup)
+        }
+    }
+
     fun addMultipleGuests(
         weddingProfileId: String,
-        contacts: List<com.trackit.app.util.DeviceContact>
+        contacts: List<com.trackit.app.util.DeviceContact>,
+        groupAllocation: String = "VIP",
+        sessionTarget: String = "KEDUANYA"
     ) {
         viewModelScope.launch {
             contacts.forEach { contact ->
@@ -160,8 +176,8 @@ class WeddingGuestsViewModel @Inject constructor(
                         weddingProfileId = weddingProfileId,
                         guestName = contact.name,
                         phoneNumber = contact.phoneNumber.ifBlank { null },
-                        groupAllocation = "LAINNYA",
-                        sessionTarget = "KEDUANYA",
+                        groupAllocation = groupAllocation,
+                        sessionTarget = sessionTarget,
                         estimatedPax = 2,
                         rsvpStatus = "PENDING"
                     )

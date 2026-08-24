@@ -1,4 +1,4 @@
-﻿package com.trackit.app.data.local.dao
+package com.trackit.app.data.local.dao
 
 import androidx.room.*
 import com.trackit.app.data.local.entity.WeddingGuestEntity
@@ -26,4 +26,7 @@ interface WeddingGuestDao {
 
     @Delete
     suspend fun delete(guest: WeddingGuestEntity)
+
+    @Query("UPDATE wedding_guests SET groupAllocation = :newGroup WHERE weddingProfileId = :profileId AND groupAllocation = :oldGroup")
+    suspend fun renameGroup(profileId: String, oldGroup: String, newGroup: String)
 }
