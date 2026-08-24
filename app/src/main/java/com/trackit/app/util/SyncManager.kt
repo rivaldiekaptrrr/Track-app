@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 /**
  * Manages synchronization between the local Room database and Firestore.
@@ -51,11 +52,11 @@ class SyncManager @Inject constructor(
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
 
-            DebugLogger.log("SyncManager: Starting pull sync for user ${userId.take(5)}...")
+            Log.d("SyncManager", "Starting pull sync for user ${userId.take(5)}...")
 
             // Pull Transactions
             val remoteTxDocs = restClient.listDocuments("users/$userId/transactions")
-            DebugLogger.log("SyncManager: Fetched ${remoteTxDocs.size} transactions from Firestore.")
+            Log.d("SyncManager", "Fetched ${remoteTxDocs.size} transactions from Firestore.")
             for (doc in remoteTxDocs) {
                 val remote = doc.toTransactionEntity() ?: continue
                 val existing = transactionDao.getByCreatedAt(remote.createdAt)
@@ -68,7 +69,7 @@ class SyncManager @Inject constructor(
 
             // Pull Wedding Expenses
             val remoteExpenseDocs = restClient.listDocuments("users/$userId/wedding_expenses")
-            DebugLogger.log("SyncManager: Fetched ${remoteExpenseDocs.size} wedding expenses from Firestore.")
+            Log.d("SyncManager", "Fetched ${remoteExpenseDocs.size} wedding expenses from Firestore.")
             for (doc in remoteExpenseDocs) {
                 val remote = doc.toWeddingExpenseEntity() ?: continue
                 weddingExpenseDao.insert(remote)
@@ -76,13 +77,13 @@ class SyncManager @Inject constructor(
 
             // Pull Wedding Tasks
             val remoteTaskDocs = restClient.listDocuments("users/$userId/wedding_tasks")
-            DebugLogger.log("SyncManager: Fetched ${remoteTaskDocs.size} wedding tasks from Firestore.")
+            Log.d("SyncManager", "Fetched ${remoteTaskDocs.size} wedding tasks from Firestore.")
             for (doc in remoteTaskDocs) {
                 val remote = doc.toWeddingTaskEntity() ?: continue
                 weddingTaskDao.insert(remote)
             }
 
-            DebugLogger.log("SyncManager: Pull sync complete.", DebugLogger.Level.SUCCESS)
+            Log.d("SyncManager", "Pull sync complete.")
         }
     }
 
@@ -97,22 +98,22 @@ class SyncManager @Inject constructor(
             val isOnline = syncPreferences.isOnlineMode.first()
             val userId = authRepository.currentUser?.uid
 
-            DebugLogger.log("Sync Start: online=$isOnline, uid=${userId?.take(5)}")
+            Log.d("SyncManager", "Sync Start: online=$isOnline, uid=${userId?.take(5)}")
 
-            if (!isOnline) { DebugLogger.log("Sync Aborted: isOnlineMode is false"); return@launch }
-            if (userId == null) { DebugLogger.log("Sync Aborted: userId is null"); return@launch }
+            if (!isOnline) { Log.d("SyncManager", "Sync Aborted: isOnlineMode is false"); return@launch }
+            if (userId == null) { Log.d("SyncManager", "Sync Aborted: userId is null"); return@launch }
 
             val docId = "${transaction.createdAt}_${transaction.profileId}"
-            DebugLogger.log("Attempting to write doc: $docId")
+            Log.d("SyncManager", "Attempting to write doc: $docId")
 
             val result = withTimeoutOrNull(15_000L) {
                 restClient.put("users/$userId/transactions/$docId", transaction.toFirestoreJson())
             }
 
             when {
-                result == null -> DebugLogger.log("Sync TIMEOUT: REST tidak merespon dalam 15 detik.", DebugLogger.Level.ERROR)
-                result -> DebugLogger.log("Sync SUCCESS (REST) for doc: $docId", DebugLogger.Level.SUCCESS)
-                else -> DebugLogger.log("Sync FAILED (REST) for doc: $docId", DebugLogger.Level.ERROR)
+                result == null -> Log.e("SyncManager", "Sync TIMEOUT: REST tidak merespon dalam 15 detik.")
+                result -> Log.d("SyncManager", "Sync SUCCESS (REST) for doc: $docId")
+                else -> Log.e("SyncManager", "Sync FAILED (REST) for doc: $docId")
             }
         }
     }
@@ -170,7 +171,7 @@ class SyncManager @Inject constructor(
      */
     fun performInitialSync(userId: String) {
         syncScope.launch {
-            DebugLogger.log("SyncManager: Starting initial push for user ${userId.take(5)}...")
+            Log.d("SyncManager", "Starting initial push for user ${userId.take(5)}...")
             val allTransactions = transactionDao.getAllTransactionsAllProfiles().first()
             var successCount = 0
             for (transaction in allTransactions) {
@@ -178,7 +179,7 @@ class SyncManager @Inject constructor(
                 val ok = restClient.put("users/$userId/transactions/$docId", transaction.toFirestoreJson())
                 if (ok) successCount++
             }
-            DebugLogger.log("SyncManager: Initial push done. $successCount/${allTransactions.size} transactions pushed.", DebugLogger.Level.SUCCESS)
+            Log.d("SyncManager", "Initial push done. $successCount/${allTransactions.size} transactions pushed.")
         }
     }
 }

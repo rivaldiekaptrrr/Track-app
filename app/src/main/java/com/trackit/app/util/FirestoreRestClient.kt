@@ -11,6 +11,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 /**
  * Handles all Firestore communications using HTTP REST API (instead of gRPC SDK).
@@ -36,7 +37,7 @@ class FirestoreRestClient @Inject constructor(
         return try {
             user.getIdToken(false).await().token
         } catch (e: Exception) {
-            DebugLogger.log("REST: Failed to get ID Token: ${e.message}", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "Failed to get ID Token: ${e.message}")
             null
         }
     }
@@ -52,7 +53,7 @@ class FirestoreRestClient @Inject constructor(
     suspend fun put(path: String, firestoreJson: String): Boolean = withContext(Dispatchers.IO) {
         val idToken = getIdToken()
         if (idToken == null) {
-            DebugLogger.log("REST PUT Aborted: No ID Token", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "PUT Aborted: No ID Token")
             return@withContext false
         }
 
@@ -69,11 +70,11 @@ class FirestoreRestClient @Inject constructor(
                 true
             } else {
                 val body = response.body?.string() ?: ""
-                DebugLogger.log("REST PUT Error ${response.code}: ${body.take(150)}", DebugLogger.Level.ERROR)
+                Log.e("FirestoreREST", "PUT Error ${response.code}: ${body.take(150)}")
                 false
             }
         } catch (e: Exception) {
-            DebugLogger.log("REST PUT Exception: ${e.message}", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "PUT Exception: ${e.message}")
             false
         }
     }
@@ -88,7 +89,7 @@ class FirestoreRestClient @Inject constructor(
     suspend fun delete(path: String): Boolean = withContext(Dispatchers.IO) {
         val idToken = getIdToken()
         if (idToken == null) {
-            DebugLogger.log("REST DELETE Aborted: No ID Token", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "DELETE Aborted: No ID Token")
             return@withContext false
         }
 
@@ -105,11 +106,11 @@ class FirestoreRestClient @Inject constructor(
                 true
             } else {
                 val body = response.body?.string() ?: ""
-                DebugLogger.log("REST DELETE Error ${response.code}: ${body.take(150)}", DebugLogger.Level.ERROR)
+                Log.e("FirestoreREST", "DELETE Error ${response.code}: ${body.take(150)}")
                 false
             }
         } catch (e: Exception) {
-            DebugLogger.log("REST DELETE Exception: ${e.message}", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "DELETE Exception: ${e.message}")
             false
         }
     }
@@ -126,7 +127,7 @@ class FirestoreRestClient @Inject constructor(
     suspend fun listDocuments(path: String): List<JSONObject> = withContext(Dispatchers.IO) {
         val idToken = getIdToken()
         if (idToken == null) {
-            DebugLogger.log("REST LIST Aborted: No ID Token", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "LIST Aborted: No ID Token")
             return@withContext emptyList()
         }
 
@@ -148,7 +149,7 @@ class FirestoreRestClient @Inject constructor(
                 val body = response.body?.string() ?: ""
 
                 if (!response.isSuccessful) {
-                    DebugLogger.log("REST LIST Error ${response.code}: ${body.take(150)}", DebugLogger.Level.ERROR)
+                    Log.e("FirestoreREST", "LIST Error ${response.code}: ${body.take(150)}")
                     break
                 }
 
@@ -164,7 +165,7 @@ class FirestoreRestClient @Inject constructor(
             } while (pageToken != null)
 
         } catch (e: Exception) {
-            DebugLogger.log("REST LIST Exception: ${e.message}", DebugLogger.Level.ERROR)
+            Log.e("FirestoreREST", "LIST Exception: ${e.message}")
         }
 
         return@withContext allDocs
