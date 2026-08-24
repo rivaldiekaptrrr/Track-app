@@ -1,4 +1,4 @@
-﻿package com.trackit.app.ui.wedding.settings
+package com.trackit.app.ui.wedding.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,7 +19,8 @@ data class WeddingSettingsUiState(
     val quoteText: String = "",
     val quoteEnabled: Boolean = true,
     val quoteFontSize: String = "SEDANG",
-    val quoteFontStyle: String = "ITALIC"
+    val quoteFontStyle: String = "ITALIC",
+    val weddingDate: Long = 0
 )
 
 @HiltViewModel
@@ -61,11 +62,20 @@ class WeddingSettingsViewModel @Inject constructor(
                             quoteText = profile.quote ?: "",
                             quoteEnabled = profile.quoteEnabled,
                             quoteFontSize = profile.quoteFontSize,
-                            quoteFontStyle = profile.quoteFontStyle
+                            quoteFontStyle = profile.quoteFontStyle,
+                            weddingDate = profile.weddingDate
                         )
                     }
                 }
             }
+        }
+    }
+
+    fun updateWeddingDate(dateMillis: Long) {
+        val profile = currentProfile ?: return
+        viewModelScope.launch {
+            weddingProfileRepository.update(profile.copy(weddingDate = dateMillis))
+            _uiState.update { it.copy(weddingDate = dateMillis) }
         }
     }
 

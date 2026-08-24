@@ -324,6 +324,7 @@ fun CategoryFormDialog(
     var selectedColor by remember { mutableStateOf(category.colorHex) }
     var customKeywords by remember { mutableStateOf(category.customKeywords) }
     var type by remember { mutableStateOf(category.type) }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -333,8 +334,10 @@ fun CategoryFormDialog(
                 // Name
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; submitted = false },
                     label = { Text("Nama Kategori") },
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama kategori wajib diisi") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -419,6 +422,7 @@ fun CategoryFormDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    submitted = true
                     if (name.isNotBlank()) {
                         onSave(
                             category.copy(

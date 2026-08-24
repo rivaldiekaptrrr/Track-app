@@ -222,6 +222,7 @@ private fun AddVendorDialog(
     var contractValue by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var catExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -241,8 +242,11 @@ private fun AddVendorDialog(
                         }
                     }
                 }
-                OutlinedTextField(value = name, onValueChange = { name = it },
-                    label = { Text("Nama Vendor") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
+                    label = { Text("Nama Vendor") }, 
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama vendor wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = pic, onValueChange = { pic = it },
                     label = { Text("Contact Person") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = phone, onValueChange = { phone = it },
@@ -258,6 +262,7 @@ private fun AddVendorDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (name.isNotBlank()) {
                     onAdd(selectedCat, name.trim(),
                         pic.ifBlank { null }, phone.ifBlank { null }, ig.ifBlank { null },

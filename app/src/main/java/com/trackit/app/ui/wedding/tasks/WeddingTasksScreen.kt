@@ -253,6 +253,7 @@ private fun AddTaskDialog(
     var selectedPhase by remember { mutableStateOf(6) }
     var selectedPic by remember { mutableStateOf("BOTH") }
     var phaseExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
 
     val phases = listOf(12 to "H-12 Bulan", 6 to "H-6 Bulan", 3 to "H-3 Bulan", 1 to "H-1 Bulan", 0 to "Hari-H")
     val picOptions = listOf("GROOM" to "CPP", "BRIDE" to "CPW", "BOTH" to "Bersama", "FAMILY" to "Panitia", "WO" to "WO")
@@ -263,8 +264,11 @@ private fun AddTaskDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
-                    value = title, onValueChange = { title = it },
-                    label = { Text("Nama Tugas") }, modifier = Modifier.fillMaxWidth(), singleLine = true
+                    value = title, onValueChange = { title = it; submitted = false },
+                    label = { Text("Nama Tugas") }, 
+                    isError = submitted && title.isBlank(),
+                    supportingText = { if (submitted && title.isBlank()) Text("Nama tugas wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
                 )
                 OutlinedTextField(
                     value = desc, onValueChange = { desc = it },
@@ -295,6 +299,7 @@ private fun AddTaskDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (title.isNotBlank()) {
                     onAdd(title.trim(), desc.ifBlank { null }, selectedPhase, selectedPic)
                 }

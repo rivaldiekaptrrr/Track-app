@@ -334,6 +334,7 @@ private fun AddExpenseDialog(
     var estimated by remember { mutableStateOf("") }
     var selectedSource by remember { mutableStateOf("BERSAMA") }
     var notes by remember { mutableStateOf("") }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -359,12 +360,17 @@ private fun AddExpenseDialog(
                     }
                 }
                 // Title
-                OutlinedTextField(value = title, onValueChange = { title = it },
-                    label = { Text("Nama Vendor / Item") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = title, onValueChange = { title = it; submitted = false },
+                    label = { Text("Nama Vendor / Item") }, 
+                    isError = submitted && title.isBlank(),
+                    supportingText = { if (submitted && title.isBlank()) Text("Nama item wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
                 // Estimated
                 OutlinedTextField(value = estimated,
-                    onValueChange = { estimated = it.filter { c -> c.isDigit() } },
+                    onValueChange = { estimated = it.filter { c -> c.isDigit() }; submitted = false },
                     label = { Text("Total Estimasi (Rp)") }, prefix = { Text("Rp") },
+                    isError = submitted && estimated.isBlank(),
+                    supportingText = { if (submitted && estimated.isBlank()) Text("Estimasi wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 // Source
                 var srcExpanded by remember { mutableStateOf(false) }
@@ -389,6 +395,7 @@ private fun AddExpenseDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (title.isNotBlank() && estimated.isNotBlank()) {
                     onAdd(selectedCategory, title.trim(), estimated.toDouble(), selectedSource,
                         notes.ifBlank { null })
@@ -406,22 +413,28 @@ private fun AddPaymentDialog(
 ) {
     var termName by remember { mutableStateOf("DP 1") }
     var amount by remember { mutableStateOf("") }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Catat Pembayaran") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = termName, onValueChange = { termName = it },
+                OutlinedTextField(value = termName, onValueChange = { termName = it; submitted = false },
                     label = { Text("Jenis Bayar (DP 1, Pelunasan, dll)") },
+                    isError = submitted && termName.isBlank(),
+                    supportingText = { if (submitted && termName.isBlank()) Text("Jenis bayar wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = amount, onValueChange = { amount = it.filter { c -> c.isDigit() } },
+                OutlinedTextField(value = amount, onValueChange = { amount = it.filter { c -> c.isDigit() }; submitted = false },
                     label = { Text("Nominal (Rp)") }, prefix = { Text("Rp") },
+                    isError = submitted && amount.isBlank(),
+                    supportingText = { if (submitted && amount.isBlank()) Text("Nominal wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
             }
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (termName.isNotBlank() && amount.isNotBlank()) {
                     onAdd(termName, amount.toDouble(), System.currentTimeMillis())
                 }

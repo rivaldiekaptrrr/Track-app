@@ -345,14 +345,17 @@ private fun AddEventDialog(
         else try { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dateText); false }
         catch (e: Exception) { true }
     }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Tambah Event Acara") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it },
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
                     label = { Text("Nama Event (mis. Akad Nikah, Resepsi)") },
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama event wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = dateText, onValueChange = { dateText = it },
                     label = { Text("Tanggal (DD/MM/YYYY)") },
@@ -367,6 +370,7 @@ private fun AddEventDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (name.isNotBlank() && !dateError && dateText.isNotBlank()) {
                     val date = try {
                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dateText)!!.time
@@ -393,6 +397,7 @@ private fun AddRundownItemDialog(
     val timeError = remember(time) {
         !Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$").matches(time)
     }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -408,8 +413,10 @@ private fun AddRundownItemDialog(
                         label = { Text("Durasi (menit)") }, singleLine = true,
                         modifier = Modifier.weight(1f))
                 }
-                OutlinedTextField(value = title, onValueChange = { title = it },
+                OutlinedTextField(value = title, onValueChange = { title = it; submitted = false },
                     label = { Text("Nama Sesi / Kegiatan") },
+                    isError = submitted && title.isBlank(),
+                    supportingText = { if (submitted && title.isBlank()) Text("Judul wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = pic, onValueChange = { pic = it },
                     label = { Text("PIC (MC, CPP, CPW, dst.)") },
@@ -421,6 +428,7 @@ private fun AddRundownItemDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (title.isNotBlank() && !timeError) {
                     onAdd(time, duration.toIntOrNull() ?: 30, title.trim(),
                         pic.ifBlank { null }, script.ifBlank { null })

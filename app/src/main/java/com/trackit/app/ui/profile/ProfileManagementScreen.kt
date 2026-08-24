@@ -347,6 +347,7 @@ fun ProfileFormDialog(
     var selectedIcon by remember { mutableStateOf(profile.iconName) }
     var selectedColor by remember { mutableStateOf(profile.colorHex) }
     var selectedMode by remember { mutableStateOf(profile.mode) } // "EXPENSE" or "WEDDING"
+    var submitted by remember { mutableStateOf(false) }
     
     // Wedding onboarding fields
     var groomName by remember { mutableStateOf("") }
@@ -355,6 +356,11 @@ fun ProfileFormDialog(
     var religionType by remember { mutableStateOf("ISLAM") }
     var culturalPresetGroom by remember { mutableStateOf("MODERN") }
     var culturalPresetBride by remember { mutableStateOf("MODERN") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var weddingDateMillis by remember { mutableStateOf(System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000)) }
+    var expandedReligion by remember { mutableStateOf(false) }
+    var expandedCultureGroom by remember { mutableStateOf(false) }
+    var expandedCultureBride by remember { mutableStateOf(false) }
     
     val religions = listOf("ISLAM", "KRISTEN", "KATOLIK", "HINDU", "BUDDHA", "KONGHUCU")
     val cultures = listOf("MODERN", "JAWA", "SUNDA", "BATAK", "MINANG", "BUGIS", "BALI", "TIONGHOA")
@@ -442,9 +448,10 @@ fun ProfileFormDialog(
                 // Name
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; submitted = false },
                     label = { Text("Nama Profil") },
-                    placeholder = { Text("Contoh: Pribadi, Bisnis, Keluarga") },
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama profil tidak boleh kosong") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
@@ -535,46 +542,92 @@ fun ProfileFormDialog(
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp)
                             )
+                            // Tanggal Pernikahan
+                            val dateFormatter = java.text.SimpleDateFormat("dd MMMM yyyy", java.util.Locale("id", "ID"))
+                            val dateString = dateFormatter.format(java.util.Date(weddingDateMillis))
                             OutlinedTextField(
-                                value = budgetCap,
-                                onValueChange = { budgetCap = it },
-                                label = { Text("Anggaran Maksimal (Rp)") },
-                                placeholder = { Text("Contoh: 150000000") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
+                                value = dateString,
+                                onValueChange = {},
+                                label = { Text("Tanggal Pernikahan") },
+                                readOnly = true,
+                                enabled = false,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showDatePicker = true },
+                                trailingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Pilih Tanggal") },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
                                 shape = RoundedCornerShape(12.dp)
                             )
 
-                            Text("Agama", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(religions) { rel ->
-                                    FilterChip(
-                                        selected = religionType == rel,
-                                        onClick = { religionType = rel },
-                                        label = { Text(rel) }
-                                    )
+                            // Anggaran - format rupiah otomatis
+                            OutlinedTextField(
+                                value = budgetCap,
+                                onValueChange = { newValue ->
+                                    val unformatted = newValue.replace(Regex("[^0-9]"), "")
+                                    budgetCap = if (unformatted.isEmpty()) "" else
+                                        java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(unformatted.toLongOrNull() ?: 0L)
+                                },
+                                label = { Text("Anggaran Maksimal (Rp)") },
+                                placeholder = { Text("Contoh: 150.000.000") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            // Dropdown Agama
+                            ExposedDropdownMenuBox(expanded = expandedReligion, onExpandedChange = { expandedReligion = it }) {
+                                OutlinedTextField(
+                                    value = religionType, onValueChange = {}, readOnly = true,
+                                    label = { Text("Agama") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedReligion) },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(expanded = expandedReligion, onDismissRequest = { expandedReligion = false }) {
+                                    religions.forEach { rel ->
+                                        DropdownMenuItem(text = { Text(rel) }, onClick = { religionType = rel; expandedReligion = false })
+                                    }
                                 }
                             }
 
-                            Text("Adat Pria (CPP)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(cultures) { cul ->
-                                    FilterChip(
-                                        selected = culturalPresetGroom == cul,
-                                        onClick = { culturalPresetGroom = cul },
-                                        label = { Text(cul) }
-                                    )
+                            // Dropdown Adat Pria
+                            ExposedDropdownMenuBox(expanded = expandedCultureGroom, onExpandedChange = { expandedCultureGroom = it }) {
+                                OutlinedTextField(
+                                    value = culturalPresetGroom, onValueChange = {}, readOnly = true,
+                                    label = { Text("Adat Pria (CPP)") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCultureGroom) },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(expanded = expandedCultureGroom, onDismissRequest = { expandedCultureGroom = false }) {
+                                    cultures.forEach { cul ->
+                                        DropdownMenuItem(text = { Text(cul) }, onClick = { culturalPresetGroom = cul; expandedCultureGroom = false })
+                                    }
                                 }
                             }
 
-                            Text("Adat Wanita (CPW)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(cultures) { cul ->
-                                    FilterChip(
-                                        selected = culturalPresetBride == cul,
-                                        onClick = { culturalPresetBride = cul },
-                                        label = { Text(cul) }
-                                    )
+                            // Dropdown Adat Wanita
+                            ExposedDropdownMenuBox(expanded = expandedCultureBride, onExpandedChange = { expandedCultureBride = it }) {
+                                OutlinedTextField(
+                                    value = culturalPresetBride, onValueChange = {}, readOnly = true,
+                                    label = { Text("Adat Wanita (CPW)") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCultureBride) },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(expanded = expandedCultureBride, onDismissRequest = { expandedCultureBride = false }) {
+                                    cultures.forEach { cul ->
+                                        DropdownMenuItem(text = { Text(cul) }, onClick = { culturalPresetBride = cul; expandedCultureBride = false })
+                                    }
                                 }
                             }
                         }
@@ -585,6 +638,7 @@ fun ProfileFormDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    submitted = true
                     if (name.isNotBlank()) {
                         val savedProfile = profile.copy(
                             name = name.trim(),
@@ -596,8 +650,8 @@ fun ProfileFormDialog(
                             WeddingProfileEntity(
                                 groomName = groomName.ifBlank { name.trim() },
                                 brideName = brideName.ifBlank { "Pasangan" },
-                                weddingDate = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000), // Default 1 tahun
-                                totalBudgetCap = budgetCap.toDoubleOrNull() ?: 0.0,
+                                weddingDate = weddingDateMillis,
+                                totalBudgetCap = budgetCap.replace(Regex("[^0-9]"), "").toDoubleOrNull() ?: 0.0,
                                 religionType = religionType,
                                 culturalPresetGroom = culturalPresetGroom,
                                 culturalPresetBride = culturalPresetBride
@@ -614,4 +668,18 @@ fun ProfileFormDialog(
             TextButton(onClick = onDismiss) { Text("Batal") }
         }
     )
+
+    if (showDatePicker) {
+        val dpState = rememberDatePickerState(initialSelectedDateMillis = weddingDateMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dpState.selectedDateMillis?.let { weddingDateMillis = it }
+                    showDatePicker = false
+                }) { Text("Pilih") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Batal") } }
+        ) { DatePicker(state = dpState) }
+    }
 }

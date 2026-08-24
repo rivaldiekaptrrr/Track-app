@@ -251,6 +251,7 @@ private fun AddDocumentDialog(
     var name by remember { mutableStateOf("") }
     var selectedOwner by remember { mutableStateOf("BOTH") }
     var cost by remember { mutableStateOf("") }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -259,8 +260,10 @@ private fun AddDocumentDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; submitted = false },
                     label = { Text("Nama Berkas") },
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama berkas wajib diisi") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -287,6 +290,7 @@ private fun AddDocumentDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    submitted = true
                     if (name.isNotBlank()) {
                         onAdd(name.trim(), selectedOwner, cost.toDoubleOrNull() ?: 0.0)
                     }

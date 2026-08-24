@@ -437,14 +437,18 @@ private fun AddGuestDialog(
     var pax by remember { mutableStateOf(2) }
     var groupExpanded by remember { mutableStateOf(false) }
     var sessionExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Tambah Tamu") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it },
-                    label = { Text("Nama Tamu / Keluarga") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
+                    label = { Text("Nama Tamu / Keluarga") }, 
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama tamu wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = phone, onValueChange = { phone = it },
                     label = { Text("No. HP (opsional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
 
@@ -494,6 +498,7 @@ private fun AddGuestDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (name.isNotBlank()) {
                     onAdd(name.trim(), phone.ifBlank { null }, selectedGroup, selectedSession, pax)
                 }

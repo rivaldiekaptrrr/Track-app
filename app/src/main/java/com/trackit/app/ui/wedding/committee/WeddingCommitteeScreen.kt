@@ -241,16 +241,22 @@ private fun AddMemberDialog(
     var uniformDesc by remember { mutableStateOf("") }
     var fabric by remember { mutableStateOf("") }
     var sideExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Tambah Anggota Panitia") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it },
-                    label = { Text("Nama") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = role, onValueChange = { role = it },
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
+                    label = { Text("Nama") }, 
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = role, onValueChange = { role = it; submitted = false },
                     label = { Text("Peran (misal: Saksi, Sambutan, MC)") },
+                    isError = submitted && role.isBlank(),
+                    supportingText = { if (submitted && role.isBlank()) Text("Peran wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
 
                 ExposedDropdownMenuBox(expanded = sideExpanded, onExpandedChange = { sideExpanded = it }) {
@@ -278,6 +284,7 @@ private fun AddMemberDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (name.isNotBlank() && role.isNotBlank()) {
                     onAdd(name.trim(), role.trim(), selectedSide,
                         phone.ifBlank { null }, uniformDesc.ifBlank { null },

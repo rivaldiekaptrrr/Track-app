@@ -259,6 +259,7 @@ private fun AddSeserahanItemDialog(
     var qty by remember { mutableStateOf(1) }
     var price by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var submitted by remember { mutableStateOf(false) }
 
     val dirOptions = listOf(
         "SESERAHAN_CPP" to "Seserahan (CPP→CPW)",
@@ -279,8 +280,11 @@ private fun AddSeserahanItemDialog(
                         Text(label, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                OutlinedTextField(value = name, onValueChange = { name = it },
-                    label = { Text("Nama Item") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
+                    label = { Text("Nama Item") }, 
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama item wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Qty", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(30.dp))
                     IconButton(onClick = { qty = (qty - 1).coerceAtLeast(1) }, modifier = Modifier.size(32.dp)) {
@@ -300,6 +304,7 @@ private fun AddSeserahanItemDialog(
         },
         confirmButton = {
             Button(onClick = {
+                submitted = true
                 if (name.isNotBlank()) {
                     onAdd(selectedDir, name.trim(), qty, price.toDoubleOrNull() ?: 0.0, notes.ifBlank { null })
                 }
