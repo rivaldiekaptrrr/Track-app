@@ -127,4 +127,25 @@ class WeddingGuestsViewModel @Inject constructor(
     fun deleteGuest(guest: WeddingGuestEntity) {
         viewModelScope.launch { repo.delete(guest) }
     }
+
+    fun addMultipleGuests(
+        weddingProfileId: String,
+        contacts: List<com.trackit.app.util.DeviceContact>
+    ) {
+        viewModelScope.launch {
+            contacts.forEach { contact ->
+                repo.insert(
+                    WeddingGuestEntity(
+                        weddingProfileId = weddingProfileId,
+                        guestName = contact.name,
+                        phoneNumber = contact.phoneNumber.ifBlank { null },
+                        groupAllocation = "LAINNYA",
+                        sessionTarget = "KEDUANYA",
+                        estimatedPax = 2,
+                        rsvpStatus = "PENDING"
+                    )
+                )
+            }
+        }
+    }
 }

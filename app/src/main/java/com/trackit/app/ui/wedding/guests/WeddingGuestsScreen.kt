@@ -15,11 +15,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingGuestEntity
+import com.trackit.app.util.ContactUtils
+import com.trackit.app.util.DeviceContact
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,9 +39,48 @@ fun WeddingGuestsScreen(
     viewModel: WeddingGuestsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
     var showCateringCalc by remember { mutableStateOf(false) }
     var activeTab by remember { mutableStateOf(0) } // 0=Daftar, 1=Kalkulator Katering
+    var showContactPicker by remember { mutableStateOf(false) }
+    var deviceContacts by remember { mutableStateOf<List<DeviceContact>>(emptyList()) }
+    var contactsLoading by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val contactPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            contactsLoading = true
+            scope.launch {
+                deviceContacts = ContactUtils.getDeviceContacts(context)
+                contactsLoading = false
+                showContactPicker = true
+            }
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar("Izin kontak diperlukan untuk mengimpor. Aktifkan di Pengaturan aplikasi.")
+            }
+        }
+    }
+
+    fun launchContactImport() {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            contactsLoading = true
+            scope.launch {
+                deviceContacts = ContactUtils.getDeviceContacts(context)
+                contactsLoading = false
+                showContactPicker = true
+            }
+        } else {
+            contactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
 
     LaunchedEffect(weddingProfileId) {
         viewModel.loadForProfile(weddingProfileId)
@@ -40,6 +88,7 @@ fun WeddingGuestsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -54,6 +103,16 @@ fun WeddingGuestsScreen(
                 },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
                 actions = {
+                    if (contactsLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp).padding(end = 4.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        IconButton(onClick = { launchContactImport() }) {
+                            Icon(Icons.Default.Contacts, contentDescription = "Impor Kontak")
+                        }
+                    }
                     IconButton(onClick = { activeTab = if (activeTab == 0) 1 else 0 }) {
                         Icon(
                             if (activeTab == 0) Icons.Default.Restaurant else Icons.Default.People,
@@ -129,6 +188,20 @@ fun WeddingGuestsScreen(
             onAdd = { name, phone, group, session, pax ->
                 viewModel.addGuest(weddingProfileId, name, phone, group, session, pax)
                 showAddDialog = false
+            }
+        )
+    }
+
+    if (showContactPicker) {
+        ContactPickerDialog(
+            contacts = deviceContacts,
+            onDismiss = { showContactPicker = false },
+            onConfirm = { selected ->
+                viewModel.addMultipleGuests(weddingProfileId, selected)
+                showContactPicker = false
+                scope.launch {
+                    snackbarHostState.showSnackbar("${selected.size} kontak berhasil diimpor!")
+                }
             }
         )
     }
