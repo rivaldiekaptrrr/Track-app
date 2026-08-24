@@ -88,10 +88,10 @@ class ProfileManagementViewModel @Inject constructor(
         viewModelScope.launch {
             if (profile.id == 0L) {
                 if (profile.mode == "WEDDING" && weddingProfile != null) {
-                    // 1. Simpan wedding profile
-                    weddingProfileRepository.insert(weddingProfile)
-                    // 2. Simpan profil utama dengan link ke wedding profile
-                    profileRepository.insert(profile.copy(weddingProfileId = weddingProfile.id))
+                    // 1. Simpan profil utama terlebih dahulu untuk mendapatkan ID-nya
+                    val newProfileId = profileRepository.insert(profile.copy(weddingProfileId = weddingProfile.id))
+                    // 2. Simpan wedding profile dengan profileId yang sudah terikat
+                    weddingProfileRepository.insert(weddingProfile.copy(profileId = newProfileId))
                     // 3. Auto-seed berkas legalitas sesuai agama
                     val docs = WeddingDocumentPresets.getPreset(
                         weddingProfileId = weddingProfile.id,

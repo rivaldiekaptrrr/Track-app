@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
         WeddingEventEntity::class,
         WeddingRundownItemEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -361,6 +361,16 @@ abstract class TrackItDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quoteEnabled INTEGER NOT NULL DEFAULT 1")
                 db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quoteFontSize TEXT NOT NULL DEFAULT 'SEDANG'")
                 db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN quoteFontStyle TEXT NOT NULL DEFAULT 'ITALIC'")
+            }
+        }
+
+        /**
+         * Migration 11 → 12: Add profileId to wedding_profiles for 1:1 link with ProfileEntity.
+         * Default is 0 (unlinked) for existing data.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN profileId INTEGER NOT NULL DEFAULT 0")
             }
         }
 

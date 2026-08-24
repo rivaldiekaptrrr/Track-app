@@ -1,8 +1,17 @@
 package com.trackit.app.util
 
 import com.trackit.app.data.local.entity.TransactionEntity
+import com.trackit.app.data.local.entity.WeddingCommitteeEntity
+import com.trackit.app.data.local.entity.WeddingDocumentEntity
+import com.trackit.app.data.local.entity.WeddingEventEntity
 import com.trackit.app.data.local.entity.WeddingExpenseEntity
+import com.trackit.app.data.local.entity.WeddingGuestEntity
+import com.trackit.app.data.local.entity.WeddingPaymentTermEntity
+import com.trackit.app.data.local.entity.WeddingProfileEntity
+import com.trackit.app.data.local.entity.WeddingRundownItemEntity
+import com.trackit.app.data.local.entity.WeddingSeserahanEntity
 import com.trackit.app.data.local.entity.WeddingTaskEntity
+import com.trackit.app.data.local.entity.WeddingVendorEntity
 import org.json.JSONObject
 
 /**
@@ -17,185 +26,406 @@ import org.json.JSONObject
  */
 object FirestoreMapper {
 
+    // ── Shared helpers ──────────────────────────────────────────────────────────
+
+    private fun JSONObject.putStr(key: String, value: String?) {
+        val v = JSONObject()
+        if (value == null) v.put("nullValue", JSONObject.NULL) else v.put("stringValue", value)
+        put(key, v)
+    }
+    private fun JSONObject.putLng(key: String, value: Long?) {
+        val v = JSONObject()
+        if (value == null) v.put("nullValue", JSONObject.NULL) else v.put("integerValue", value.toString())
+        put(key, v)
+    }
+    private fun JSONObject.putInt(key: String, value: Int) {
+        put(key, JSONObject().put("integerValue", value.toString()))
+    }
+    private fun JSONObject.putDbl(key: String, value: Double) {
+        put(key, JSONObject().put("doubleValue", value))
+    }
+    private fun JSONObject.putBool(key: String, value: Boolean) {
+        put(key, JSONObject().put("booleanValue", value))
+    }
+    private fun JSONObject.strOrNull(key: String): String? {
+        if (!has(key)) return null
+        val f = getJSONObject(key)
+        return if (f.has("stringValue")) f.getString("stringValue") else null
+    }
+    private fun JSONObject.longOrNull(key: String): Long? {
+        if (!has(key)) return null
+        val f = getJSONObject(key)
+        return if (f.has("integerValue")) f.getString("integerValue").toLongOrNull() else null
+    }
+    private fun JSONObject.intOrZero(key: String): Int {
+        if (!has(key)) return 0
+        val f = getJSONObject(key)
+        return if (f.has("integerValue")) f.getString("integerValue").toIntOrNull() ?: 0 else 0
+    }
+    private fun JSONObject.dblOrZero(key: String): Double {
+        if (!has(key)) return 0.0
+        val f = getJSONObject(key)
+        return if (f.has("doubleValue")) f.getDouble("doubleValue") else 0.0
+    }
+    private fun JSONObject.boolOrFalse(key: String): Boolean {
+        if (!has(key)) return false
+        val f = getJSONObject(key)
+        return if (f.has("booleanValue")) f.getBoolean("booleanValue") else false
+    }
+    private fun fields(block: JSONObject.() -> Unit): String =
+        JSONObject().put("fields", JSONObject().apply(block)).toString()
+
     // ======================= TRANSACTION =======================
 
-    fun TransactionEntity.toFirestoreJson(): String {
-        val fields = JSONObject()
-
-        fun putString(key: String, value: String?) {
-            val v = JSONObject()
-            if (value == null) v.put("nullValue", JSONObject.NULL) else v.put("stringValue", value)
-            fields.put(key, v)
-        }
-        fun putLong(key: String, value: Long?) {
-            val v = JSONObject()
-            if (value == null) v.put("nullValue", JSONObject.NULL) else v.put("integerValue", value.toString())
-            fields.put(key, v)
-        }
-        fun putInt(key: String, value: Int?) {
-            val v = JSONObject()
-            if (value == null) v.put("nullValue", JSONObject.NULL) else v.put("integerValue", value.toString())
-            fields.put(key, v)
-        }
-        fun putDouble(key: String, value: Double) {
-            fields.put(key, JSONObject().put("doubleValue", value))
-        }
-        fun putBool(key: String, value: Boolean) {
-            fields.put(key, JSONObject().put("booleanValue", value))
-        }
-
-        putLong("id", id)
-        putDouble("amount", amount)
-        putString("description", description)
-        putLong("categoryId", categoryId)
-        putLong("date", date)
-        putLong("createdAt", createdAt)
+    fun TransactionEntity.toFirestoreJson(): String = fields {
+        putLng("id", id)
+        putDbl("amount", amount)
+        putStr("description", description)
+        putLng("categoryId", categoryId)
+        putLng("date", date)
+        putLng("createdAt", createdAt)
         putBool("isRecurring", isRecurring)
-        putString("recurringType", recurringType)
-        putInt("recurringDayOfMonth", recurringDayOfMonth)
-        putString("type", type)
-        putLong("profileId", profileId)
-
-        return JSONObject().put("fields", fields).toString()
+        putStr("recurringType", recurringType)
+        putInt("recurringDayOfMonth", recurringDayOfMonth ?: 0)
+        putStr("type", type)
+        putLng("profileId", profileId)
     }
 
-    /**
-     * Parses a raw Firestore REST document JSONObject (from listDocuments response)
-     * into a TransactionEntity.
-     */
-    fun JSONObject.toTransactionEntity(): TransactionEntity? {
-        return try {
-            val fields = getJSONObject("fields")
+    fun JSONObject.toTransactionEntity(): TransactionEntity? = try {
+        val f = getJSONObject("fields")
+        TransactionEntity(
+            id = 0,
+            amount = f.dblOrZero("amount"),
+            description = f.strOrNull("description") ?: "",
+            categoryId = f.longOrNull("categoryId"),
+            date = f.longOrNull("date") ?: System.currentTimeMillis(),
+            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis(),
+            isRecurring = f.boolOrFalse("isRecurring"),
+            recurringType = f.strOrNull("recurringType"),
+            recurringDayOfMonth = f.intOrZero("recurringDayOfMonth").takeIf { it != 0 },
+            type = f.strOrNull("type") ?: "EXPENSE",
+            profileId = f.longOrNull("profileId") ?: 1L
+        )
+    } catch (e: Exception) { null }
 
-            fun strOrNull(key: String): String? {
-                if (!fields.has(key)) return null
-                val f = fields.getJSONObject(key)
-                return if (f.has("stringValue")) f.getString("stringValue") else null
-            }
-            fun longOrNull(key: String): Long? {
-                if (!fields.has(key)) return null
-                val f = fields.getJSONObject(key)
-                return if (f.has("integerValue")) f.getString("integerValue").toLongOrNull() else null
-            }
-            fun intOrNull(key: String): Int? {
-                if (!fields.has(key)) return null
-                val f = fields.getJSONObject(key)
-                return if (f.has("integerValue")) f.getString("integerValue").toIntOrNull() else null
-            }
-            fun doubleOrZero(key: String): Double {
-                if (!fields.has(key)) return 0.0
-                val f = fields.getJSONObject(key)
-                return if (f.has("doubleValue")) f.getDouble("doubleValue") else 0.0
-            }
-            fun boolOrFalse(key: String): Boolean {
-                if (!fields.has(key)) return false
-                val f = fields.getJSONObject(key)
-                return if (f.has("booleanValue")) f.getBoolean("booleanValue") else false
-            }
+    // ======================= WEDDING PROFILE =======================
 
-            TransactionEntity(
-                id = 0, // Room will auto-generate local ID
-                amount = doubleOrZero("amount"),
-                description = strOrNull("description") ?: "",
-                categoryId = longOrNull("categoryId"),
-                date = longOrNull("date") ?: System.currentTimeMillis(),
-                createdAt = longOrNull("createdAt") ?: System.currentTimeMillis(),
-                isRecurring = boolOrFalse("isRecurring"),
-                recurringType = strOrNull("recurringType"),
-                recurringDayOfMonth = intOrNull("recurringDayOfMonth"),
-                type = strOrNull("type") ?: "EXPENSE",
-                profileId = longOrNull("profileId") ?: 1L
-            )
-        } catch (e: Exception) {
-            null
-        }
+    fun WeddingProfileEntity.toFirestoreJson(): String = fields {
+        putStr("id", id)
+        putStr("groomName", groomName)
+        putStr("brideName", brideName)
+        putLng("weddingDate", weddingDate)
+        putDbl("totalBudgetCap", totalBudgetCap)
+        putStr("religionType", religionType)
+        putStr("religionDetail", religionDetail)
+        putStr("culturalPresetGroom", culturalPresetGroom)
+        putStr("culturalPresetBride", culturalPresetBride)
+        putStr("quote", quote)
+        putBool("quoteEnabled", quoteEnabled)
+        putStr("quoteFontSize", quoteFontSize)
+        putStr("quoteFontStyle", quoteFontStyle)
+        putLng("createdAt", createdAt)
     }
+
+    fun JSONObject.toWeddingProfileEntity(): WeddingProfileEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingProfileEntity(
+            id = f.strOrNull("id") ?: return null,
+            groomName = f.strOrNull("groomName") ?: "",
+            brideName = f.strOrNull("brideName") ?: "",
+            weddingDate = f.longOrNull("weddingDate") ?: System.currentTimeMillis(),
+            totalBudgetCap = f.dblOrZero("totalBudgetCap"),
+            religionType = f.strOrNull("religionType") ?: "ISLAM",
+            religionDetail = f.strOrNull("religionDetail"),
+            culturalPresetGroom = f.strOrNull("culturalPresetGroom"),
+            culturalPresetBride = f.strOrNull("culturalPresetBride"),
+            quote = f.strOrNull("quote"),
+            quoteEnabled = f.boolOrFalse("quoteEnabled"),
+            quoteFontSize = f.strOrNull("quoteFontSize") ?: "SEDANG",
+            quoteFontStyle = f.strOrNull("quoteFontStyle") ?: "ITALIC",
+            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
+        )
+    } catch (e: Exception) { null }
 
     // ======================= WEDDING EXPENSE =======================
 
-    fun WeddingExpenseEntity.toFirestoreJson(): String {
-        val fields = JSONObject()
-
-        fields.put("expenseId", JSONObject().put("stringValue", expenseId))
-        fields.put("weddingProfileId", JSONObject().put("stringValue", weddingProfileId))
-        fields.put("category", JSONObject().put("stringValue", category))
-        fields.put("title", JSONObject().put("stringValue", title))
-        fields.put("totalEstimated", JSONObject().put("doubleValue", totalEstimated))
-        fields.put("totalPaid", JSONObject().put("doubleValue", totalPaid))
-        fields.put("paidBySource", JSONObject().put("stringValue", paidBySource))
-        fields.put("paymentStatus", JSONObject().put("stringValue", paymentStatus))
-        fields.put("createdAt", JSONObject().put("integerValue", createdAt.toString()))
-        if (notes != null) {
-            fields.put("notes", JSONObject().put("stringValue", notes))
-        } else {
-            fields.put("notes", JSONObject().put("nullValue", JSONObject.NULL))
-        }
-
-        return JSONObject().put("fields", fields).toString()
+    fun WeddingExpenseEntity.toFirestoreJson(): String = fields {
+        putStr("expenseId", expenseId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("category", category)
+        putStr("title", title)
+        putDbl("totalEstimated", totalEstimated)
+        putDbl("totalPaid", totalPaid)
+        putStr("paidBySource", paidBySource)
+        putStr("paymentStatus", paymentStatus)
+        putLng("createdAt", createdAt)
+        putStr("notes", notes)
     }
 
-    fun JSONObject.toWeddingExpenseEntity(): WeddingExpenseEntity? {
-        return try {
-            val fields = getJSONObject("fields")
-            WeddingExpenseEntity(
-                expenseId = fields.getJSONObject("expenseId").getString("stringValue"),
-                weddingProfileId = fields.getJSONObject("weddingProfileId").getString("stringValue"),
-                category = fields.getJSONObject("category").getString("stringValue"),
-                title = fields.getJSONObject("title").getString("stringValue"),
-                totalEstimated = fields.getJSONObject("totalEstimated").getDouble("doubleValue"),
-                totalPaid = if (fields.has("totalPaid")) fields.getJSONObject("totalPaid").getDouble("doubleValue") else 0.0,
-                paidBySource = if (fields.has("paidBySource")) fields.getJSONObject("paidBySource").getString("stringValue") else "BERSAMA",
-                paymentStatus = if (fields.has("paymentStatus")) fields.getJSONObject("paymentStatus").getString("stringValue") else "UNPAID",
-                notes = if (fields.has("notes") && fields.getJSONObject("notes").has("stringValue")) fields.getJSONObject("notes").getString("stringValue") else null,
-                createdAt = if (fields.has("createdAt")) fields.getJSONObject("createdAt").getString("integerValue").toLong() else System.currentTimeMillis()
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
+    fun JSONObject.toWeddingExpenseEntity(): WeddingExpenseEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingExpenseEntity(
+            expenseId = f.strOrNull("expenseId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            category = f.strOrNull("category") ?: "",
+            title = f.strOrNull("title") ?: "",
+            totalEstimated = f.dblOrZero("totalEstimated"),
+            totalPaid = f.dblOrZero("totalPaid"),
+            paidBySource = f.strOrNull("paidBySource") ?: "BERSAMA",
+            paymentStatus = f.strOrNull("paymentStatus") ?: "UNPAID",
+            notes = f.strOrNull("notes"),
+            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
+        )
+    } catch (e: Exception) { null }
 
     // ======================= WEDDING TASK =======================
 
-    fun WeddingTaskEntity.toFirestoreJson(): String {
-        val fields = JSONObject()
-
-        fields.put("taskId", JSONObject().put("stringValue", taskId))
-        fields.put("weddingProfileId", JSONObject().put("stringValue", weddingProfileId))
-        fields.put("phaseMonth", JSONObject().put("integerValue", phaseMonth.toString()))
-        fields.put("title", JSONObject().put("stringValue", title))
-        fields.put("pic", JSONObject().put("stringValue", pic))
-        fields.put("isCompleted", JSONObject().put("booleanValue", isCompleted))
-        fields.put("sortOrder", JSONObject().put("integerValue", sortOrder.toString()))
-        if (description != null) {
-            fields.put("description", JSONObject().put("stringValue", description))
-        } else {
-            fields.put("description", JSONObject().put("nullValue", JSONObject.NULL))
-        }
-        if (dueDate != null) {
-            fields.put("dueDate", JSONObject().put("integerValue", dueDate.toString()))
-        } else {
-            fields.put("dueDate", JSONObject().put("nullValue", JSONObject.NULL))
-        }
-
-        return JSONObject().put("fields", fields).toString()
+    fun WeddingTaskEntity.toFirestoreJson(): String = fields {
+        putStr("taskId", taskId)
+        putStr("weddingProfileId", weddingProfileId)
+        putInt("phaseMonth", phaseMonth)
+        putStr("title", title)
+        putStr("description", description)
+        putStr("pic", pic)
+        putBool("isCompleted", isCompleted)
+        putLng("dueDate", dueDate)
+        putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingTaskEntity(): WeddingTaskEntity? {
-        return try {
-            val fields = getJSONObject("fields")
-            WeddingTaskEntity(
-                taskId = fields.getJSONObject("taskId").getString("stringValue"),
-                weddingProfileId = fields.getJSONObject("weddingProfileId").getString("stringValue"),
-                phaseMonth = fields.getJSONObject("phaseMonth").getString("integerValue").toInt(),
-                title = fields.getJSONObject("title").getString("stringValue"),
-                description = if (fields.has("description") && fields.getJSONObject("description").has("stringValue")) fields.getJSONObject("description").getString("stringValue") else null,
-                pic = if (fields.has("pic")) fields.getJSONObject("pic").getString("stringValue") else "BOTH",
-                isCompleted = if (fields.has("isCompleted")) fields.getJSONObject("isCompleted").getBoolean("booleanValue") else false,
-                dueDate = if (fields.has("dueDate") && fields.getJSONObject("dueDate").has("integerValue")) fields.getJSONObject("dueDate").getString("integerValue").toLongOrNull() else null,
-                sortOrder = if (fields.has("sortOrder")) fields.getJSONObject("sortOrder").getString("integerValue").toInt() else 0
-            )
-        } catch (e: Exception) {
-            null
-        }
+    fun JSONObject.toWeddingTaskEntity(): WeddingTaskEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingTaskEntity(
+            taskId = f.strOrNull("taskId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            phaseMonth = f.intOrZero("phaseMonth"),
+            title = f.strOrNull("title") ?: "",
+            description = f.strOrNull("description"),
+            pic = f.strOrNull("pic") ?: "BOTH",
+            isCompleted = f.boolOrFalse("isCompleted"),
+            dueDate = f.longOrNull("dueDate"),
+            sortOrder = f.intOrZero("sortOrder")
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING VENDOR =======================
+
+    fun WeddingVendorEntity.toFirestoreJson(): String = fields {
+        putStr("vendorId", vendorId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("category", category)
+        putStr("name", name)
+        putStr("picName", picName)
+        putStr("phoneNumber", phoneNumber)
+        putStr("instagramHandle", instagramHandle)
+        putDbl("contractValue", contractValue)
+        putStr("notes", notes)
+        putStr("status", status)
+        putLng("createdAt", createdAt)
     }
+
+    fun JSONObject.toWeddingVendorEntity(): WeddingVendorEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingVendorEntity(
+            vendorId = f.strOrNull("vendorId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            category = f.strOrNull("category") ?: "",
+            name = f.strOrNull("name") ?: "",
+            picName = f.strOrNull("picName"),
+            phoneNumber = f.strOrNull("phoneNumber"),
+            instagramHandle = f.strOrNull("instagramHandle"),
+            contractValue = f.dblOrZero("contractValue"),
+            notes = f.strOrNull("notes"),
+            status = f.strOrNull("status") ?: "PROSPEK",
+            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING GUEST =======================
+
+    fun WeddingGuestEntity.toFirestoreJson(): String = fields {
+        putStr("guestId", guestId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("guestName", guestName)
+        putStr("phoneNumber", phoneNumber)
+        putStr("groupAllocation", groupAllocation)
+        putStr("sessionTarget", sessionTarget)
+        putInt("estimatedPax", estimatedPax)
+        putStr("rsvpStatus", rsvpStatus)
+    }
+
+    fun JSONObject.toWeddingGuestEntity(): WeddingGuestEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingGuestEntity(
+            guestId = f.strOrNull("guestId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            guestName = f.strOrNull("guestName") ?: "",
+            phoneNumber = f.strOrNull("phoneNumber"),
+            groupAllocation = f.strOrNull("groupAllocation") ?: "TEMAN_CPP",
+            sessionTarget = f.strOrNull("sessionTarget") ?: "KEDUANYA",
+            estimatedPax = f.intOrZero("estimatedPax").coerceAtLeast(1),
+            rsvpStatus = f.strOrNull("rsvpStatus") ?: "PENDING"
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING COMMITTEE =======================
+
+    fun WeddingCommitteeEntity.toFirestoreJson(): String = fields {
+        putStr("memberId", memberId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("memberName", memberName)
+        putStr("role", role)
+        putStr("side", side)
+        putStr("phoneNumber", phoneNumber)
+        putStr("uniformDescription", uniformDescription)
+        putDbl("fabricMeters", fabricMeters)
+        putStr("uniformStatus", uniformStatus)
+        putInt("sortOrder", sortOrder)
+    }
+
+    fun JSONObject.toWeddingCommitteeEntity(): WeddingCommitteeEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingCommitteeEntity(
+            memberId = f.strOrNull("memberId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            memberName = f.strOrNull("memberName") ?: "",
+            role = f.strOrNull("role") ?: "",
+            side = f.strOrNull("side") ?: "KELUARGA_CPP",
+            phoneNumber = f.strOrNull("phoneNumber"),
+            uniformDescription = f.strOrNull("uniformDescription"),
+            fabricMeters = f.dblOrZero("fabricMeters"),
+            uniformStatus = f.strOrNull("uniformStatus") ?: "BELUM_DIBAGI",
+            sortOrder = f.intOrZero("sortOrder")
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING PAYMENT TERM =======================
+
+    fun WeddingPaymentTermEntity.toFirestoreJson(): String = fields {
+        putStr("termId", termId)
+        putStr("expenseId", expenseId)
+        putStr("termName", termName)
+        putDbl("amount", amount)
+        putLng("dueDate", dueDate)
+        putBool("isPaid", isPaid)
+        putLng("paidDate", paidDate)
+    }
+
+    fun JSONObject.toWeddingPaymentTermEntity(): WeddingPaymentTermEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingPaymentTermEntity(
+            termId = f.strOrNull("termId") ?: return null,
+            expenseId = f.strOrNull("expenseId") ?: return null,
+            termName = f.strOrNull("termName") ?: "",
+            amount = f.dblOrZero("amount"),
+            dueDate = f.longOrNull("dueDate") ?: System.currentTimeMillis(),
+            isPaid = f.boolOrFalse("isPaid"),
+            paidDate = f.longOrNull("paidDate")
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING SESERAHAN =======================
+
+    fun WeddingSeserahanEntity.toFirestoreJson(): String = fields {
+        putStr("itemId", itemId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("direction", direction)
+        putStr("itemName", itemName)
+        putInt("quantity", quantity)
+        putDbl("estimatedPrice", estimatedPrice)
+        putStr("status", status)
+        putStr("notes", notes)
+        putInt("sortOrder", sortOrder)
+    }
+
+    fun JSONObject.toWeddingSeserahanEntity(): WeddingSeserahanEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingSeserahanEntity(
+            itemId = f.strOrNull("itemId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            direction = f.strOrNull("direction") ?: "SESERAHAN_CPP",
+            itemName = f.strOrNull("itemName") ?: "",
+            quantity = f.intOrZero("quantity").coerceAtLeast(1),
+            estimatedPrice = f.dblOrZero("estimatedPrice"),
+            status = f.strOrNull("status") ?: "BELUM_BELI",
+            notes = f.strOrNull("notes"),
+            sortOrder = f.intOrZero("sortOrder")
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING DOCUMENT =======================
+
+    fun WeddingDocumentEntity.toFirestoreJson(): String = fields {
+        putStr("docId", docId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("docName", docName)
+        putStr("ownerType", ownerType)
+        putBool("isCompleted", isCompleted)
+        // localFilePath is intentionally NOT synced (it's a device-local SAF Uri)
+        putDbl("adminCost", adminCost)
+        putInt("sortOrder", sortOrder)
+    }
+
+    fun JSONObject.toWeddingDocumentEntity(): WeddingDocumentEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingDocumentEntity(
+            docId = f.strOrNull("docId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            docName = f.strOrNull("docName") ?: "",
+            ownerType = f.strOrNull("ownerType") ?: "BOTH",
+            isCompleted = f.boolOrFalse("isCompleted"),
+            localFilePath = null, // Device-specific — never restore from remote
+            adminCost = f.dblOrZero("adminCost"),
+            sortOrder = f.intOrZero("sortOrder")
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING EVENT (RUNDOWN TAB) =======================
+
+    fun WeddingEventEntity.toFirestoreJson(): String = fields {
+        putStr("eventId", eventId)
+        putStr("weddingProfileId", weddingProfileId)
+        putStr("eventName", eventName)
+        putLng("eventDate", eventDate)
+        putStr("eventLocation", eventLocation)
+        putInt("sortOrder", sortOrder)
+    }
+
+    fun JSONObject.toWeddingEventEntity(): WeddingEventEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingEventEntity(
+            eventId = f.strOrNull("eventId") ?: return null,
+            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+            eventName = f.strOrNull("eventName") ?: "",
+            eventDate = f.longOrNull("eventDate") ?: System.currentTimeMillis(),
+            eventLocation = f.strOrNull("eventLocation"),
+            sortOrder = f.intOrZero("sortOrder")
+        )
+    } catch (e: Exception) { null }
+
+    // ======================= WEDDING RUNDOWN ITEM =======================
+
+    fun WeddingRundownItemEntity.toFirestoreJson(): String = fields {
+        putStr("itemId", itemId)
+        putStr("eventId", eventId)
+        putStr("timeStart", timeStart)
+        putInt("durationMinutes", durationMinutes)
+        putStr("sessionTitle", sessionTitle)
+        putStr("pic", pic)
+        putStr("mcScript", mcScript)
+        putInt("sortOrder", sortOrder)
+    }
+
+    fun JSONObject.toWeddingRundownItemEntity(): WeddingRundownItemEntity? = try {
+        val f = getJSONObject("fields")
+        WeddingRundownItemEntity(
+            itemId = f.strOrNull("itemId") ?: return null,
+            eventId = f.strOrNull("eventId") ?: return null,
+            timeStart = f.strOrNull("timeStart") ?: "08:00",
+            durationMinutes = f.intOrZero("durationMinutes").coerceAtLeast(1),
+            sessionTitle = f.strOrNull("sessionTitle") ?: "",
+            pic = f.strOrNull("pic"),
+            mcScript = f.strOrNull("mcScript"),
+            sortOrder = f.intOrZero("sortOrder")
+        )
+    } catch (e: Exception) { null }
 }

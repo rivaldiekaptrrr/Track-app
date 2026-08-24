@@ -8,6 +8,8 @@ import java.util.UUID
 data class WeddingProfileEntity(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    /** Links this WeddingProfile 1:1 to its parent ProfileEntity (Long ID). */
+    val profileId: Long = 0L,
     val groomName: String,
     val brideName: String,
     val weddingDate: Long,
