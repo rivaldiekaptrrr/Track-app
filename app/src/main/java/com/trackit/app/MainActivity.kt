@@ -72,6 +72,17 @@ class MainActivity : FragmentActivity() {
     private var isGoingToSystemSettings = false
     private var isSafeToAutoBackup = false
 
+    private var pendingExportProfileId: String? = null
+    private var pendingExportProfileName: String? = null
+
+    private val createWeddingPdfLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        uri?.let { handleWeddingExportUri(it, isPdf = true) }
+    }
+
+    private val createWeddingCsvLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        uri?.let { handleWeddingExportUri(it, isPdf = false) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -413,24 +424,45 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun exportWeddingPdf(weddingProfileId: String, profileName: String) {
-        lifecycleScope.launch {
-            val expenses = weddingExpenseRepository.getAllByProfile(weddingProfileId).first()
-            WeddingPdfExporter.exportReport(
-                context = this@MainActivity,
-                expenses = expenses,
-                profileName = profileName
-            )
-        }
+        pendingExportProfileId = weddingProfileId
+        pendingExportProfileName = profileName
+        val safeName = profileName.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+        val fileName = "Wedding_${safeName}_${java.text.SimpleDateFormat("ddMMyyyy", java.util.Locale.US).format(java.util.Date())}.pdf"
+        createWeddingPdfLauncher.launch(fileName)
     }
 
     private fun exportWeddingCsv(weddingProfileId: String, profileName: String) {
+        pendingExportProfileId = weddingProfileId
+        pendingExportProfileName = profileName
+        val safeName = profileName.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+        val fileName = "Wedding_${safeName}_${java.text.SimpleDateFormat("ddMMyyyy", java.util.Locale.US).format(java.util.Date())}.csv"
+        createWeddingCsvLauncher.launch(fileName)
+    }
+
+    private fun handleWeddingExportUri(uri: android.net.Uri, isPdf: Boolean) {
+        val profileId = pendingExportProfileId ?: return
+        val profileName = pendingExportProfileName ?: return
         lifecycleScope.launch {
-            val expenses = weddingExpenseRepository.getAllByProfile(weddingProfileId).first()
-            WeddingCsvExporter.exportReport(
-                context = this@MainActivity,
-                expenses = expenses,
-                profileName = profileName
-            )
+            try {
+                val expenses = weddingExpenseRepository.getAllByProfile(profileId).first()
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    if (isPdf) {
+                        WeddingPdfExporter.writeToStream(expenses, profileName, outputStream)
+                    } else {
+                        WeddingCsvExporter.writeToStream(expenses, profileName, outputStream)
+                    }
+                }
+                android.widget.Toast.makeText(this@MainActivity, "Berhasil menyimpan laporan", android.widget.Toast.LENGTH_SHORT).show()
+                
+                // Optionally open the file
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, if (isPdf) "application/pdf" else "text/csv")
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(android.content.Intent.createChooser(intent, "Buka Laporan"))
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(this@MainActivity, "Gagal menyimpan: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
         }
     }
 

@@ -36,10 +36,10 @@ object WeddingPdfExporter {
         "LAINNYA" to "Lainnya"
     )
 
-    fun exportReport(
-        context: Context,
+    fun writeToStream(
         expenses: List<WeddingExpenseEntity>,
-        profileName: String = "Anggaran Pernikahan"
+        profileName: String = "Anggaran Pernikahan",
+        outputStream: OutputStream
     ) {
         val document = PdfDocument()
         val pageWidth = 595
@@ -183,24 +183,11 @@ object WeddingPdfExporter {
 
         document.finishPage(page)
 
-        // ── Save and Share ────────────────────────────────────────────────────
+        // ── Save to Stream ────────────────────────────────────────────────────
         try {
-            val safeName = profileName.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
-            val fileName = "Wedding_${safeName}_${fileNameFormat.format(Date())}.pdf"
-            val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-            val file = File(downloadsDir, fileName)
-            document.writeTo(FileOutputStream(file))
+            document.writeTo(outputStream)
+        } finally {
             document.close()
-
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/pdf")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            document.close()
-            Toast.makeText(context, "Gagal membuat PDF: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 }

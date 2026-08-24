@@ -28,15 +28,15 @@ object WeddingCsvExporter {
         "LAINNYA" to "Lainnya"
     )
 
-    fun exportReport(
-        context: Context,
+    fun writeToStream(
         expenses: List<WeddingExpenseEntity>,
-        profileName: String = "Anggaran Pernikahan"
+        profileName: String = "Anggaran Pernikahan",
+        outputStream: java.io.OutputStream
     ) {
         try {
             val safeName = profileName.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
             val fileName = "Wedding_${safeName}_${fileNameFormat.format(Date())}.csv"
-            val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
+            val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOCUMENTS)
             val file = File(downloadsDir, fileName)
 
             val sb = StringBuilder()
@@ -92,23 +92,11 @@ object WeddingCsvExporter {
             sb.append("Total Terbayar,,,,,${totalPaid.toLong()}\n")
             sb.append("Total Sisa Tagihan,,,,,,${(totalEstimated - totalPaid).toLong()}\n")
 
-            val writer = OutputStreamWriter(FileOutputStream(file), StandardCharsets.UTF_8)
-            writer.write(sb.toString())
-            writer.flush()
-            writer.close()
-
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "text/csv")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            OutputStreamWriter(outputStream, StandardCharsets.UTF_8).use { writer ->
+                writer.write(sb.toString())
             }
-            // Try to open with Excel / spreadsheet app
-            val chooser = Intent.createChooser(intent, "Buka dengan Excel")
-            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(chooser)
-
         } catch (e: Exception) {
-            Toast.makeText(context, "Gagal ekspor Excel: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
         }
     }
 }
