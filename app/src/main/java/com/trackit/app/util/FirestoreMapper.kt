@@ -91,22 +91,24 @@ object FirestoreMapper {
         putLng("profileId", profileId)
     }
 
-    fun JSONObject.toTransactionEntity(): TransactionEntity? = try {
-        val f = getJSONObject("fields")
-        TransactionEntity(
-            id = 0,
-            amount = f.dblOrZero("amount"),
-            description = f.strOrNull("description") ?: "",
-            categoryId = f.longOrNull("categoryId"),
-            date = f.longOrNull("date") ?: System.currentTimeMillis(),
-            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis(),
-            isRecurring = f.boolOrFalse("isRecurring"),
-            recurringType = f.strOrNull("recurringType"),
-            recurringDayOfMonth = f.intOrZero("recurringDayOfMonth").takeIf { it != 0 },
-            type = f.strOrNull("type") ?: "EXPENSE",
-            profileId = f.longOrNull("profileId") ?: 1L
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toTransactionEntity(): TransactionEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            TransactionEntity(
+                id = 0,
+                amount = f.dblOrZero("amount"),
+                description = f.strOrNull("description") ?: "",
+                categoryId = f.longOrNull("categoryId"),
+                date = f.longOrNull("date") ?: System.currentTimeMillis(),
+                createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis(),
+                isRecurring = f.boolOrFalse("isRecurring"),
+                recurringType = f.strOrNull("recurringType"),
+                recurringDayOfMonth = f.intOrZero("recurringDayOfMonth").takeIf { it != 0 },
+                type = f.strOrNull("type") ?: "EXPENSE",
+                profileId = f.longOrNull("profileId") ?: 1L
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING PROFILE =======================
 
@@ -127,25 +129,27 @@ object FirestoreMapper {
         putLng("createdAt", createdAt)
     }
 
-    fun JSONObject.toWeddingProfileEntity(): WeddingProfileEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingProfileEntity(
-            id = f.strOrNull("id") ?: return null,
-            groomName = f.strOrNull("groomName") ?: "",
-            brideName = f.strOrNull("brideName") ?: "",
-            weddingDate = f.longOrNull("weddingDate") ?: System.currentTimeMillis(),
-            totalBudgetCap = f.dblOrZero("totalBudgetCap"),
-            religionType = f.strOrNull("religionType") ?: "ISLAM",
-            religionDetail = f.strOrNull("religionDetail"),
-            culturalPresetGroom = f.strOrNull("culturalPresetGroom"),
-            culturalPresetBride = f.strOrNull("culturalPresetBride"),
-            quote = f.strOrNull("quote"),
-            quoteEnabled = f.boolOrFalse("quoteEnabled"),
-            quoteFontSize = f.strOrNull("quoteFontSize") ?: "SEDANG",
-            quoteFontStyle = f.strOrNull("quoteFontStyle") ?: "ITALIC",
-            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingProfileEntity(): WeddingProfileEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingProfileEntity(
+                id = f.strOrNull("id") ?: return null,
+                groomName = f.strOrNull("groomName") ?: "",
+                brideName = f.strOrNull("brideName") ?: "",
+                weddingDate = f.longOrNull("weddingDate") ?: System.currentTimeMillis(),
+                totalBudgetCap = f.dblOrZero("totalBudgetCap"),
+                religionType = f.strOrNull("religionType") ?: "ISLAM",
+                religionDetail = f.strOrNull("religionDetail"),
+                culturalPresetGroom = f.strOrNull("culturalPresetGroom"),
+                culturalPresetBride = f.strOrNull("culturalPresetBride"),
+                quote = f.strOrNull("quote"),
+                quoteEnabled = f.boolOrFalse("quoteEnabled"),
+                quoteFontSize = f.strOrNull("quoteFontSize") ?: "SEDANG",
+                quoteFontStyle = f.strOrNull("quoteFontStyle") ?: "ITALIC",
+                createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING EXPENSE =======================
 
@@ -162,21 +166,23 @@ object FirestoreMapper {
         putStr("notes", notes)
     }
 
-    fun JSONObject.toWeddingExpenseEntity(): WeddingExpenseEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingExpenseEntity(
-            expenseId = f.strOrNull("expenseId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            category = f.strOrNull("category") ?: "",
-            title = f.strOrNull("title") ?: "",
-            totalEstimated = f.dblOrZero("totalEstimated"),
-            totalPaid = f.dblOrZero("totalPaid"),
-            paidBySource = f.strOrNull("paidBySource") ?: "BERSAMA",
-            paymentStatus = f.strOrNull("paymentStatus") ?: "UNPAID",
-            notes = f.strOrNull("notes"),
-            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingExpenseEntity(): WeddingExpenseEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingExpenseEntity(
+                expenseId = f.strOrNull("expenseId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                category = f.strOrNull("category") ?: "",
+                title = f.strOrNull("title") ?: "",
+                totalEstimated = f.dblOrZero("totalEstimated"),
+                totalPaid = f.dblOrZero("totalPaid"),
+                paidBySource = f.strOrNull("paidBySource") ?: "BERSAMA",
+                paymentStatus = f.strOrNull("paymentStatus") ?: "UNPAID",
+                notes = f.strOrNull("notes"),
+                createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING TASK =======================
 
@@ -192,20 +198,22 @@ object FirestoreMapper {
         putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingTaskEntity(): WeddingTaskEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingTaskEntity(
-            taskId = f.strOrNull("taskId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            phaseMonth = f.intOrZero("phaseMonth"),
-            title = f.strOrNull("title") ?: "",
-            description = f.strOrNull("description"),
-            pic = f.strOrNull("pic") ?: "BOTH",
-            isCompleted = f.boolOrFalse("isCompleted"),
-            dueDate = f.longOrNull("dueDate"),
-            sortOrder = f.intOrZero("sortOrder")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingTaskEntity(): WeddingTaskEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingTaskEntity(
+                taskId = f.strOrNull("taskId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                phaseMonth = f.intOrZero("phaseMonth"),
+                title = f.strOrNull("title") ?: "",
+                description = f.strOrNull("description"),
+                pic = f.strOrNull("pic") ?: "BOTH",
+                isCompleted = f.boolOrFalse("isCompleted"),
+                dueDate = f.longOrNull("dueDate"),
+                sortOrder = f.intOrZero("sortOrder")
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING VENDOR =======================
 
@@ -223,22 +231,24 @@ object FirestoreMapper {
         putLng("createdAt", createdAt)
     }
 
-    fun JSONObject.toWeddingVendorEntity(): WeddingVendorEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingVendorEntity(
-            vendorId = f.strOrNull("vendorId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            category = f.strOrNull("category") ?: "",
-            name = f.strOrNull("name") ?: "",
-            picName = f.strOrNull("picName"),
-            phoneNumber = f.strOrNull("phoneNumber"),
-            instagramHandle = f.strOrNull("instagramHandle"),
-            contractValue = f.dblOrZero("contractValue"),
-            notes = f.strOrNull("notes"),
-            status = f.strOrNull("status") ?: "PROSPEK",
-            createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingVendorEntity(): WeddingVendorEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingVendorEntity(
+                vendorId = f.strOrNull("vendorId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                category = f.strOrNull("category") ?: "",
+                name = f.strOrNull("name") ?: "",
+                picName = f.strOrNull("picName"),
+                phoneNumber = f.strOrNull("phoneNumber"),
+                instagramHandle = f.strOrNull("instagramHandle"),
+                contractValue = f.dblOrZero("contractValue"),
+                notes = f.strOrNull("notes"),
+                status = f.strOrNull("status") ?: "PROSPEK",
+                createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING GUEST =======================
 
@@ -253,19 +263,21 @@ object FirestoreMapper {
         putStr("rsvpStatus", rsvpStatus)
     }
 
-    fun JSONObject.toWeddingGuestEntity(): WeddingGuestEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingGuestEntity(
-            guestId = f.strOrNull("guestId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            guestName = f.strOrNull("guestName") ?: "",
-            phoneNumber = f.strOrNull("phoneNumber"),
-            groupAllocation = f.strOrNull("groupAllocation") ?: "TEMAN_CPP",
-            sessionTarget = f.strOrNull("sessionTarget") ?: "KEDUANYA",
-            estimatedPax = f.intOrZero("estimatedPax").coerceAtLeast(1),
-            rsvpStatus = f.strOrNull("rsvpStatus") ?: "PENDING"
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingGuestEntity(): WeddingGuestEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingGuestEntity(
+                guestId = f.strOrNull("guestId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                guestName = f.strOrNull("guestName") ?: "",
+                phoneNumber = f.strOrNull("phoneNumber"),
+                groupAllocation = f.strOrNull("groupAllocation") ?: "TEMAN_CPP",
+                sessionTarget = f.strOrNull("sessionTarget") ?: "KEDUANYA",
+                estimatedPax = f.intOrZero("estimatedPax").coerceAtLeast(1),
+                rsvpStatus = f.strOrNull("rsvpStatus") ?: "PENDING"
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING COMMITTEE =======================
 
@@ -282,21 +294,23 @@ object FirestoreMapper {
         putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingCommitteeEntity(): WeddingCommitteeEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingCommitteeEntity(
-            memberId = f.strOrNull("memberId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            memberName = f.strOrNull("memberName") ?: "",
-            role = f.strOrNull("role") ?: "",
-            side = f.strOrNull("side") ?: "KELUARGA_CPP",
-            phoneNumber = f.strOrNull("phoneNumber"),
-            uniformDescription = f.strOrNull("uniformDescription"),
-            fabricMeters = f.dblOrZero("fabricMeters"),
-            uniformStatus = f.strOrNull("uniformStatus") ?: "BELUM_DIBAGI",
-            sortOrder = f.intOrZero("sortOrder")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingCommitteeEntity(): WeddingCommitteeEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingCommitteeEntity(
+                memberId = f.strOrNull("memberId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                memberName = f.strOrNull("memberName") ?: "",
+                role = f.strOrNull("role") ?: "",
+                side = f.strOrNull("side") ?: "KELUARGA_CPP",
+                phoneNumber = f.strOrNull("phoneNumber"),
+                uniformDescription = f.strOrNull("uniformDescription"),
+                fabricMeters = f.dblOrZero("fabricMeters"),
+                uniformStatus = f.strOrNull("uniformStatus") ?: "BELUM_DIBAGI",
+                sortOrder = f.intOrZero("sortOrder")
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING PAYMENT TERM =======================
 
@@ -310,18 +324,20 @@ object FirestoreMapper {
         putLng("paidDate", paidDate)
     }
 
-    fun JSONObject.toWeddingPaymentTermEntity(): WeddingPaymentTermEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingPaymentTermEntity(
-            termId = f.strOrNull("termId") ?: return null,
-            expenseId = f.strOrNull("expenseId") ?: return null,
-            termName = f.strOrNull("termName") ?: "",
-            amount = f.dblOrZero("amount"),
-            dueDate = f.longOrNull("dueDate") ?: System.currentTimeMillis(),
-            isPaid = f.boolOrFalse("isPaid"),
-            paidDate = f.longOrNull("paidDate")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingPaymentTermEntity(): WeddingPaymentTermEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingPaymentTermEntity(
+                termId = f.strOrNull("termId") ?: return null,
+                expenseId = f.strOrNull("expenseId") ?: return null,
+                termName = f.strOrNull("termName") ?: "",
+                amount = f.dblOrZero("amount"),
+                dueDate = f.longOrNull("dueDate") ?: System.currentTimeMillis(),
+                isPaid = f.boolOrFalse("isPaid"),
+                paidDate = f.longOrNull("paidDate")
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING SESERAHAN =======================
 
@@ -337,20 +353,22 @@ object FirestoreMapper {
         putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingSeserahanEntity(): WeddingSeserahanEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingSeserahanEntity(
-            itemId = f.strOrNull("itemId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            direction = f.strOrNull("direction") ?: "SESERAHAN_CPP",
-            itemName = f.strOrNull("itemName") ?: "",
-            quantity = f.intOrZero("quantity").coerceAtLeast(1),
-            estimatedPrice = f.dblOrZero("estimatedPrice"),
-            status = f.strOrNull("status") ?: "BELUM_BELI",
-            notes = f.strOrNull("notes"),
-            sortOrder = f.intOrZero("sortOrder")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingSeserahanEntity(): WeddingSeserahanEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingSeserahanEntity(
+                itemId = f.strOrNull("itemId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                direction = f.strOrNull("direction") ?: "SESERAHAN_CPP",
+                itemName = f.strOrNull("itemName") ?: "",
+                quantity = f.intOrZero("quantity").coerceAtLeast(1),
+                estimatedPrice = f.dblOrZero("estimatedPrice"),
+                status = f.strOrNull("status") ?: "BELUM_BELI",
+                notes = f.strOrNull("notes"),
+                sortOrder = f.intOrZero("sortOrder")
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING DOCUMENT =======================
 
@@ -365,19 +383,21 @@ object FirestoreMapper {
         putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingDocumentEntity(): WeddingDocumentEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingDocumentEntity(
-            docId = f.strOrNull("docId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            docName = f.strOrNull("docName") ?: "",
-            ownerType = f.strOrNull("ownerType") ?: "BOTH",
-            isCompleted = f.boolOrFalse("isCompleted"),
-            localFilePath = null, // Device-specific — never restore from remote
-            adminCost = f.dblOrZero("adminCost"),
-            sortOrder = f.intOrZero("sortOrder")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingDocumentEntity(): WeddingDocumentEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingDocumentEntity(
+                docId = f.strOrNull("docId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                docName = f.strOrNull("docName") ?: "",
+                ownerType = f.strOrNull("ownerType") ?: "BOTH",
+                isCompleted = f.boolOrFalse("isCompleted"),
+                localFilePath = null, // Device-specific — never restore from remote
+                adminCost = f.dblOrZero("adminCost"),
+                sortOrder = f.intOrZero("sortOrder")
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING EVENT (RUNDOWN TAB) =======================
 
@@ -390,17 +410,19 @@ object FirestoreMapper {
         putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingEventEntity(): WeddingEventEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingEventEntity(
-            eventId = f.strOrNull("eventId") ?: return null,
-            weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
-            eventName = f.strOrNull("eventName") ?: "",
-            eventDate = f.longOrNull("eventDate") ?: System.currentTimeMillis(),
-            eventLocation = f.strOrNull("eventLocation"),
-            sortOrder = f.intOrZero("sortOrder")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingEventEntity(): WeddingEventEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingEventEntity(
+                eventId = f.strOrNull("eventId") ?: return null,
+                weddingProfileId = f.strOrNull("weddingProfileId") ?: return null,
+                eventName = f.strOrNull("eventName") ?: "",
+                eventDate = f.longOrNull("eventDate") ?: System.currentTimeMillis(),
+                eventLocation = f.strOrNull("eventLocation"),
+                sortOrder = f.intOrZero("sortOrder")
+            )
+        } catch (e: Exception) { null }
+    }
 
     // ======================= WEDDING RUNDOWN ITEM =======================
 
@@ -415,17 +437,19 @@ object FirestoreMapper {
         putInt("sortOrder", sortOrder)
     }
 
-    fun JSONObject.toWeddingRundownItemEntity(): WeddingRundownItemEntity? = try {
-        val f = getJSONObject("fields")
-        WeddingRundownItemEntity(
-            itemId = f.strOrNull("itemId") ?: return null,
-            eventId = f.strOrNull("eventId") ?: return null,
-            timeStart = f.strOrNull("timeStart") ?: "08:00",
-            durationMinutes = f.intOrZero("durationMinutes").coerceAtLeast(1),
-            sessionTitle = f.strOrNull("sessionTitle") ?: "",
-            pic = f.strOrNull("pic"),
-            mcScript = f.strOrNull("mcScript"),
-            sortOrder = f.intOrZero("sortOrder")
-        )
-    } catch (e: Exception) { null }
+    fun JSONObject.toWeddingRundownItemEntity(): WeddingRundownItemEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            WeddingRundownItemEntity(
+                itemId = f.strOrNull("itemId") ?: return null,
+                eventId = f.strOrNull("eventId") ?: return null,
+                timeStart = f.strOrNull("timeStart") ?: "08:00",
+                durationMinutes = f.intOrZero("durationMinutes").coerceAtLeast(1),
+                sessionTitle = f.strOrNull("sessionTitle") ?: "",
+                pic = f.strOrNull("pic"),
+                mcScript = f.strOrNull("mcScript"),
+                sortOrder = f.intOrZero("sortOrder")
+            )
+        } catch (e: Exception) { null }
+    }
 }
