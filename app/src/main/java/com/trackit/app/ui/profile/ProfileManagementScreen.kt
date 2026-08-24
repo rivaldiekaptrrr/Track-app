@@ -371,24 +371,50 @@ fun ProfileFormDialog(
 
                 // === Mode Selector (only for new profile) ===
                 if (profile.id == 0L) {
-                    Text("Tipe Profil", style = MaterialTheme.typography.labelMedium)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = selectedMode == "EXPENSE",
-                            onClick = { selectedMode = "EXPENSE" },
-                            leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, null, Modifier.size(16.dp)) },
-                            label = { Text("Expense Tracker") }
-                        )
-                        FilterChip(
-                            selected = selectedMode == "WEDDING",
-                            onClick = {
-                                selectedMode = "WEDDING"
-                                selectedIcon = "favorite"
-                                selectedColor = "#C62828"
-                            },
-                            leadingIcon = { Icon(Icons.Default.Favorite, null, Modifier.size(16.dp)) },
-                            label = { Text("Wedding Planner") }
-                        )
+                    Text("Tipe Profil", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                            .padding(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val isExpense = selectedMode == "EXPENSE"
+                        val isWedding = selectedMode == "WEDDING"
+                        
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isExpense) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { selectedMode = "EXPENSE" }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.AccountBalanceWallet, null, Modifier.size(18.dp), tint = if (isExpense) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Expense", color = if (isExpense) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isWedding) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { 
+                                    selectedMode = "WEDDING"
+                                    selectedIcon = "favorite"
+                                    selectedColor = "#C62828"
+                                }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.Favorite, null, Modifier.size(18.dp), tint = if (isWedding) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Wedding", color = if (isWedding) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
                     }
                 }
 
@@ -420,31 +446,38 @@ fun ProfileFormDialog(
                     label = { Text("Nama Profil") },
                     placeholder = { Text("Contoh: Pribadi, Bisnis, Keluarga") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 // Color Picker
-                Text("Warna", style = MaterialTheme.typography.labelMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Warna Profil", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
                     items(profileColors) { colorHex ->
+                        val isSelected = selectedColor == colorHex
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(CategoryIconMapper.parseColor(colorHex))
-                                .border(
-                                    width = if (selectedColor == colorHex) 3.dp else 0.dp,
-                                    color = if (selectedColor == colorHex) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                                    shape = CircleShape
+                                .clickable { selectedColor = colorHex },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
                                 )
-                                .clickable { selectedColor = colorHex }
-                        )
+                            }
+                        }
                     }
                 }
 
                 // Icon Picker
                 if (selectedMode == "EXPENSE") {
-                    Text("Ikon", style = MaterialTheme.typography.labelMedium)
+                    Text("Ikon Profil", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(profileIcons) { iconName ->
                             Box(
@@ -471,62 +504,79 @@ fun ProfileFormDialog(
 
                 // === Wedding Detail Fields ===
                 if (selectedMode == "WEDDING") {
-                    Divider(Modifier.padding(vertical = 8.dp))
-                    Text("Detail Pengantin", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                    
-                    OutlinedTextField(
-                        value = groomName,
-                        onValueChange = { groomName = it },
-                        label = { Text("Nama Mempelai Pria (CPP)") },
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = brideName,
-                        onValueChange = { brideName = it },
-                        label = { Text("Nama Mempelai Wanita (CPW)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = budgetCap,
-                        onValueChange = { budgetCap = it },
-                        label = { Text("Anggaran Maksimal (Rp)") },
-                        placeholder = { Text("Contoh: 150000000") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Text("Agama", style = MaterialTheme.typography.labelMedium)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(religions) { rel ->
-                            FilterChip(
-                                selected = religionType == rel,
-                                onClick = { religionType = rel },
-                                label = { Text(rel) }
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(0.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Text("Detail Pengantin", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            }
+                            
+                            OutlinedTextField(
+                                value = groomName,
+                                onValueChange = { groomName = it },
+                                label = { Text("Nama Mempelai Pria (CPP)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
                             )
-                        }
-                    }
-
-                    Text("Adat Pria (CPP)", style = MaterialTheme.typography.labelMedium)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(cultures) { cul ->
-                            FilterChip(
-                                selected = culturalPresetGroom == cul,
-                                onClick = { culturalPresetGroom = cul },
-                                label = { Text(cul) }
+                            OutlinedTextField(
+                                value = brideName,
+                                onValueChange = { brideName = it },
+                                label = { Text("Nama Mempelai Wanita (CPW)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
                             )
-                        }
-                    }
-
-                    Text("Adat Wanita (CPW)", style = MaterialTheme.typography.labelMedium)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(cultures) { cul ->
-                            FilterChip(
-                                selected = culturalPresetBride == cul,
-                                onClick = { culturalPresetBride = cul },
-                                label = { Text(cul) }
+                            OutlinedTextField(
+                                value = budgetCap,
+                                onValueChange = { budgetCap = it },
+                                label = { Text("Anggaran Maksimal (Rp)") },
+                                placeholder = { Text("Contoh: 150000000") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
                             )
+
+                            Text("Agama", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(religions) { rel ->
+                                    FilterChip(
+                                        selected = religionType == rel,
+                                        onClick = { religionType = rel },
+                                        label = { Text(rel) }
+                                    )
+                                }
+                            }
+
+                            Text("Adat Pria (CPP)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(cultures) { cul ->
+                                    FilterChip(
+                                        selected = culturalPresetGroom == cul,
+                                        onClick = { culturalPresetGroom = cul },
+                                        label = { Text(cul) }
+                                    )
+                                }
+                            }
+
+                            Text("Adat Wanita (CPW)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(cultures) { cul ->
+                                    FilterChip(
+                                        selected = culturalPresetBride == cul,
+                                        onClick = { culturalPresetBride = cul },
+                                        label = { Text(cul) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
