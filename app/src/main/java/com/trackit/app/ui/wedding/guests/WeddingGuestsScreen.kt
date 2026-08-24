@@ -340,6 +340,7 @@ private fun GuestItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -347,14 +348,15 @@ private fun GuestItem(
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .height(42.dp)
+                    .fillMaxHeight()
+                    .padding(vertical = 2.dp)
                     .clip(RoundedCornerShape(2.dp))
                     .background(rsvpText)
             )
             
             Spacer(Modifier.width(10.dp))
 
-            // Avatar initial with nice soft colored background based on VIP / other
+            // Avatar initial
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -373,19 +375,42 @@ private fun GuestItem(
             Spacer(Modifier.width(12.dp))
 
             // Guest Info (Center)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    guest.guestName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                if (!guest.phoneNumber.isNullOrBlank()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 1.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Row 1: Name and Pax Badge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = guest.guestName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    // Compact Pax Badge
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(6.dp)
                     ) {
+                        Text(
+                            text = "${guest.estimatedPax} Pax",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                
+                // Row 2: Phone number (optional)
+                if (!guest.phoneNumber.isNullOrBlank()) {
+                    Spacer(Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = null,
@@ -394,16 +419,17 @@ private fun GuestItem(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            guest.phoneNumber,
+                            text = guest.phoneNumber,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
 
-                // Badges Row
+                // Row 3: Badges Row (Group & Session)
+                // Use Experimental Layout FlowRow if we had it, but standard row with weight is safe here.
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -437,41 +463,25 @@ private fun GuestItem(
                 }
             }
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(10.dp))
 
-            // Right side (Pax & RSVP dropdown chip)
+            // Right side actions
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxHeight()
             ) {
-                // Pax Badge
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "${guest.estimatedPax} Pax",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
-
-                // RSVP dropdown chip
-                ExposedDropdownMenuBox(
-                    expanded = rsvpExpanded,
-                    onExpandedChange = { rsvpExpanded = it }
-                ) {
+                // RSVP Menu Action
+                Box {
                     Surface(
                         color = rsvpBg,
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.menuAnchor(),
+                        modifier = Modifier.clickable { rsvpExpanded = true },
                         border = BorderStroke(0.5.dp, rsvpText.copy(alpha = 0.2f))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = rsvpLabel,
@@ -479,15 +489,17 @@ private fun GuestItem(
                                 color = rsvpText,
                                 fontWeight = FontWeight.SemiBold
                             )
+                            Spacer(Modifier.width(2.dp))
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = null,
                                 tint = rsvpText,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
-                    ExposedDropdownMenu(
+                    
+                    DropdownMenu(
                         expanded = rsvpExpanded,
                         onDismissRequest = { rsvpExpanded = false }
                     ) {
@@ -503,26 +515,26 @@ private fun GuestItem(
                             }
                     }
                 }
-            }
+                
+                Spacer(Modifier.height(12.dp))
 
-            Spacer(Modifier.width(6.dp))
-
-            // Delete action button
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.12f),
-                        RoundedCornerShape(8.dp)
+                // Delete action button
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.12f),
+                            RoundedCornerShape(8.dp)
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Hapus",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(14.dp)
                     )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Hapus",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
-                )
+                }
             }
         }
     }
