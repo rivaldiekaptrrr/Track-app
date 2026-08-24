@@ -1,5 +1,8 @@
 package com.trackit.app.ui.dashboard
 
+import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -95,7 +98,19 @@ fun DashboardScreen(
                 ),
                 actions = {
                     IconButton(onClick = onNavigateToProfiles) {
-                        Icon(Icons.Default.Person, contentDescription = "Profil")
+                        val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
+                        if (photoUrl != null) {
+                            AsyncImage(
+                                model = photoUrl,
+                                contentDescription = "Profil",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Icon(Icons.Default.Person, contentDescription = "Profil")
+                        }
                     }
                 }
             )
