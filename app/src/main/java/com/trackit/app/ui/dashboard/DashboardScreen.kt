@@ -280,8 +280,9 @@ fun DashboardScreen(
                         Text("Batal")
                     }
                 }
-            )
+        )
         }
+    }
 }
 
 @Composable
