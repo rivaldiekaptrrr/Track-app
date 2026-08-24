@@ -82,14 +82,6 @@ fun DashboardScreen(
     }
 
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddTransaction,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Transaksi")
-            }
-        },
         topBar = {
             TopAppBar(
                 title = { Text("Dashboard") },
