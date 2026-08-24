@@ -130,8 +130,6 @@ git push origin main
 Buka file [RELEASE_NOTES.md](file:///d:\Project\Track-app\RELEASE_NOTES.md) di root proyek dan tuliskan perubahan yang ingin ditampilkan di pop-up pembaruan aplikasi:
 
 ```markdown
-## Catatan Rilis v1.2.0
-
 - Menambahkan fitur baru X
 - Memperbaiki bug Y
 - Optimasi performa Z
