@@ -24,3 +24,11 @@
 -dontwarn org.apache.http.**
 -dontwarn com.google.api.client.http.apache.v2.**
 -dontwarn com.google.api.client.googleapis.apache.v2.**
+
+# OkHttp (used by FirestoreRestClient for REST API)
+-dontwarn okhttp3.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+
+# org.json (used by FirestoreMapper)
+-keep class org.json.** { *; }
