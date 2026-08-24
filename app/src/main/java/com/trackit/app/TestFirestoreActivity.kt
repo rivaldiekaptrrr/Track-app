@@ -22,6 +22,15 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.trackit.app.ui.theme.TrackItTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,6 +38,8 @@ class TestFirestoreActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseFirestore
     private val firebaseAuth = FirebaseAuth.getInstance()
+    private val okHttpClient = OkHttpClient()
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
     private val logs = mutableStateListOf<Pair<String, LogLevel>>()
     private val dateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
 
@@ -268,7 +279,90 @@ class TestFirestoreActivity : ComponentActivity() {
                                     ),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("TEST WRITE")
+                                    Text("WRITE(gRPC)", fontSize = 11.sp)
+                                }
+
+                                // Test Write REST Button
+                                Button(
+                                    onClick = {
+                                        val user = firebaseAuth.currentUser
+                                        if (user == null) {
+                                            log("Tidak bisa test: belum login!", LogLevel.ERROR)
+                                            return@Button
+                                        }
+
+                                        log("--- STEP 2: FIRESTORE WRITE (REST) ---", LogLevel.INFO)
+                                        log("Mengambil ID Token...", LogLevel.INFO)
+                                        
+                                        user.getIdToken(false).addOnSuccessListener { tokenResult ->
+                                            val idToken = tokenResult.token
+                                            if (idToken == null) {
+                                                log("Gagal: ID Token null", LogLevel.ERROR)
+                                                return@addOnSuccessListener
+                                            }
+                                            
+                                            val docId = "test_rest_${System.currentTimeMillis()}"
+                                            log("Target: users/${user.uid}/transactions/$docId", LogLevel.INFO)
+                                            log("Mengirim HTTP POST request (OkHttp)...", LogLevel.WARN)
+
+                                            val url = "https://firestore.googleapis.com/v1/projects/trackit-a83c3/databases/(default)/documents/users/${user.uid}/transactions?documentId=$docId"
+                                            
+                                            // Format JSON payload for REST API
+                                            val jsonString = """
+                                                {
+                                                  "fields": {
+                                                    "amount": {"doubleValue": 8888.0},
+                                                    "description": {"stringValue": "Test E2E REST API"},
+                                                    "type": {"stringValue": "EXPENSE"},
+                                                    "profileId": {"integerValue": "1"},
+                                                    "createdAt": {"integerValue": "${System.currentTimeMillis()}"}
+                                                  }
+                                                }
+                                            """.trimIndent()
+
+                                            val body = jsonString.toRequestBody("application/json; charset=utf-8".toMediaType())
+                                            val request = Request.Builder()
+                                                .url(url)
+                                                .post(body)
+                                                .addHeader("Authorization", "Bearer $idToken")
+                                                .build()
+
+                                            val startTime = System.currentTimeMillis()
+                                            
+                                            coroutineScope.launch {
+                                                try {
+                                                    val response = withContext(Dispatchers.IO) {
+                                                        okHttpClient.newCall(request).execute()
+                                                    }
+                                                    val elapsed = System.currentTimeMillis() - startTime
+                                                    
+                                                    if (response.isSuccessful) {
+                                                        log("REST WRITE BERHASIL! (${elapsed}ms)", LogLevel.SUCCESS)
+                                                        log("Status: ${response.code}", LogLevel.SUCCESS)
+                                                    } else {
+                                                        val errBody = response.body?.string() ?: ""
+                                                        log("REST WRITE GAGAL! (${elapsed}ms)", LogLevel.ERROR)
+                                                        log("Status: ${response.code}", LogLevel.ERROR)
+                                                        log("Body: ${errBody.take(100)}...", LogLevel.ERROR)
+                                                    }
+                                                } catch (e: Exception) {
+                                                    val elapsed = System.currentTimeMillis() - startTime
+                                                    log("HTTP EXCEPTION! (${elapsed}ms)", LogLevel.ERROR)
+                                                    log("Error: ${e.message}", LogLevel.ERROR)
+                                                }
+                                            }
+                                        }.addOnFailureListener {
+                                            log("Gagal ambil ID Token", LogLevel.ERROR)
+                                        }
+                                    },
+                                    enabled = isLoggedIn,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFE65100), // Orange
+                                        disabledContainerColor = Color(0xFF424242)
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("WRITE(REST)", fontSize = 11.sp)
                                 }
 
                                 // Clear Logs
