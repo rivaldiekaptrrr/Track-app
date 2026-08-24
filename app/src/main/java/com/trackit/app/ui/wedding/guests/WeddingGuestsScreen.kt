@@ -3,11 +3,15 @@ package com.trackit.app.ui.wedding.guests
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -48,6 +52,7 @@ fun WeddingGuestsScreen(
     var deviceContacts by remember { mutableStateOf<List<DeviceContact>>(emptyList()) }
     var contactsLoading by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var editingGuest by remember { mutableStateOf<WeddingGuestEntity?>(null) }
 
     val contactPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -174,7 +179,8 @@ fun WeddingGuestsScreen(
                         GuestItem(
                             guest = guest,
                             onRsvpChange = { status -> viewModel.updateRsvp(guest, status) },
-                            onDelete = { viewModel.deleteGuest(guest) }
+                            onDelete = { viewModel.deleteGuest(guest) },
+                            onClick = { editingGuest = guest }
                         )
                     }
                 }
@@ -201,6 +207,20 @@ fun WeddingGuestsScreen(
                 showContactPicker = false
                 scope.launch {
                     snackbarHostState.showSnackbar("${selected.size} kontak berhasil diimpor!")
+                }
+            }
+        )
+    }
+
+    editingGuest?.let { guest ->
+        EditGuestDialog(
+            guest = guest,
+            onDismiss = { editingGuest = null },
+            onConfirm = { name, phone, group, session, pax ->
+                viewModel.updateGuest(guest, name, phone, group, session, pax)
+                editingGuest = null
+                scope.launch {
+                    snackbarHostState.showSnackbar("Kontak berhasil diperbarui!")
                 }
             }
         )
@@ -286,87 +306,223 @@ private fun GuestFilters(
 private fun GuestItem(
     guest: WeddingGuestEntity,
     onRsvpChange: (String) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit
 ) {
     var rsvpExpanded by remember { mutableStateOf(false) }
-    val rsvpColor = when (guest.rsvpStatus) {
-        "ATTENDING" -> Color(0xFF2E7D32)
-        "DECLINED" -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    
+    // RSVP visual assets
+    val (rsvpBg, rsvpText, rsvpLabel) = when (guest.rsvpStatus) {
+        "ATTENDING" -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "Hadir")
+        "DECLINED" -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "Tidak Hadir")
+        else -> Triple(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), MaterialTheme.colorScheme.onSurfaceVariant, "Menunggu")
     }
-    val rsvpLabel = when (guest.rsvpStatus) {
-        "ATTENDING" -> "Hadir"
-        "DECLINED" -> "Tidak Hadir"
-        else -> "Menunggu"
-    }
+
     val groupLabel = GUEST_GROUPS.find { it.first == guest.groupAllocation }?.second ?: guest.groupAllocation
     val sessionLabel = GUEST_SESSIONS.find { it.first == guest.sessionTarget }?.second ?: guest.sessionTarget
 
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+    // Group badge colors
+    val (groupBg, groupText) = when (guest.groupAllocation) {
+        "VIP" -> Pair(Color(0xFFFFF9C4), Color(0xFFF57F17)) // Golden for VIP
+        "KELUARGA_CPP", "KELUARGA_CPW" -> Pair(Color(0xFFE1F5FE), Color(0xFF0288D1)) // Light Blue
+        else -> Pair(Color(0xFFF3E5F5), Color(0xFF7B1FA2)) // Light Purple for others
+    }
+
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Avatar initial
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left Accent Bar (RSVP based)
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(42.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(rsvpText)
+            )
+            
+            Spacer(Modifier.width(10.dp))
+
+            // Avatar initial with nice soft colored background based on VIP / other
             Surface(
                 modifier = Modifier.size(40.dp),
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.primaryContainer
+                shape = RoundedCornerShape(12.dp),
+                color = groupBg
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         guest.guestName.take(1).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        fontWeight = FontWeight.Bold,
+                        color = groupText
                     )
                 }
             }
+
             Spacer(Modifier.width(12.dp))
+
+            // Guest Info (Center)
             Column(modifier = Modifier.weight(1f)) {
-                Text(guest.guestName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(groupLabel, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("·", style = MaterialTheme.typography.labelSmall)
-                    Text(sessionLabel, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("·", style = MaterialTheme.typography.labelSmall)
-                    Text("${guest.estimatedPax} pax", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                Text(
+                    guest.guestName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
                 if (!guest.phoneNumber.isNullOrBlank()) {
-                    Text(guest.phoneNumber, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 1.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = null,
+                            modifier = Modifier.size(10.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            guest.phoneNumber,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-            }
-            // RSVP chip
-            ExposedDropdownMenuBox(expanded = rsvpExpanded, onExpandedChange = { rsvpExpanded = it }) {
-                Surface(
-                    color = rsvpColor.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.menuAnchor()
+
+                Spacer(Modifier.height(4.dp))
+
+                // Badges Row
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(rsvpLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = rsvpColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-                }
-                ExposedDropdownMenu(expanded = rsvpExpanded, onDismissRequest = { rsvpExpanded = false }) {
-                    listOf("PENDING" to "Menunggu", "ATTENDING" to "Hadir", "DECLINED" to "Tidak Hadir")
-                        .forEach { (key, label) ->
-                            DropdownMenuItem(text = { Text(label) }, onClick = {
-                                onRsvpChange(key); rsvpExpanded = false
-                            })
-                        }
+                    // Group Badge
+                    Surface(
+                        color = groupBg,
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = groupLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = groupText,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    // Session Badge
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = sessionLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
-            Spacer(Modifier.width(4.dp))
-            IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Default.Delete, null,
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-                    modifier = Modifier.size(16.dp))
+
+            Spacer(Modifier.width(8.dp))
+
+            // Right side (Pax & RSVP dropdown chip)
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Pax Badge
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "${guest.estimatedPax} Pax",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+
+                // RSVP dropdown chip
+                ExposedDropdownMenuBox(
+                    expanded = rsvpExpanded,
+                    onExpandedChange = { rsvpExpanded = it }
+                ) {
+                    Surface(
+                        color = rsvpBg,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.menuAnchor(),
+                        border = BorderStroke(0.5.dp, rsvpText.copy(alpha = 0.2f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = rsvpLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = rsvpText,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = rsvpText,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                    ExposedDropdownMenu(
+                        expanded = rsvpExpanded,
+                        onDismissRequest = { rsvpExpanded = false }
+                    ) {
+                        listOf("PENDING" to "Menunggu", "ATTENDING" to "Hadir", "DECLINED" to "Tidak Hadir")
+                            .forEach { (key, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        onRsvpChange(key)
+                                        rsvpExpanded = false
+                                    }
+                                )
+                            }
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(6.dp))
+
+            // Delete action button
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.12f),
+                        RoundedCornerShape(8.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Hapus",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }
@@ -580,3 +736,89 @@ private fun AddGuestDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditGuestDialog(
+    guest: WeddingGuestEntity,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, phone: String?, group: String, session: String, pax: Int) -> Unit
+) {
+    var name by remember { mutableStateOf(guest.guestName) }
+    var phone by remember { mutableStateOf(guest.phoneNumber ?: "") }
+    var selectedGroup by remember { mutableStateOf(guest.groupAllocation) }
+    var selectedSession by remember { mutableStateOf(guest.sessionTarget) }
+    var pax by remember { mutableStateOf(guest.estimatedPax) }
+    var groupExpanded by remember { mutableStateOf(false) }
+    var sessionExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Tamu") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
+                    label = { Text("Nama Tamu / Keluarga") }, 
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama tamu wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = phone, onValueChange = { phone = it },
+                    label = { Text("No. HP (opsional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+
+                // Group dropdown
+                ExposedDropdownMenuBox(expanded = groupExpanded, onExpandedChange = { groupExpanded = it }) {
+                    OutlinedTextField(
+                        value = GUEST_GROUPS.find { it.first == selectedGroup }?.second ?: "",
+                        onValueChange = {}, label = { Text("Kelompok") }, readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = groupExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = groupExpanded, onDismissRequest = { groupExpanded = false }) {
+                        GUEST_GROUPS.forEach { (key, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { selectedGroup = key; groupExpanded = false })
+                        }
+                    }
+                }
+
+                // Session dropdown
+                ExposedDropdownMenuBox(expanded = sessionExpanded, onExpandedChange = { sessionExpanded = it }) {
+                    OutlinedTextField(
+                        value = GUEST_SESSIONS.find { it.first == selectedSession }?.second ?: "",
+                        onValueChange = {}, label = { Text("Sesi Acara") }, readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sessionExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = sessionExpanded, onDismissRequest = { sessionExpanded = false }) {
+                        GUEST_SESSIONS.forEach { (key, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { selectedSession = key; sessionExpanded = false })
+                        }
+                    }
+                }
+
+                // Pax counter
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Estimasi pax", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { pax = (pax - 1).coerceAtLeast(1) }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Remove, null, Modifier.size(16.dp))
+                    }
+                    Text("$pax", fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp))
+                    IconButton(onClick = { pax++ }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Add, null, Modifier.size(16.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                submitted = true
+                if (name.isNotBlank()) {
+                    onConfirm(name.trim(), phone.ifBlank { null }, selectedGroup, selectedSession, pax)
+                }
+            }) { Text("Simpan") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
+    )
+}
+

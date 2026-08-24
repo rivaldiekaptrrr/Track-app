@@ -124,6 +124,27 @@ class WeddingGuestsViewModel @Inject constructor(
         viewModelScope.launch { repo.update(guest.copy(rsvpStatus = status)) }
     }
 
+    fun updateGuest(
+        guest: WeddingGuestEntity,
+        name: String,
+        phone: String?,
+        group: String,
+        session: String,
+        pax: Int
+    ) {
+        viewModelScope.launch {
+            repo.update(
+                guest.copy(
+                    guestName = name,
+                    phoneNumber = phone?.ifBlank { null },
+                    groupAllocation = group,
+                    sessionTarget = session,
+                    estimatedPax = pax
+                )
+            )
+        }
+    }
+
     fun deleteGuest(guest: WeddingGuestEntity) {
         viewModelScope.launch { repo.delete(guest) }
     }

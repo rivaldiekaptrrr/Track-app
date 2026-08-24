@@ -1,3 +1,4 @@
+- **UPDATE v3.2.4**: Add Edit Guest dialog in Guest Management, allowing users to modify guest details by clicking on them
 - **UPDATE v3.2.3**: Change PDF export theme color to premium Blue (replacing Purple)
 - **HOTFIX v3.2.2**: Fix compile errors in MainActivity, WeddingPdfExporter, and WeddingCsvExporter
 - **HOTFIX v3.2.1**: Fix crash when saving Export PDF/Excel caused by unconfigured file paths directory.
