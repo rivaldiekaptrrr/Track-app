@@ -14,8 +14,8 @@ android {
         applicationId = "com.trackit.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 26
-        versionName = "3.2.4"
+        versionCode = 27
+        versionName = "3.2.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
