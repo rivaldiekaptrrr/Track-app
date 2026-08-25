@@ -141,7 +141,18 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding profiles from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingProfileEntity() ?: continue
-            weddingProfileDao.insert(remote)
+            // SAFE MERGE: Preserve local profileId (FK to ProfileEntity).
+            // A plain INSERT REPLACE would CASCADE-delete all child entities
+            // (tasks, expenses, events, etc.) and reset profileId to 0,
+            // breaking the link between WeddingProfile and its parent Profile.
+            val existing = weddingProfileDao.getByIdSync(remote.id)
+            if (existing != null) {
+                // Update remote fields but keep the local-only profileId intact
+                weddingProfileDao.update(remote.copy(profileId = existing.profileId))
+            } else {
+                // New profile from remote — insert as-is (profileId = 0 until user links it)
+                weddingProfileDao.insert(remote)
+            }
         }
     }
 
@@ -465,12 +476,25 @@ class SyncManager @Inject constructor(
     // ======================= INITIAL SYNC (PUSH LOCAL → REMOTE) =======================
 
     /**
-     * Called after login. Pushes all local transactions up to Firestore.
+     * Called ONLY after a NEW REGISTRATION (not on subsequent logins).
+     * Pushes all local transactions to Firestore for the first time.
+     *
+     * On login from a second device, this must NOT be called to avoid
+     * overwriting cloud data from the first device.
+     *
      * Uses explicit userId to avoid race condition with AuthRepository state.
+     *
+     * @param userId  The Firebase UID of the authenticated user.
+     * @param isNewRegistration  Set to true only when the account was just created.
+     *                           Pass false for existing-account logins.
      */
-    fun performInitialSync(userId: String) {
+    fun performInitialSync(userId: String, isNewRegistration: Boolean) {
+        if (!isNewRegistration) {
+            Log.d(TAG, "performInitialSync skipped — existing account login, not a new registration.")
+            return
+        }
         syncScope.launch {
-            Log.d(TAG, "Starting initial push for user ${userId.take(5)}...")
+            Log.d(TAG, "Starting initial push for new user ${userId.take(5)}...")
             val allTransactions = transactionDao.getAllTransactionsAllProfiles().first()
             var successCount = 0
             for (transaction in allTransactions) {

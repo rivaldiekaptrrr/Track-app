@@ -40,7 +40,9 @@ class AuthViewModel @Inject constructor(
                     syncPreferences.setUserId(uid)
                     syncPreferences.setOnlineMode(true)
                     syncManager.startSync()
-                    syncManager.performInitialSync(uid)
+                    // Login on a second device: pull remote data, do NOT push local data
+                    // (isNewRegistration = false) to avoid overwriting the first device's cloud data.
+                    syncManager.performInitialSync(uid, isNewRegistration = false)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -59,7 +61,8 @@ class AuthViewModel @Inject constructor(
                     syncPreferences.setUserId(uid)
                     syncPreferences.setOnlineMode(true)
                     syncManager.startSync()
-                    syncManager.performInitialSync(uid)
+                    // New account: push all existing local data up to Firestore for the first time.
+                    syncManager.performInitialSync(uid, isNewRegistration = true)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -78,7 +81,10 @@ class AuthViewModel @Inject constructor(
                     syncPreferences.setUserId(uid)
                     syncPreferences.setOnlineMode(true)
                     syncManager.startSync()
-                    syncManager.performInitialSync(uid)
+                    // Google Sign-In could be a new or existing account.
+                    // Treat as existing account (isNewRegistration = false) to avoid
+                    // overwriting remote data. The user's data will be pulled via startSync().
+                    syncManager.performInitialSync(uid, isNewRegistration = false)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
