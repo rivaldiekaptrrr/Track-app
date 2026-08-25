@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.util.BackupManager
-import com.trackit.app.util.GDriveBackupManager
 import kotlinx.coroutines.launch
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,34 +43,11 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
-    var showGDriveRestoreDialog by remember { mutableStateOf(false) }
-
-    val gDriveSignInLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            if (task.isSuccessful) {
-                scope.launch {
-                    Toast.makeText(context, "Mencadangkan ke Google Drive...", Toast.LENGTH_SHORT).show()
-                    val backupResult = GDriveBackupManager.backupDatabase(context)
-                    if (backupResult.isSuccess) {
-                        Toast.makeText(context, "Backup berhasil disimpan di Google Drive", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(context, "Gagal backup: ${backupResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            } else {
-                Toast.makeText(context, "Login Google gagal", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let { 
             BackupManager.isRestoring = true
             BackupManager.restoreDatabase(context, it)
-            // Require manual restart from user since process will be killed soon or they can just restart it
             Toast.makeText(context, "Silakan tutup aplikasi secara manual dari Recent Apps dan buka kembali.", Toast.LENGTH_LONG).show()
         }
     }
@@ -791,92 +767,6 @@ fun SettingsScreen(
                 }
             }
 
-            // Google Drive Backup
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().clickable {
-                    if (GDriveBackupManager.isSignedIn(context)) {
-                        scope.launch {
-                            Toast.makeText(context, "Mencadangkan ke Google Drive...", Toast.LENGTH_SHORT).show()
-                            val backupResult = GDriveBackupManager.backupDatabase(context)
-                            if (backupResult.isSuccess) {
-                                Toast.makeText(context, "Backup berhasil disimpan di Google Drive", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(context, "Gagal backup: ${backupResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    } else {
-                        gDriveSignInLauncher.launch(GDriveBackupManager.getSignInIntent(context))
-                    }
-                },
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.CloudUpload,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            "Backup ke Google Drive",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            "Simpan data Anda dengan aman di awan",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // Google Drive Restore
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().clickable {
-                    if (GDriveBackupManager.isSignedIn(context)) {
-                        showGDriveRestoreDialog = true
-                    } else {
-                        Toast.makeText(context, "Silakan login Google Drive (ketuk tombol Backup) terlebih dahulu", Toast.LENGTH_LONG).show()
-                    }
-                },
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.CloudDownload,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            "Pulihkan dari Google Drive",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            "Kembalikan database Anda dari awan",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
             // App Info
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -980,144 +870,5 @@ fun SettingsScreen(
         )
     }
 
-    if (showGDriveRestoreDialog) {
-        RestoreGDriveDialog(
-            onDismiss = { showGDriveRestoreDialog = false },
-            onRestoreSuccess = {
-                showGDriveRestoreDialog = false
-                Toast.makeText(
-                    context,
-                    "✅ Restore berhasil! Silakan tutup aplikasi dari Recent Apps lalu buka kembali.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        )
-    }
 }
 
-@Composable
-fun RestoreGDriveDialog(
-    onDismiss: () -> Unit,
-    onRestoreSuccess: () -> Unit
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(true) }
-    var backups by remember { mutableStateOf<List<GDriveBackupManager.DriveBackupFile>>(emptyList()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isRestoring by remember { mutableStateOf(false) }
-    var restoringName by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        val result = GDriveBackupManager.listBackups(context)
-        if (result.isSuccess) {
-            backups = result.getOrNull() ?: emptyList()
-            if (backups.isEmpty()) {
-                errorMessage = "Tidak ada file backup ditemukan di Google Drive Anda."
-            }
-        } else {
-            errorMessage = result.exceptionOrNull()?.message ?: "Gagal mengambil daftar backup."
-        }
-        isLoading = false
-    }
-
-    AlertDialog(
-        onDismissRequest = { if (!isRestoring) onDismiss() },
-        title = { Text("Pulihkan dari Google Drive", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                when {
-                    isLoading -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Memuat daftar backup...")
-                        }
-                    }
-                    errorMessage != null -> {
-                        Text(
-                            errorMessage!!,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    else -> {
-                        Text(
-                            "Pilih file backup yang ingin dipulihkan:",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                            items(backups) { backup ->
-                                val dateString = java.text.SimpleDateFormat(
-                                    "dd MMM yyyy, HH:mm", java.util.Locale.getDefault()
-                                ).format(java.util.Date(backup.createdTimeMs))
-
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                        .clickable {
-                                            if (isRestoring) return@clickable
-                                            isRestoring = true
-                                            restoringName = backup.name
-                                            scope.launch {
-                                                val result = GDriveBackupManager.restoreDatabase(context, backup.id)
-                                                isRestoring = false
-                                                if (result.isSuccess) {
-                                                    BackupManager.isRestoring = true
-                                                    onRestoreSuccess()
-                                                } else {
-                                                    errorMessage = "Gagal: ${result.exceptionOrNull()?.message}"
-                                                }
-                                            }
-                                        },
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(
-                                            backup.name,
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            dateString,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        if (isRestoring) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    "Memulihkan \"$restoringName\"...",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isRestoring) {
-                Text("Tutup")
-            }
-        }
-    )
-}

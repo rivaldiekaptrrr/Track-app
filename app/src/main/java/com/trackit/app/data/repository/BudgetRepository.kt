@@ -2,13 +2,15 @@ package com.trackit.app.data.repository
 
 import com.trackit.app.data.local.dao.BudgetSettingDao
 import com.trackit.app.data.local.entity.BudgetSettingEntity
+import com.trackit.app.util.SyncManager
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BudgetRepository @Inject constructor(
-    private val budgetSettingDao: BudgetSettingDao
+    private val budgetSettingDao: BudgetSettingDao,
+    private val syncManager: SyncManager
 ) {
     fun getBudgetSetting(profileId: Long): Flow<BudgetSettingEntity?> =
         budgetSettingDao.getBudgetSetting(profileId)
@@ -23,5 +25,6 @@ class BudgetRepository @Inject constructor(
         } else {
             budgetSettingDao.insert(BudgetSettingEntity(profileId = profileId, monthlyBudget = budget))
         }
+        syncManager.pushBudgetSetting(BudgetSettingEntity(profileId = profileId, monthlyBudget = budget))
     }
 }

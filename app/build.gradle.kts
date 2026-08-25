@@ -132,15 +132,7 @@ dependencies {
 
     // Google Drive Backup
     implementation("com.google.android.gms:play-services-auth:21.2.0")
-    implementation("com.google.api-client:google-api-client-android:2.2.0") {
-        exclude(group = "org.apache.httpcomponents")
-    }
-    implementation("com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0") {
-        exclude(group = "org.apache.httpcomponents")
-    }
-    implementation("com.google.http-client:google-http-client-gson:1.44.1") {
-        exclude(group = "org.apache.httpcomponents")
-    }
+
 
     // Firebase (BOM manages versions)
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))

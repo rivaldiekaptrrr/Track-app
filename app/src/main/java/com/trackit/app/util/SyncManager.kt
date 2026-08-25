@@ -2,6 +2,10 @@ package com.trackit.app.util
 
 import android.content.Context
 import android.util.Log
+import com.trackit.app.data.local.dao.BudgetSettingDao
+import com.trackit.app.data.local.dao.CategoryBudgetDao
+import com.trackit.app.data.local.dao.CategoryDao
+import com.trackit.app.data.local.dao.ProfileDao
 import com.trackit.app.data.local.dao.TransactionDao
 import com.trackit.app.data.local.dao.WeddingCommitteeDao
 import com.trackit.app.data.local.dao.WeddingDocumentDao
@@ -14,6 +18,10 @@ import com.trackit.app.data.local.dao.WeddingRundownItemDao
 import com.trackit.app.data.local.dao.WeddingSeserahanDao
 import com.trackit.app.data.local.dao.WeddingTaskDao
 import com.trackit.app.data.local.dao.WeddingVendorDao
+import com.trackit.app.data.local.entity.BudgetSettingEntity
+import com.trackit.app.data.local.entity.CategoryBudgetEntity
+import com.trackit.app.data.local.entity.CategoryEntity
+import com.trackit.app.data.local.entity.ProfileEntity
 import com.trackit.app.data.local.entity.TransactionEntity
 import com.trackit.app.data.local.entity.WeddingCommitteeEntity
 import com.trackit.app.data.local.entity.WeddingDocumentEntity
@@ -27,7 +35,11 @@ import com.trackit.app.data.local.entity.WeddingSeserahanEntity
 import com.trackit.app.data.local.entity.WeddingTaskEntity
 import com.trackit.app.data.local.entity.WeddingVendorEntity
 import com.trackit.app.data.repository.AuthRepository
+import com.trackit.app.util.FirestoreMapper.toCategoryBudgetEntity
+import com.trackit.app.util.FirestoreMapper.toCategoryEntity
+import com.trackit.app.util.FirestoreMapper.toBudgetSettingEntity
 import com.trackit.app.util.FirestoreMapper.toFirestoreJson
+import com.trackit.app.util.FirestoreMapper.toProfileEntity
 import com.trackit.app.util.FirestoreMapper.toTransactionEntity
 import com.trackit.app.util.FirestoreMapper.toWeddingCommitteeEntity
 import com.trackit.app.util.FirestoreMapper.toWeddingDocumentEntity
@@ -75,6 +87,10 @@ class SyncManager @Inject constructor(
     private val weddingDocumentDao: WeddingDocumentDao,
     private val weddingEventDao: WeddingEventDao,
     private val weddingRundownItemDao: WeddingRundownItemDao,
+    private val categoryDao: CategoryDao,
+    private val profileDao: ProfileDao,
+    private val budgetSettingDao: BudgetSettingDao,
+    private val categoryBudgetDao: CategoryBudgetDao,
     private val authRepository: AuthRepository,
     private val syncPreferences: SyncPreferences
 ) {
@@ -111,6 +127,10 @@ class SyncManager @Inject constructor(
             pullWeddingDocuments(userId)
             pullWeddingEvents(userId)
             pullWeddingRundownItems(userId)
+            pullProfiles(userId)
+            pullCategories(userId)
+            pullBudgetSettings(userId)
+            pullCategoryBudgets(userId)
 
             Log.d(TAG, "Full pull sync complete.")
         }
@@ -503,6 +523,137 @@ class SyncManager @Inject constructor(
                 if (ok) successCount++
             }
             Log.d(TAG, "Initial push done. $successCount/${allTransactions.size} transactions pushed.")
+        }
+    }
+
+    // ======================= PULL: PROFILES =======================
+
+    private suspend fun pullProfiles(userId: String) {
+        val docs = restClient.listDocuments("users/$userId/profiles")
+        Log.d(TAG, "Fetched ${docs.size} profiles from Firestore.")
+        for (doc in docs) {
+            val remote = doc.toProfileEntity() ?: continue
+            val existing = profileDao.getProfileById(remote.id)
+            if (existing != null) {
+                profileDao.update(remote)
+            } else {
+                profileDao.insert(remote)
+            }
+        }
+    }
+
+    // ======================= PULL: CATEGORIES =======================
+
+    private suspend fun pullCategories(userId: String) {
+        val docs = restClient.listDocuments("users/$userId/categories")
+        Log.d(TAG, "Fetched ${docs.size} categories from Firestore.")
+        for (doc in docs) {
+            val remote = doc.toCategoryEntity() ?: continue
+            // Use name+profileId to identify existing category (avoid Long ID collision)
+            val existing = categoryDao.getByNameAndProfile(remote.name, remote.profileId)
+            if (existing != null) {
+                categoryDao.update(remote.copy(id = existing.id))
+            } else {
+                categoryDao.insert(remote.copy(id = 0))
+            }
+        }
+    }
+
+    // ======================= PULL: BUDGET SETTINGS =======================
+
+    private suspend fun pullBudgetSettings(userId: String) {
+        val docs = restClient.listDocuments("users/$userId/budget_settings")
+        Log.d(TAG, "Fetched ${docs.size} budget settings from Firestore.")
+        for (doc in docs) {
+            val remote = doc.toBudgetSettingEntity() ?: continue
+            budgetSettingDao.insert(remote)
+        }
+    }
+
+    // ======================= PULL: CATEGORY BUDGETS =======================
+
+    private suspend fun pullCategoryBudgets(userId: String) {
+        val docs = restClient.listDocuments("users/$userId/category_budgets")
+        Log.d(TAG, "Fetched ${docs.size} category budgets from Firestore.")
+        for (doc in docs) {
+            val remote = doc.toCategoryBudgetEntity() ?: continue
+            categoryBudgetDao.insert(remote)
+        }
+    }
+
+    // ======================= PUSH: PROFILE =======================
+
+    fun pushProfile(profile: ProfileEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+        }
+    }
+
+    fun deleteProfile(profile: ProfileEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            restClient.delete("users/$userId/profiles/${profile.id}")
+        }
+    }
+
+    // ======================= PUSH: CATEGORY =======================
+
+    fun pushCategory(category: CategoryEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            val docId = "${category.profileId}_${category.id}"
+            restClient.put("users/$userId/categories/$docId", category.toFirestoreJson())
+        }
+    }
+
+    fun deleteCategory(category: CategoryEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            val docId = "${category.profileId}_${category.id}"
+            restClient.delete("users/$userId/categories/$docId")
+        }
+    }
+
+    // ======================= PUSH: BUDGET SETTING =======================
+
+    fun pushBudgetSetting(budgetSetting: BudgetSettingEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            restClient.put("users/$userId/budget_settings/${budgetSetting.profileId}", budgetSetting.toFirestoreJson())
+        }
+    }
+
+    fun deleteBudgetSetting(profileId: Long) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            restClient.delete("users/$userId/budget_settings/$profileId")
+        }
+    }
+
+    // ======================= PUSH: CATEGORY BUDGET =======================
+
+    fun pushCategoryBudget(budget: CategoryBudgetEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            val docId = "${budget.profileId}_${budget.categoryId}"
+            restClient.put("users/$userId/category_budgets/$docId", budget.toFirestoreJson())
+        }
+    }
+
+    fun deleteCategoryBudget(budget: CategoryBudgetEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            val docId = "${budget.profileId}_${budget.categoryId}"
+            restClient.delete("users/$userId/category_budgets/$docId")
         }
     }
 }

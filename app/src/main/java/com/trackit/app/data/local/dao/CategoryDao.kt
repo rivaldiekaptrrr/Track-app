@@ -30,4 +30,7 @@ interface CategoryDao {
 
     @Query("SELECT COUNT(*) FROM categories WHERE profileId = :profileId")
     suspend fun getCountForProfile(profileId: Long): Int
+
+    @Query("SELECT * FROM categories WHERE name = :name AND profileId = :profileId LIMIT 1")
+    suspend fun getByNameAndProfile(name: String, profileId: Long): CategoryEntity?
 }

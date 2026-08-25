@@ -452,4 +452,101 @@ object FirestoreMapper {
             )
         } catch (e: Exception) { null }
     }
+
+    // ======================= CATEGORY =======================
+
+    fun CategoryEntity.toFirestoreJson(): String = fields {
+        putLng("id", id)
+        putStr("name", name)
+        putStr("iconName", iconName)
+        putStr("colorHex", colorHex)
+        putStr("customKeywords", customKeywords)
+        putStr("type", type)
+        putBool("isHidden", isHidden)
+        putLng("profileId", profileId)
+    }
+
+    fun JSONObject.toCategoryEntity(): CategoryEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            CategoryEntity(
+                id = f.longOrNull("id") ?: 0L,
+                name = f.strOrNull("name") ?: return null,
+                iconName = f.strOrNull("iconName") ?: "category",
+                colorHex = f.strOrNull("colorHex") ?: "#1565C0",
+                customKeywords = f.strOrNull("customKeywords") ?: "",
+                type = f.strOrNull("type") ?: "EXPENSE",
+                isHidden = f.boolOrFalse("isHidden"),
+                profileId = f.longOrNull("profileId") ?: 1L
+            )
+        } catch (e: Exception) { null }
+    }
+
+    // ======================= PROFILE =======================
+
+    fun ProfileEntity.toFirestoreJson(): String = fields {
+        putLng("id", id)
+        putStr("name", name)
+        putStr("iconName", iconName)
+        putStr("colorHex", colorHex)
+        putLng("createdAt", createdAt)
+        putStr("mode", mode)
+        putStr("weddingProfileId", weddingProfileId)
+    }
+
+    fun JSONObject.toProfileEntity(): ProfileEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            ProfileEntity(
+                id = f.longOrNull("id") ?: 0L,
+                name = f.strOrNull("name") ?: return null,
+                iconName = f.strOrNull("iconName") ?: "person",
+                colorHex = f.strOrNull("colorHex") ?: "#1565C0",
+                createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis(),
+                mode = f.strOrNull("mode") ?: "EXPENSE",
+                weddingProfileId = f.strOrNull("weddingProfileId")
+            )
+        } catch (e: Exception) { null }
+    }
+
+    // ======================= BUDGET SETTING =======================
+
+    fun BudgetSettingEntity.toFirestoreJson(): String = fields {
+        putLng("profileId", profileId)
+        putDbl("monthlyBudget", monthlyBudget)
+    }
+
+    fun JSONObject.toBudgetSettingEntity(): BudgetSettingEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            BudgetSettingEntity(
+                profileId = f.longOrNull("profileId") ?: return null,
+                monthlyBudget = f.dblOrZero("monthlyBudget")
+            )
+        } catch (e: Exception) { null }
+    }
+
+    // ======================= CATEGORY BUDGET =======================
+
+    fun CategoryBudgetEntity.toFirestoreJson(): String = fields {
+        putLng("categoryId", categoryId)
+        putDbl("amount", amount)
+        putDbl("alertPercentage", alertPercentage.toDouble())
+        putStr("lastWarningMonth", lastWarningMonth)
+        putLng("profileId", profileId)
+    }
+
+    fun JSONObject.toCategoryBudgetEntity(): CategoryBudgetEntity? {
+        return try {
+            val f = getJSONObject("fields")
+            CategoryBudgetEntity(
+                categoryId = f.longOrNull("categoryId") ?: return null,
+                amount = f.dblOrZero("amount"),
+                alertPercentage = f.dblOrZero("alertPercentage").toFloat().coerceIn(0f, 1f),
+                lastWarningMonth = f.strOrNull("lastWarningMonth") ?: "",
+                profileId = f.longOrNull("profileId") ?: 1L
+            )
+        } catch (e: Exception) { null }
+    }
 }
+
