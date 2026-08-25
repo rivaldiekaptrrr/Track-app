@@ -33,7 +33,7 @@ class WeddingExpenseRepository @Inject constructor(
 
     fun getTermsByExpense(expenseId: String): Flow<List<WeddingPaymentTermEntity>> = termDao.getByExpense(expenseId)
     fun getAllUnpaidTerms(): Flow<List<WeddingPaymentTermEntity>> = termDao.getAllUnpaid()
-    suspend fun insertTerm(term: WeddingPaymentTermEntity) = termDao.insert(term)
-    suspend fun updateTerm(term: WeddingPaymentTermEntity) = termDao.update(term)
-    suspend fun deleteTerm(term: WeddingPaymentTermEntity) = termDao.delete(term)
+    suspend fun insertTerm(term: WeddingPaymentTermEntity) { termDao.insert(term); syncManager.pushWeddingPaymentTerm(term) }
+    suspend fun updateTerm(term: WeddingPaymentTermEntity) { termDao.update(term); syncManager.pushWeddingPaymentTerm(term) }
+    suspend fun deleteTerm(term: WeddingPaymentTermEntity) { termDao.delete(term); syncManager.deleteWeddingPaymentTerm(term) }
 }

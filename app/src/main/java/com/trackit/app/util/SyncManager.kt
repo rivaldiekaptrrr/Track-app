@@ -581,6 +581,22 @@ class SyncManager @Inject constructor(
         }
     }
 
+    fun pushWeddingPaymentTerm(term: WeddingPaymentTermEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            restClient.put("users/$userId/wedding_payment_terms/${term.termId}", term.toFirestoreJson())
+        }
+    }
+
+    fun deleteWeddingPaymentTerm(term: WeddingPaymentTermEntity) {
+        syncScope.launch {
+            if (!syncPreferences.isOnlineMode.first()) return@launch
+            val userId = authRepository.currentUser?.uid ?: return@launch
+            restClient.delete("users/$userId/wedding_payment_terms/${term.termId}")
+        }
+    }
+
     // ======================= PUSH: PROFILE =======================
 
     fun pushProfile(profile: ProfileEntity) {
