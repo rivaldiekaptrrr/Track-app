@@ -189,6 +189,7 @@ class SettingsViewModel @Inject constructor(
             authRepository.signOut()
             syncPreferences.setOnlineMode(false)
             syncPreferences.setUserId(null)
+            preferencesManager.setHasSkippedLogin(false)
             _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
         }
     }

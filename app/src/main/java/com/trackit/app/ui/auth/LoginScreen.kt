@@ -309,7 +309,10 @@ fun LoginScreen(
 
             // Skip button
             OutlinedButton(
-                onClick = onSkip,
+                onClick = {
+                    viewModel.skipLogin()
+                    onSkip()
+                },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),

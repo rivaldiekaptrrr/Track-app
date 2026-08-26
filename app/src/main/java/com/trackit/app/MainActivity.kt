@@ -168,8 +168,9 @@ class MainActivity : FragmentActivity() {
                     
                     val bypassBiometric by preferencesManager.bypassBiometricOnce.collectAsState(initial = false)
                     val isBiometricEnabled by preferencesManager.isBiometricEnabled.collectAsState(initial = null)
+                    val hasSkippedLogin by preferencesManager.hasSkippedLogin.collectAsState(initial = null)
 
-                    if (isBiometricEnabled == null) {
+                    if (isBiometricEnabled == null || hasSkippedLogin == null) {
                         // Wait for preferences to load from DataStore
                         return@Surface
                     }
@@ -189,7 +190,13 @@ class MainActivity : FragmentActivity() {
                     if (isAuthenticated) {
                         val startVoice = intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)
                         val navController = rememberNavController()
-                        val startDest = if (startVoice) Screen.AddTransaction.createRoute(startVoice = true) else Screen.Dashboard.route
+                        
+                        val isUserLoggedIn = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null
+                        val startDest = when {
+                            !isUserLoggedIn && hasSkippedLogin == false -> Screen.Login.route
+                            startVoice -> Screen.AddTransaction.createRoute(startVoice = true)
+                            else -> Screen.Dashboard.route
+                        }
                         
                         TrackItNavHost(
                             navController = navController,

@@ -6,6 +6,7 @@ import com.trackit.app.data.repository.AuthRepository
 import com.trackit.app.data.repository.AuthResult
 import com.trackit.app.util.SyncPreferences
 import com.trackit.app.util.SyncManager
+import com.trackit.app.data.local.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ data class AuthUiState(
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val syncPreferences: SyncPreferences,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -43,6 +45,7 @@ class AuthViewModel @Inject constructor(
                     // Login on a second device: pull remote data, do NOT push local data
                     // (isNewRegistration = false) to avoid overwriting the first device's cloud data.
                     syncManager.performInitialSync(uid, isNewRegistration = false)
+                    preferencesManager.setHasSkippedLogin(true)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -63,6 +66,7 @@ class AuthViewModel @Inject constructor(
                     syncManager.startSync()
                     // New account: push all existing local data up to Firestore for the first time.
                     syncManager.performInitialSync(uid, isNewRegistration = true)
+                    preferencesManager.setHasSkippedLogin(true)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -85,6 +89,7 @@ class AuthViewModel @Inject constructor(
                     // Treat as existing account (isNewRegistration = false) to avoid
                     // overwriting remote data. The user's data will be pulled via startSync().
                     syncManager.performInitialSync(uid, isNewRegistration = false)
+                    preferencesManager.setHasSkippedLogin(true)
                     _uiState.value = AuthUiState(isSuccess = true)
                 }
                 is AuthResult.Error -> {
@@ -99,7 +104,14 @@ class AuthViewModel @Inject constructor(
             authRepository.signOut()
             syncPreferences.setOnlineMode(false)
             syncPreferences.setUserId(null)
+            preferencesManager.setHasSkippedLogin(false)
             syncManager.stopSync()
+        }
+    }
+
+    fun skipLogin() {
+        viewModelScope.launch {
+            preferencesManager.setHasSkippedLogin(true)
         }
     }
 
