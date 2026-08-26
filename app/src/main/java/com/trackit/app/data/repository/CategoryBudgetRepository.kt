@@ -16,11 +16,11 @@ class CategoryBudgetRepository @Inject constructor(
         return categoryBudgetDao.getAllBudgets(profileId)
     }
 
-    suspend fun getBudgetByCategorySync(categoryId: Long, profileId: Long): CategoryBudgetEntity? {
+    suspend fun getBudgetByCategorySync(categoryId: String, profileId: Long): CategoryBudgetEntity? {
         return categoryBudgetDao.getBudgetByCategorySync(categoryId, profileId)
     }
 
-    fun getBudgetByCategory(categoryId: Long, profileId: Long): Flow<CategoryBudgetEntity?> {
+    fun getBudgetByCategory(categoryId: String, profileId: Long): Flow<CategoryBudgetEntity?> {
         return categoryBudgetDao.getBudgetByCategory(categoryId, profileId)
     }
 
@@ -34,7 +34,7 @@ class CategoryBudgetRepository @Inject constructor(
         syncManager.deleteCategoryBudget(budget)
     }
 
-    suspend fun updateLastWarningMonth(categoryId: Long, profileId: Long, month: String) {
+    suspend fun updateLastWarningMonth(categoryId: String, profileId: Long, month: String) {
         categoryBudgetDao.updateLastWarningMonth(categoryId, profileId, month)
     }
 }

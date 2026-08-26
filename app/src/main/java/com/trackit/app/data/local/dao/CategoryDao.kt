@@ -23,7 +23,7 @@ interface CategoryDao {
     fun getAllCategories(profileId: Long): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM categories WHERE id = :id")
-    suspend fun getById(id: Long): CategoryEntity?
+    suspend fun getById(id: String): CategoryEntity?
 
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun getCount(): Int

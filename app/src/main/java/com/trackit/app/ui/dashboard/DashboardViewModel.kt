@@ -160,7 +160,7 @@ class DashboardViewModel @Inject constructor(
                now.get(Calendar.MONTH) == sel.get(Calendar.MONTH)
     }
 
-    fun deleteTransaction(transactionId: Long) {
+    fun deleteTransaction(transactionId: String) {
         viewModelScope.launch {
             transactionRepository.deleteById(transactionId)
         }

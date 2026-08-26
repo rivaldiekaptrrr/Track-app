@@ -21,11 +21,11 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["categoryId"])]
 )
 data class TransactionEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    val id: String = java.util.UUID.randomUUID().toString(),
     val amount: Double,
     val description: String,
-    val categoryId: Long?,
+    val categoryId: String?,
     val date: Long, // epoch millis
     val createdAt: Long = System.currentTimeMillis(),
     val isRecurring: Boolean = false,

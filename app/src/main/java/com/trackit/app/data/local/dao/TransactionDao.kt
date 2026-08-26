@@ -17,19 +17,19 @@ interface TransactionDao {
     suspend fun delete(transaction: TransactionEntity)
 
     @Query("DELETE FROM transactions WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    suspend fun deleteById(id: String)
 
     @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getById(id: Long): TransactionEntity?
+    suspend fun getById(id: String): TransactionEntity?
 
     @Query("SELECT * FROM transactions WHERE createdAt = :createdAt")
     suspend fun getByCreatedAt(createdAt: Long): TransactionEntity?
 
     @Query("UPDATE transactions SET categoryId = :newCategoryId WHERE categoryId = :oldCategoryId")
-    suspend fun updateTransactionsCategory(oldCategoryId: Long, newCategoryId: Long)
+    suspend fun updateTransactionsCategory(oldCategoryId: String, newCategoryId: String)
 
     @Query("SELECT COUNT(*) FROM transactions WHERE categoryId = :categoryId")
-    suspend fun countTransactionsByCategory(categoryId: Long): Int
+    suspend fun countTransactionsByCategory(categoryId: String): Int
 
     @Query("SELECT * FROM transactions WHERE profileId = :profileId ORDER BY date DESC, createdAt DESC")
     fun getAllTransactions(profileId: Long): Flow<List<TransactionEntity>>
@@ -101,7 +101,7 @@ interface TransactionDao {
         SELECT COALESCE(SUM(amount), 0.0) FROM transactions 
         WHERE categoryId = :categoryId AND date >= :startOfMonth AND date < :endOfMonth AND type = 'EXPENSE' AND profileId = :profileId
     """)
-    suspend fun getTotalSpentByCategoryInMonthSync(categoryId: Long, startOfMonth: Long, endOfMonth: Long, profileId: Long): Double
+    suspend fun getTotalSpentByCategoryInMonthSync(categoryId: String, startOfMonth: Long, endOfMonth: Long, profileId: Long): Double
 
     @Query("""
         SELECT * FROM transactions WHERE isRecurring = 1 AND profileId = :profileId
@@ -124,6 +124,6 @@ interface TransactionDao {
 }
 
 data class CategorySpending(
-    val categoryId: Long?,
+    val categoryId: String?,
     val total: Double
 )

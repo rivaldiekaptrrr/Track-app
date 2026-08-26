@@ -69,7 +69,8 @@ class CategoryManagementViewModel @Inject constructor(
 
     fun saveCategory(category: CategoryEntity) {
         viewModelScope.launch {
-            if (category.id == 0L) {
+            val exists = _categories.value.any { it.id == category.id }
+            if (!exists) {
                 categoryRepository.insert(category)
             } else {
                 categoryRepository.update(category)
@@ -260,6 +261,7 @@ fun CustomKeywordScreen(
         if (showDialog && selectedCategory != null) {
             CategoryFormDialog(
                 category = selectedCategory!!,
+                isNew = categories.none { it.id == selectedCategory!!.id },
                 onDismiss = { showDialog = false },
                 onSave = { updatedCategory ->
                     viewModel.saveCategory(updatedCategory)
@@ -315,6 +317,7 @@ fun CustomKeywordScreen(
 @Composable
 fun CategoryFormDialog(
     category: CategoryEntity,
+    isNew: Boolean,
     onDismiss: () -> Unit,
     onSave: (CategoryEntity) -> Unit,
     onDelete: (CategoryEntity) -> Unit
@@ -328,7 +331,7 @@ fun CategoryFormDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (category.id == 0L) "Tambah Kategori" else "Edit Kategori") },
+        title = { Text(if (isNew) "Tambah Kategori" else "Edit Kategori") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 // Name
@@ -441,7 +444,7 @@ fun CategoryFormDialog(
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (category.id != 0L) {
+                if (!isNew) {
                     TextButton(
                         onClick = { onDelete(category) },
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)

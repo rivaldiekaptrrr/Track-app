@@ -31,7 +31,7 @@ class TransactionRepository @Inject constructor(
     suspend fun getTotalSpentInMonthSync(startOfMonth: Long, endOfMonth: Long, profileId: Long): Double =
         transactionDao.getTotalSpentInMonthSync(startOfMonth, endOfMonth, profileId)
 
-    suspend fun getTotalSpentByCategoryInMonthSync(categoryId: Long, startOfMonth: Long, endOfMonth: Long, profileId: Long): Double =
+    suspend fun getTotalSpentByCategoryInMonthSync(categoryId: String, startOfMonth: Long, endOfMonth: Long, profileId: Long): Double =
         transactionDao.getTotalSpentByCategoryInMonthSync(categoryId, startOfMonth, endOfMonth, profileId)
 
     fun getSpendingByCategory(startOfMonth: Long, endOfMonth: Long, profileId: Long): Flow<List<CategorySpending>> =
@@ -52,10 +52,10 @@ class TransactionRepository @Inject constructor(
     suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity> =
         transactionDao.getRecurringTransactions(profileId)
 
-    suspend fun insert(transaction: TransactionEntity): Long {
-        val id = transactionDao.insert(transaction)
-        syncManager.pushTransaction(transaction.copy(id = id))
-        return id
+    suspend fun insert(transaction: TransactionEntity): String {
+        transactionDao.insert(transaction)
+        syncManager.pushTransaction(transaction)
+        return transaction.id
     }
 
     suspend fun update(transaction: TransactionEntity) {
@@ -68,7 +68,7 @@ class TransactionRepository @Inject constructor(
         syncManager.deleteTransaction(transaction)
     }
 
-    suspend fun deleteById(id: Long) {
+    suspend fun deleteById(id: String) {
         val transaction = transactionDao.getById(id)
         transactionDao.deleteById(id)
         if (transaction != null) {
@@ -76,13 +76,13 @@ class TransactionRepository @Inject constructor(
         }
     }
 
-    suspend fun getById(id: Long): TransactionEntity? =
+    suspend fun getById(id: String): TransactionEntity? =
         transactionDao.getById(id)
 
-    suspend fun updateTransactionsCategory(oldCategoryId: Long, newCategoryId: Long) =
+    suspend fun updateTransactionsCategory(oldCategoryId: String, newCategoryId: String) =
         transactionDao.updateTransactionsCategory(oldCategoryId, newCategoryId)
 
-    suspend fun countTransactionsByCategory(categoryId: Long): Int =
+    suspend fun countTransactionsByCategory(categoryId: String): Int =
         transactionDao.countTransactionsByCategory(categoryId)
 
     suspend fun countExpensesForDaySync(startOfDay: Long, endOfDay: Long, profileId: Long): Int =

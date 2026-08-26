@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
 )
 data class CategoryBudgetEntity(
     @PrimaryKey
-    val categoryId: Long,
+    val categoryId: String,
     val amount: Double,
     @ColumnInfo(defaultValue = "0.9")
     val alertPercentage: Float = 0.9f,

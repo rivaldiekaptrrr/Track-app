@@ -84,7 +84,7 @@ class CategoryBudgetViewModel @Inject constructor(
         }
     }
 
-    fun startEditing(categoryId: Long) {
+    fun startEditing(categoryId: String) {
         _uiState.update { state ->
             state.copy(items = state.items.map { item ->
                 if (item.category.id == categoryId) {
@@ -98,7 +98,7 @@ class CategoryBudgetViewModel @Inject constructor(
         }
     }
 
-    fun cancelEditing(categoryId: Long) {
+    fun cancelEditing(categoryId: String) {
         _uiState.update { state ->
             state.copy(items = state.items.map { item ->
                 if (item.category.id == categoryId) item.copy(isEditing = false) else item
@@ -106,7 +106,7 @@ class CategoryBudgetViewModel @Inject constructor(
         }
     }
 
-    fun updateInputAmount(categoryId: Long, amount: String) {
+    fun updateInputAmount(categoryId: String, amount: String) {
         _uiState.update { state ->
             state.copy(items = state.items.map { item ->
                 if (item.category.id == categoryId) {
@@ -116,7 +116,7 @@ class CategoryBudgetViewModel @Inject constructor(
         }
     }
 
-    fun updateInputAlertPct(categoryId: Long, pct: Float) {
+    fun updateInputAlertPct(categoryId: String, pct: Float) {
         _uiState.update { state ->
             state.copy(items = state.items.map { item ->
                 if (item.category.id == categoryId) item.copy(inputAlertPct = pct) else item
@@ -124,7 +124,7 @@ class CategoryBudgetViewModel @Inject constructor(
         }
     }
 
-    fun saveBudget(categoryId: Long) {
+    fun saveBudget(categoryId: String) {
         viewModelScope.launch {
             val activeProfileId = preferencesManager.activeProfileId.first()
             val item = _uiState.value.items.find { it.category.id == categoryId } ?: return@launch
@@ -151,7 +151,7 @@ class CategoryBudgetViewModel @Inject constructor(
         }
     }
 
-    fun deleteBudget(categoryId: Long) {
+    fun deleteBudget(categoryId: String) {
         viewModelScope.launch {
             val activeProfileId = preferencesManager.activeProfileId.first()
             val budget = categoryBudgetRepository.getBudgetByCategorySync(categoryId, activeProfileId)

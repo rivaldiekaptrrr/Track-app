@@ -15,16 +15,16 @@ class CategoryRepository @Inject constructor(
     fun getAllCategories(profileId: Long): Flow<List<CategoryEntity>> =
         categoryDao.getAllCategories(profileId)
 
-    suspend fun getById(id: Long): CategoryEntity? =
+    suspend fun getById(id: String): CategoryEntity? =
         categoryDao.getById(id)
 
-    suspend fun getCategoryByIdSync(id: Long): CategoryEntity? =
+    suspend fun getCategoryByIdSync(id: String): CategoryEntity? =
         categoryDao.getById(id)
 
-    suspend fun insert(category: CategoryEntity): Long {
-        val id = categoryDao.insert(category)
-        syncManager.pushCategory(category.copy(id = id))
-        return id
+    suspend fun insert(category: CategoryEntity): String {
+        categoryDao.insert(category)
+        syncManager.pushCategory(category)
+        return category.id
     }
 
     suspend fun insertAll(categories: List<CategoryEntity>) {

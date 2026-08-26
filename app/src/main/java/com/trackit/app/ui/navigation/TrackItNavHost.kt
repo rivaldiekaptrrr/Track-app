@@ -130,7 +130,7 @@ fun TrackItNavHost(
             composable(
                 route = Screen.EditTransaction.route,
                 arguments = listOf(
-                    navArgument("transactionId") { type = NavType.LongType }
+                    navArgument("transactionId") { type = NavType.StringType }
                 )
             ) {
                 AddEditTransactionScreen(

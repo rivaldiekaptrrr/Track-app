@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
         WeddingEventEntity::class,
         WeddingRundownItemEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -371,6 +371,80 @@ abstract class TrackItDatabase : RoomDatabase() {
         val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE wedding_profiles ADD COLUMN profileId INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("PRAGMA foreign_keys=OFF")
+
+                // 1. Migrate categories: id (Long -> String/TEXT)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `categories_new` (
+                        `id` TEXT NOT NULL, 
+                        `name` TEXT NOT NULL, 
+                        `iconName` TEXT NOT NULL, 
+                        `colorHex` TEXT NOT NULL, 
+                        `customKeywords` TEXT NOT NULL DEFAULT '', 
+                        `type` TEXT NOT NULL DEFAULT 'EXPENSE', 
+                        `isHidden` INTEGER NOT NULL DEFAULT 0, 
+                        `profileId` INTEGER NOT NULL DEFAULT 1, 
+                        PRIMARY KEY(`id`)
+                    )
+                """)
+                db.execSQL("""
+                    INSERT INTO `categories_new` (`id`, `name`, `iconName`, `colorHex`, `customKeywords`, `type`, `isHidden`, `profileId`)
+                    SELECT CAST(`id` AS TEXT), `name`, `iconName`, `colorHex`, `customKeywords`, `type`, `isHidden`, `profileId` FROM `categories`
+                """)
+                db.execSQL("DROP TABLE `categories`")
+                db.execSQL("ALTER TABLE `categories_new` RENAME TO `categories`")
+
+                // 2. Migrate category_budgets: categoryId (Long -> String/TEXT)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `category_budgets_new` (
+                        `categoryId` TEXT NOT NULL, 
+                        `amount` REAL NOT NULL, 
+                        `alertPercentage` REAL NOT NULL DEFAULT 0.9, 
+                        `lastWarningMonth` TEXT NOT NULL DEFAULT '', 
+                        `profileId` INTEGER NOT NULL DEFAULT 1, 
+                        PRIMARY KEY(`categoryId`),
+                        FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("""
+                    INSERT INTO `category_budgets_new` (`categoryId`, `amount`, `alertPercentage`, `lastWarningMonth`, `profileId`)
+                    SELECT CAST(`categoryId` AS TEXT), `amount`, `alertPercentage`, `lastWarningMonth`, `profileId` FROM `category_budgets`
+                """)
+                db.execSQL("DROP TABLE `category_budgets`")
+                db.execSQL("ALTER TABLE `category_budgets_new` RENAME TO `category_budgets`")
+
+                // 3. Migrate transactions: id (Long -> String/TEXT), categoryId (Long -> String/TEXT)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `transactions_new` (
+                        `id` TEXT NOT NULL, 
+                        `amount` REAL NOT NULL, 
+                        `description` TEXT NOT NULL, 
+                        `categoryId` TEXT, 
+                        `date` INTEGER NOT NULL, 
+                        `createdAt` INTEGER NOT NULL, 
+                        `isRecurring` INTEGER NOT NULL DEFAULT 0, 
+                        `recurringType` TEXT, 
+                        `recurringDayOfMonth` INTEGER, 
+                        `type` TEXT NOT NULL DEFAULT 'EXPENSE', 
+                        `profileId` INTEGER NOT NULL DEFAULT 1, 
+                        PRIMARY KEY(`id`),
+                        FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON DELETE SET NULL
+                    )
+                """)
+                db.execSQL("""
+                    INSERT INTO `transactions_new` (`id`, `amount`, `description`, `categoryId`, `date`, `createdAt`, `isRecurring`, `recurringType`, `recurringDayOfMonth`, `type`, `profileId`)
+                    SELECT CAST(`id` AS TEXT), `amount`, `description`, CAST(`categoryId` AS TEXT), `date`, `createdAt`, `isRecurring`, `recurringType`, `recurringDayOfMonth`, `type`, `profileId` FROM `transactions`
+                """)
+                db.execSQL("DROP TABLE `transactions`")
+                db.execSQL("ALTER TABLE `transactions_new` RENAME TO `transactions`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_categoryId` ON `transactions` (`categoryId`)")
+
+                db.execSQL("PRAGMA foreign_keys=ON")
             }
         }
 

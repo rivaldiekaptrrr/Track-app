@@ -82,10 +82,10 @@ object FirestoreMapper {
     // ======================= TRANSACTION =======================
 
     fun TransactionEntity.toFirestoreJson(): String = fields {
-        putLng("id", id)
+        putStr("id", id)
         putDbl("amount", amount)
         putStr("description", description)
-        putLng("categoryId", categoryId)
+        putStr("categoryId", categoryId)
         putLng("date", date)
         putLng("createdAt", createdAt)
         putBool("isRecurring", isRecurring)
@@ -99,10 +99,10 @@ object FirestoreMapper {
         return try {
             val f = getJSONObject("fields")
             TransactionEntity(
-                id = 0,
+                id = f.strOrNull("id") ?: java.util.UUID.randomUUID().toString(),
                 amount = f.dblOrZero("amount"),
                 description = f.strOrNull("description") ?: "",
-                categoryId = f.longOrNull("categoryId"),
+                categoryId = f.strOrNull("categoryId"),
                 date = f.longOrNull("date") ?: System.currentTimeMillis(),
                 createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis(),
                 isRecurring = f.boolOrFalse("isRecurring"),
@@ -460,7 +460,7 @@ object FirestoreMapper {
     // ======================= CATEGORY =======================
 
     fun CategoryEntity.toFirestoreJson(): String = fields {
-        putLng("id", id)
+        putStr("id", id)
         putStr("name", name)
         putStr("iconName", iconName)
         putStr("colorHex", colorHex)
@@ -474,7 +474,7 @@ object FirestoreMapper {
         return try {
             val f = getJSONObject("fields")
             CategoryEntity(
-                id = f.longOrNull("id") ?: 0L,
+                id = f.strOrNull("id") ?: java.util.UUID.randomUUID().toString(),
                 name = f.strOrNull("name") ?: return null,
                 iconName = f.strOrNull("iconName") ?: "category",
                 colorHex = f.strOrNull("colorHex") ?: "#1565C0",
@@ -533,7 +533,7 @@ object FirestoreMapper {
     // ======================= CATEGORY BUDGET =======================
 
     fun CategoryBudgetEntity.toFirestoreJson(): String = fields {
-        putLng("categoryId", categoryId)
+        putStr("categoryId", categoryId)
         putDbl("amount", amount)
         putDbl("alertPercentage", alertPercentage.toDouble())
         putStr("lastWarningMonth", lastWarningMonth)
@@ -544,7 +544,7 @@ object FirestoreMapper {
         return try {
             val f = getJSONObject("fields")
             CategoryBudgetEntity(
-                categoryId = f.longOrNull("categoryId") ?: return null,
+                categoryId = f.strOrNull("categoryId") ?: return null,
                 amount = f.dblOrZero("amount"),
                 alertPercentage = f.dblOrZero("alertPercentage").toFloat().coerceIn(0f, 1f),
                 lastWarningMonth = f.strOrNull("lastWarningMonth") ?: "",

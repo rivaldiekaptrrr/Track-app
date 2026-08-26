@@ -19,10 +19,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TransactionFormState(
-    val id: Long? = null,
+    val id: String? = null,
     val amount: String = "",
     val description: String = "",
-    val selectedCategoryId: Long? = null,
+    val selectedCategoryId: String? = null,
     val date: Long = DateUtils.todayMillis(),
     val isRecurring: Boolean = false,
     val recurringType: String? = null,
@@ -48,7 +48,7 @@ class TransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val transactionId: Long? = savedStateHandle.get<Long>("transactionId")
+    private val transactionId: String? = savedStateHandle.get<String>("transactionId")?.takeIf { it != "null" && it.isNotBlank() }
 
     private val _formState = MutableStateFlow(TransactionFormState())
     val formState: StateFlow<TransactionFormState> = _formState.asStateFlow()
@@ -69,7 +69,7 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
-    private fun loadTransaction(id: Long) {
+    private fun loadTransaction(id: String) {
         viewModelScope.launch {
             val transaction = transactionRepository.getById(id)
             transaction?.let { tx ->
@@ -211,7 +211,7 @@ class TransactionViewModel @Inject constructor(
         _formState.update { it.copy(description = description) }
     }
 
-    fun updateCategory(categoryId: Long) {
+    fun updateCategory(categoryId: String) {
         val category = _formState.value.categories.find { it.id == categoryId }
         val type = category?.type ?: _formState.value.type
         _formState.update { it.copy(selectedCategoryId = categoryId, type = type) }
@@ -348,7 +348,7 @@ class TransactionViewModel @Inject constructor(
 
             try {
                 val transaction = TransactionEntity(
-                    id = state.id ?: 0,
+                    id = state.id ?: java.util.UUID.randomUUID().toString(),
                     amount = amount,
                     description = state.description,
                     categoryId = state.selectedCategoryId,

@@ -44,7 +44,7 @@ class CategoryBudgetNotifier @Inject constructor(
      * @param categoryId ID kategori yang baru saja digunakan.
      * @param profileId  ID profil aktif.
      */
-    suspend fun checkAfterTransaction(categoryId: Long, profileId: Long) {
+    suspend fun checkAfterTransaction(categoryId: String, profileId: Long) {
         // Hanya cek jika ada data budget untuk kategori ini
         val budget = categoryBudgetRepository.getBudgetByCategorySync(categoryId, profileId) ?: return
         if (budget.amount <= 0.0) return
@@ -65,7 +65,7 @@ class CategoryBudgetNotifier @Inject constructor(
             // Over budget — selalu tampilkan (tidak dibatasi per bulan)
             percentage >= 1.0 -> {
                 showNotification(
-                    notifId = NOTIFICATION_ID_BASE + categoryId.toInt(),
+                    notifId = NOTIFICATION_ID_BASE + categoryId.hashCode(),
                     title = "🚨 Budget ${category.name} Habis!",
                     body = "Pengeluaran ${category.name} bulan ini sudah mencapai " +
                             "${CurrencyUtils.formatRupiah(totalSpent)} dan melebihi budget " +
@@ -75,7 +75,7 @@ class CategoryBudgetNotifier @Inject constructor(
             // Hampir habis (mencapai alert threshold) — hanya 1x per bulan
             percentage >= budget.alertPercentage && budget.lastWarningMonth != currentMonth -> {
                 showNotification(
-                    notifId = NOTIFICATION_ID_BASE + categoryId.toInt(),
+                    notifId = NOTIFICATION_ID_BASE + categoryId.hashCode(),
                     title = "⚠️ Budget ${category.name} Hampir Habis",
                     body = "Pengeluaran ${category.name} sudah ${(percentage * 100).toInt()}% " +
                             "(${CurrencyUtils.formatRupiah(totalSpent)} dari " +

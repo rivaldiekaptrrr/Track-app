@@ -46,13 +46,13 @@ import androidx.core.content.ContextCompat
 @Composable
 fun DashboardScreen(
     onAddTransaction: () -> Unit,
-    onEditTransaction: (Long) -> Unit,
+    onEditTransaction: (String) -> Unit,
     onNavigateToProfiles: () -> Unit = {},
     onAddTransactionWithVoice: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<String?>(null) }
     val haptic = LocalHapticFeedback.current
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
 

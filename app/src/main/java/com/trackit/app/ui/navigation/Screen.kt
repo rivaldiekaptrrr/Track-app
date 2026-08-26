@@ -9,7 +9,7 @@ sealed class Screen(val route: String) {
         }
     }
     data object EditTransaction : Screen("edit_transaction/{transactionId}") {
-        fun createRoute(transactionId: Long): String {
+        fun createRoute(transactionId: String): String {
             return "edit_transaction/$transactionId"
         }
     }

@@ -14,13 +14,13 @@ interface CategoryBudgetDao {
     fun getAllBudgets(profileId: Long): Flow<List<CategoryBudgetEntity>>
 
     @Query("SELECT * FROM category_budgets WHERE categoryId = :categoryId AND profileId = :profileId LIMIT 1")
-    suspend fun getBudgetByCategorySync(categoryId: Long, profileId: Long): CategoryBudgetEntity?
+    suspend fun getBudgetByCategorySync(categoryId: String, profileId: Long): CategoryBudgetEntity?
 
     @Query("SELECT * FROM category_budgets WHERE categoryId = :categoryId AND profileId = :profileId LIMIT 1")
-    fun getBudgetByCategory(categoryId: Long, profileId: Long): Flow<CategoryBudgetEntity?>
+    fun getBudgetByCategory(categoryId: String, profileId: Long): Flow<CategoryBudgetEntity?>
 
     @Query("UPDATE category_budgets SET lastWarningMonth = :month WHERE categoryId = :categoryId AND profileId = :profileId")
-    suspend fun updateLastWarningMonth(categoryId: Long, profileId: Long, month: String)
+    suspend fun updateLastWarningMonth(categoryId: String, profileId: Long, month: String)
 
     @Delete
     suspend fun delete(budget: CategoryBudgetEntity)

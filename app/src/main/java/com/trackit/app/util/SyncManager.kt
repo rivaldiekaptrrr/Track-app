@@ -152,7 +152,7 @@ class SyncManager @Inject constructor(
             if (existing != null) {
                 transactionDao.update(remote.copy(id = existing.id))
             } else {
-                transactionDao.insert(remote.copy(id = 0))
+                transactionDao.insert(remote)
             }
         }
     }
@@ -555,7 +555,7 @@ class SyncManager @Inject constructor(
             if (existing != null) {
                 categoryDao.update(remote.copy(id = existing.id))
             } else {
-                categoryDao.insert(remote.copy(id = 0))
+                categoryDao.insert(remote)
             }
         }
     }

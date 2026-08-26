@@ -25,7 +25,7 @@ object PdfExporter {
     fun exportReport(
         context: Context,
         transactions: List<TransactionEntity>,
-        categories: Map<Long, CategoryEntity>,
+        categories: Map<String, CategoryEntity>,
         title: String,
         startDate: Long,
         endDate: Long,
@@ -247,7 +247,7 @@ object PdfExporter {
     fun exportMonthlyReport(
         context: Context,
         transactions: List<TransactionEntity>,
-        categories: Map<Long, CategoryEntity>,
+        categories: Map<String, CategoryEntity>,
         monthYear: String,
         totalSpent: Double
     ) {

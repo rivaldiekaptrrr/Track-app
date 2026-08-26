@@ -23,7 +23,7 @@ object CsvExporter {
     fun exportReport(
         context: Context,
         transactions: List<TransactionEntity>,
-        categories: Map<Long, CategoryEntity>,
+        categories: Map<String, CategoryEntity>,
         title: String,
         startDate: Long,
         endDate: Long,
@@ -144,7 +144,7 @@ object CsvExporter {
     fun exportMonthlyReport(
         context: Context,
         transactions: List<TransactionEntity>,
-        categories: Map<Long, CategoryEntity>,
+        categories: Map<String, CategoryEntity>,
         monthYear: String
     ) {
         val cal = java.util.Calendar.getInstance()
