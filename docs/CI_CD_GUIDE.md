@@ -117,33 +117,24 @@ defaultConfig {
 >
 > ℹ️ **Aturan `versionName`:** Harus **sama** dengan tag yang akan kamu buat di langkah 3 (tanpa prefix `v`). Contoh: tag `v1.2.0` → `versionName = "1.2.0"`.
 
-#### 2. Commit & Push ke `main`
-
-```bash
-git add .
-git commit -m "chore: bump version to v1.2.0"
-git push origin main
-```
-
-#### 3. Isi `RELEASE_NOTES.md` dengan Catatan Rilis
-
-Buka file [RELEASE_NOTES.md](file:///d:\Project\Track-app\RELEASE_NOTES.md) di root proyek dan tuliskan perubahan yang ingin ditampilkan di pop-up pembaruan aplikasi:
+Lalu buka file [RELEASE_NOTES.md](file:///d:\Project\Track-app\RELEASE_NOTES.md) di root proyek dan tuliskan perubahan yang ingin ditampilkan di pop-up pembaruan aplikasi:
 
 ```markdown
-- Menambahkan fitur baru X
-- Memperbaiki bug Y
-- Optimasi performa Z
+- Add new feature X
+- Fix bug Y
+- Performance optimization Z
 ```
 
 Simpan file tersebut, lalu:
 
+#### 2. Commit & Push ke `main`
+
 ```bash
-git add RELEASE_NOTES.md
-git commit -m "chore: update release notes v1.2.0"
+git add .
+git commit -m "chore: bump version to v1.2.0 and update release"
 git push origin main
 ```
-
-#### 4. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis!
+#### 3. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis!
 
 ```bash
 git tag v1.2.0
