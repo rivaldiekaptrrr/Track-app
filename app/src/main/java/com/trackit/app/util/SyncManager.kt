@@ -132,6 +132,7 @@ class SyncManager @Inject constructor(
             pullBudgetSettings(userId)
             pullCategoryBudgets(userId)
 
+            syncPreferences.updateLastSyncTime()
             Log.d(TAG, "Full pull sync complete.")
         }
     }

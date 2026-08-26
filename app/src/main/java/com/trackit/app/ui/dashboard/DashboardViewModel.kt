@@ -11,6 +11,7 @@ import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.DateUtils
+import com.trackit.app.util.SyncPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -45,7 +46,8 @@ class DashboardViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val budgetRepository: BudgetRepository,
     private val profileRepository: ProfileRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val syncPreferences: SyncPreferences
 ) : ViewModel() {
 
     private val _selectedMonth = MutableStateFlow(System.currentTimeMillis())
@@ -89,10 +91,11 @@ class DashboardViewModel @Inject constructor(
 
                 val allTimeStream = combine(
                     transactionRepository.getAllTimeIncome(profileId),
-                    transactionRepository.getAllTimeExpense(profileId)
-                ) { income, expense -> income - expense }
+                    transactionRepository.getAllTimeExpense(profileId),
+                    syncPreferences.lastSyncTime
+                ) { income, expense, syncTime -> Triple(income, expense, syncTime) }
 
-                combine(monthlyStream, allTimeStream) { params, allTimeBalance ->
+                combine(monthlyStream, allTimeStream) { params, allTimeData ->
                     val totalSpent   = params[0] as Double
                     val totalIncome  = params[1] as Double
                     @Suppress("UNCHECKED_CAST")
@@ -107,6 +110,10 @@ class DashboardViewModel @Inject constructor(
                     val categoryMap = categories.associateBy { it.id }
                     val budget = budgetSetting?.monthlyBudget ?: 0.0
                     val activeProfile = profiles.find { it.id == profileId }
+                    
+                    val allTimeBalance = allTimeData.first - allTimeData.second
+                    val storedSyncTime = allTimeData.third
+                    val syncTime = if (storedSyncTime > 0) storedSyncTime else (transactions.maxOfOrNull { it.createdAt } ?: System.currentTimeMillis())
 
                     DashboardUiState(
                         totalSpent = totalSpent,
@@ -123,7 +130,7 @@ class DashboardViewModel @Inject constructor(
                         isLoading = false,
                         activeProfile = activeProfile,
                         allProfiles = profiles,
-                        lastSyncTime = transactions.maxOfOrNull { it.createdAt } ?: System.currentTimeMillis(),
+                        lastSyncTime = syncTime,
                         selectedMonthMillis = _selectedMonth.value,
                         isExpenseOnlyMode = _uiState.value.isExpenseOnlyMode
                     )

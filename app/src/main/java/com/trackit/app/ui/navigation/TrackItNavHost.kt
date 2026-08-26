@@ -104,6 +104,9 @@ fun TrackItNavHost(
                     },
                     onNavigateToProfiles = {
                         navController.navigate(Screen.ProfileManagement.route)
+                    },
+                    onAddTransactionWithVoice = {
+                        navController.navigate(Screen.AddTransaction.createRoute(startVoice = true))
                     }
                 )
             }

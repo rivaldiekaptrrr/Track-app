@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.util.CategoryIconMapper
 import com.trackit.app.util.CurrencyUtils
+import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
 import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,6 +149,8 @@ private fun CategoryBudgetCard(
         progressRatio >= item.alertPercentage -> Color(0xFFF57C00) // Orange
         else -> Color(0xFF2E7D32) // Green
     }
+
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -294,7 +297,7 @@ private fun CategoryBudgetCard(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (hasBudget) {
                             OutlinedButton(
-                                onClick = onDelete,
+                                onClick = { showDeleteConfirm = true },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
@@ -326,5 +329,17 @@ private fun CategoryBudgetCard(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            title = "Hapus Budget?",
+            message = "Batas budget untuk kategori \"${item.category.name}\" akan dihapus.",
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = {
+                showDeleteConfirm = false
+                onDelete()
+            }
+        )
     }
 }

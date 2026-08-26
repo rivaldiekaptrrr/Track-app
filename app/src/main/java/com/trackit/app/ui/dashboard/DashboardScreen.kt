@@ -48,6 +48,7 @@ fun DashboardScreen(
     onAddTransaction: () -> Unit,
     onEditTransaction: (Long) -> Unit,
     onNavigateToProfiles: () -> Unit = {},
+    onAddTransactionWithVoice: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -240,7 +241,7 @@ fun DashboardScreen(
 
                 if (uiState.recentTransactions.isEmpty()) {
                     item {
-                        EmptyState()
+                        EmptyState(onTryVoice = onAddTransactionWithVoice)
                     }
                 } else {
                     items(
@@ -606,7 +607,9 @@ private fun TransactionItem(
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(
+    onTryVoice: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -646,7 +649,7 @@ private fun EmptyState() {
         )
         Spacer(modifier = Modifier.height(32.dp))
         OutlinedButton(
-            onClick = { /* Could trigger voice but FAB handles it */ },
+            onClick = onTryVoice,
             shape = RoundedCornerShape(12.dp)
         ) {
             Icon(Icons.Default.Mic, contentDescription = null)

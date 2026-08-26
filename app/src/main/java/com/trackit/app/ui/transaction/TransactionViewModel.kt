@@ -328,8 +328,13 @@ class TransactionViewModel @Inject constructor(
         val state = _formState.value
         val amount = state.amount.toDoubleOrNull()
 
-        if (amount == null || amount <= 0) {
-            _formState.update { it.copy(errorMessage = "Masukkan nominal yang valid") }
+        if (amount == null) {
+            _formState.update { it.copy(errorMessage = "Format nominal tidak valid") }
+            return
+        }
+        
+        if (amount <= 0) {
+            _formState.update { it.copy(errorMessage = "Nominal harus lebih besar dari Rp 0") }
             return
         }
 

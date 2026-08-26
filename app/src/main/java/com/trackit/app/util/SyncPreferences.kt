@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ class SyncPreferences @Inject constructor(
     companion object {
         val KEY_ONLINE_MODE = booleanPreferencesKey("is_online_mode")
         val KEY_USER_ID = stringPreferencesKey("firebase_user_id")
+        val KEY_LAST_SYNC_TIME = longPreferencesKey("last_sync_time")
     }
 
     val isOnlineMode: Flow<Boolean> = context.syncDataStore.data.map { prefs ->
@@ -30,6 +32,10 @@ class SyncPreferences @Inject constructor(
 
     val userId: Flow<String?> = context.syncDataStore.data.map { prefs ->
         prefs[KEY_USER_ID]
+    }
+
+    val lastSyncTime: Flow<Long> = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_SYNC_TIME] ?: 0L
     }
 
     suspend fun setOnlineMode(enabled: Boolean) {
@@ -42,6 +48,12 @@ class SyncPreferences @Inject constructor(
         context.syncDataStore.edit { prefs ->
             if (uid != null) prefs[KEY_USER_ID] = uid
             else prefs.remove(KEY_USER_ID)
+        }
+    }
+
+    suspend fun updateLastSyncTime() {
+        context.syncDataStore.edit { prefs ->
+            prefs[KEY_LAST_SYNC_TIME] = System.currentTimeMillis()
         }
     }
 }
