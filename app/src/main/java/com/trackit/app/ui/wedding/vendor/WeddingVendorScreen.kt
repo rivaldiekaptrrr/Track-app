@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingVendorEntity
 import com.trackit.app.util.CurrencyUtils
+import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +29,7 @@ fun WeddingVendorScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingVendor by remember { mutableStateOf<WeddingVendorEntity?>(null) }
 
     LaunchedEffect(weddingProfileId) { viewModel.loadForProfile(weddingProfileId) }
 
@@ -87,6 +89,7 @@ fun WeddingVendorScreen(
                         VendorItem(
                             vendor = vendor,
                             onStatusChange = { viewModel.updateStatus(vendor, it) },
+                            onEdit = { editingVendor = vendor },
                             onDelete = { viewModel.deleteVendor(vendor) }
                         )
                     }
@@ -104,6 +107,17 @@ fun WeddingVendorScreen(
             }
         )
     }
+
+    editingVendor?.let { vendor ->
+        EditVendorDialog(
+            vendor = vendor,
+            onDismiss = { editingVendor = null },
+            onSave = { cat, name, pic, phone, ig, value, notes ->
+                viewModel.updateVendor(vendor, cat, name, pic, phone, ig, value, notes)
+                editingVendor = null
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,8 +125,10 @@ fun WeddingVendorScreen(
 private fun VendorItem(
     vendor: WeddingVendorEntity,
     onStatusChange: (String) -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
     val catLabel = VENDOR_CATEGORIES.find { it.first == vendor.category }?.second ?: vendor.category
     val statusLabel = VENDOR_STATUSES.find { it.first == vendor.status }?.second ?: vendor.status
@@ -198,7 +214,12 @@ private fun VendorItem(
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Default.Edit, null,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp))
+                }
+                IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(36.dp)) {
                     Icon(Icons.Default.Delete, null,
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp))
@@ -206,7 +227,17 @@ private fun VendorItem(
             }
         }
     }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            title = "Hapus Vendor?",
+            message = "Vendor \"${vendor.name}\" akan dihapus permanen.",
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = onDelete
+        )
+    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -267,6 +298,75 @@ private fun AddVendorDialog(
                 submitted = true
                 if (name.isNotBlank()) {
                     onAdd(selectedCat, name.trim(),
+                        pic.ifBlank { null }, phone.ifBlank { null }, ig.ifBlank { null },
+                        contractValue.toDoubleOrNull() ?: 0.0, notes.ifBlank { null })
+                }
+            }) { Text("Simpan") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditVendorDialog(
+    vendor: WeddingVendorEntity,
+    onDismiss: () -> Unit,
+    onSave: (cat: String, name: String, pic: String?, phone: String?, ig: String?, value: Double, notes: String?) -> Unit
+) {
+    var selectedCat by remember { mutableStateOf(vendor.category) }
+    var name by remember { mutableStateOf(vendor.name) }
+    var pic by remember { mutableStateOf(vendor.picName ?: "") }
+    var phone by remember { mutableStateOf(vendor.phoneNumber ?: "") }
+    var ig by remember { mutableStateOf(vendor.instagramHandle ?: "") }
+    var contractValue by remember { mutableStateOf(if (vendor.contractValue > 0) vendor.contractValue.toLong().toString() else "") }
+    var notes by remember { mutableStateOf(vendor.notes ?: "") }
+    var catExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Vendor") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ExposedDropdownMenuBox(expanded = catExpanded, onExpandedChange = { catExpanded = it }) {
+                    OutlinedTextField(
+                        value = VENDOR_CATEGORIES.find { it.first == selectedCat }?.second ?: "",
+                        onValueChange = {}, label = { Text("Kategori") }, readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = catExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }) {
+                        VENDOR_CATEGORIES.forEach { (key, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { selectedCat = key; catExpanded = false })
+                        }
+                    }
+                }
+                OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
+                    label = { Text("Nama Vendor") },
+                    isError = submitted && name.isBlank(),
+                    supportingText = { if (submitted && name.isBlank()) Text("Nama vendor wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = pic, onValueChange = { pic = it },
+                    label = { Text("Contact Person") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = phone, onValueChange = { phone = it },
+                    label = { Text("No. HP / WhatsApp") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = ig, onValueChange = { ig = it },
+                    label = { Text("Instagram (@username)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = contractValue, onValueChange = { contractValue = it.filter { c -> c.isDigit() } },
+                    label = { Text("Nilai Kontrak (Rp)") }, prefix = { Text("Rp") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = notes, onValueChange = { notes = it },
+                    label = { Text("Catatan") }, modifier = Modifier.fillMaxWidth(), maxLines = 2)
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                submitted = true
+                if (name.isNotBlank()) {
+                    onSave(selectedCat, name.trim(),
                         pic.ifBlank { null }, phone.ifBlank { null }, ig.ifBlank { null },
                         contractValue.toDoubleOrNull() ?: 0.0, notes.ifBlank { null })
                 }

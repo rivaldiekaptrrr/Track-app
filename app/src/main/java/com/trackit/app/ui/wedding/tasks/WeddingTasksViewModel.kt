@@ -78,6 +78,12 @@ class WeddingTasksViewModel @Inject constructor(
         }
     }
 
+    fun updateTask(task: WeddingTaskEntity, title: String, desc: String?, phaseMonth: Int, pic: String) {
+        viewModelScope.launch {
+            repo.update(task.copy(title = title, description = desc, phaseMonth = phaseMonth, pic = pic))
+        }
+    }
+
     fun deleteTask(task: WeddingTaskEntity) {
         viewModelScope.launch { repo.delete(task) }
     }

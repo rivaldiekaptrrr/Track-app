@@ -76,6 +76,21 @@ class WeddingVendorViewModel @Inject constructor(
         viewModelScope.launch { repo.update(vendor.copy(status = status)) }
     }
 
+    fun updateVendor(
+        vendor: WeddingVendorEntity,
+        category: String, name: String,
+        picName: String?, phone: String?, ig: String?,
+        contractValue: Double, notes: String?
+    ) {
+        viewModelScope.launch {
+            repo.update(vendor.copy(
+                category = category, name = name,
+                picName = picName, phoneNumber = phone,
+                instagramHandle = ig, contractValue = contractValue, notes = notes
+            ))
+        }
+    }
+
     fun deleteVendor(vendor: WeddingVendorEntity) {
         viewModelScope.launch { repo.delete(vendor) }
     }

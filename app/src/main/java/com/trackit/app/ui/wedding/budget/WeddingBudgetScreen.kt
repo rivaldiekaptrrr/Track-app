@@ -24,6 +24,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingExpenseEntity
 import com.trackit.app.util.CurrencyUtils
+import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -240,6 +247,7 @@ private fun ExpenseItem(
         else -> "Belum Bayar"
     }
     var showPayDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val catLabel = EXPENSE_CATEGORIES.find { it.first == expense.category }?.second ?: expense.category
 
     ElevatedCard(
@@ -298,7 +306,7 @@ private fun ExpenseItem(
                             Text("Catat Bayar")
                         }
                         OutlinedButton(
-                            onClick = onDelete,
+                            onClick = { showDeleteConfirm = true },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                         ) {
@@ -310,6 +318,15 @@ private fun ExpenseItem(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            title = "Hapus Pengeluaran?",
+            message = "\"${expense.title}\" beserta semua termin pembayarannya akan dihapus permanen.",
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = onDelete
+        )
     }
 
     if (showPayDialog) {
@@ -408,6 +425,7 @@ private fun AddExpenseDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddPaymentDialog(
     onDismiss: () -> Unit,
@@ -415,7 +433,27 @@ private fun AddPaymentDialog(
 ) {
     var termName by remember { mutableStateOf("DP 1") }
     var amount by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
+
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale("id")) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate)
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedDate = datePickerState.selectedDateMillis ?: selectedDate
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Batal") } }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -434,16 +472,30 @@ private fun AddPaymentDialog(
                     isError = submitted && amount.isBlank(),
                     supportingText = { if (submitted && amount.isBlank()) Text("Nominal wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
+                // Date picker field
+                OutlinedTextField(
+                    value = dateFormatter.format(Date(selectedDate)),
+                    onValueChange = {},
+                    label = { Text("Tanggal Bayar / Jatuh Tempo") },
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.CalendarMonth, null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
             Button(onClick = {
                 submitted = true
                 if (termName.isNotBlank() && amount.isNotBlank()) {
-                    onAdd(termName, amount.toDouble(), System.currentTimeMillis())
+                    onAdd(termName, amount.toDouble(), selectedDate)
                 }
             }) { Text("Simpan") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
 }
+

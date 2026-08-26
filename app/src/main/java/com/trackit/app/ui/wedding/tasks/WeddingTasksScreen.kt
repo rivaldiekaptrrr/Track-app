@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingTaskEntity
+import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +32,7 @@ fun WeddingTasksScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingTask by remember { mutableStateOf<WeddingTaskEntity?>(null) }
 
     LaunchedEffect(weddingProfileId) {
         viewModel.loadForProfile(weddingProfileId)
@@ -127,6 +129,7 @@ fun WeddingTasksScreen(
                         TaskItem(
                             task = task,
                             onToggle = { viewModel.toggleCompleted(task) },
+                            onEdit = { editingTask = task },
                             onDelete = { viewModel.deleteTask(task) }
                         )
                     }
@@ -141,6 +144,17 @@ fun WeddingTasksScreen(
             onAdd = { title, desc, phase, pic ->
                 viewModel.addTask(weddingProfileId, title, desc, phase, pic)
                 showAddDialog = false
+            }
+        )
+    }
+
+    editingTask?.let { task ->
+        EditTaskDialog(
+            task = task,
+            onDismiss = { editingTask = null },
+            onSave = { title, desc, phase, pic ->
+                viewModel.updateTask(task, title, desc, phase, pic)
+                editingTask = null
             }
         )
     }
@@ -176,8 +190,10 @@ private fun PhaseHeader(phase: Int, tasks: List<WeddingTaskEntity>) {
 private fun TaskItem(
     task: WeddingTaskEntity,
     onToggle: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val bgColor by animateColorAsState(
         if (task.isCompleted) Color(0xFF1B5E20).copy(alpha = 0.07f)
         else MaterialTheme.colorScheme.surface,
@@ -233,12 +249,26 @@ private fun TaskItem(
                     )
                 }
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Default.Edit, null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp))
+            }
+            IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(36.dp)) {
                 Icon(Icons.Default.Delete, null,
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
                     modifier = Modifier.size(20.dp))
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            title = "Hapus Tugas?",
+            message = "Tugas \"${task.title}\" akan dihapus permanen.",
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = onDelete
+        )
     }
 }
 
@@ -308,3 +338,70 @@ private fun AddTaskDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditTaskDialog(
+    task: WeddingTaskEntity,
+    onDismiss: () -> Unit,
+    onSave: (title: String, desc: String?, phaseMonth: Int, pic: String) -> Unit
+) {
+    var title by remember { mutableStateOf(task.title) }
+    var desc by remember { mutableStateOf(task.description ?: "") }
+    var selectedPhase by remember { mutableStateOf(task.phaseMonth) }
+    var selectedPic by remember { mutableStateOf(task.pic) }
+    var phaseExpanded by remember { mutableStateOf(false) }
+    var submitted by remember { mutableStateOf(false) }
+
+    val phases = listOf(12 to "H-12 Bulan", 6 to "H-6 Bulan", 3 to "H-3 Bulan", 1 to "H-1 Bulan", 0 to "Hari-H")
+    val picOptions = listOf("GROOM" to "CPP", "BRIDE" to "CPW", "BOTH" to "Bersama", "FAMILY" to "Panitia", "WO" to "WO")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Tugas") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = title, onValueChange = { title = it; submitted = false },
+                    label = { Text("Nama Tugas") },
+                    isError = submitted && title.isBlank(),
+                    supportingText = { if (submitted && title.isBlank()) Text("Nama tugas wajib diisi") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                OutlinedTextField(
+                    value = desc, onValueChange = { desc = it },
+                    label = { Text("Keterangan (opsional)") }, modifier = Modifier.fillMaxWidth(), maxLines = 2
+                )
+                ExposedDropdownMenuBox(expanded = phaseExpanded, onExpandedChange = { phaseExpanded = it }) {
+                    OutlinedTextField(
+                        value = phases.find { it.first == selectedPhase }?.second ?: "",
+                        onValueChange = {}, label = { Text("Fase") }, readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = phaseExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = phaseExpanded, onDismissRequest = { phaseExpanded = false }) {
+                        phases.forEach { (key, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { selectedPhase = key; phaseExpanded = false })
+                        }
+                    }
+                }
+                Text("PIC", style = MaterialTheme.typography.labelMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(picOptions) { (key, label) ->
+                        FilterChip(selected = selectedPic == key, onClick = { selectedPic = key }, label = { Text(label) })
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                submitted = true
+                if (title.isNotBlank()) {
+                    onSave(title.trim(), desc.ifBlank { null }, selectedPhase, selectedPic)
+                }
+            }) { Text("Simpan") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
+    )
+}
+

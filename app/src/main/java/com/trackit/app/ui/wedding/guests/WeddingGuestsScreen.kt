@@ -32,6 +32,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -408,6 +409,7 @@ private fun GuestItem(
     onClick: () -> Unit
 ) {
     var rsvpExpanded by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     
     // RSVP visual assets
     val (rsvpBg, rsvpText, rsvpLabel) = when (guest.rsvpStatus) {
@@ -603,7 +605,7 @@ private fun GuestItem(
 
                 // Delete action button
                 IconButton(
-                    onClick = onDelete,
+                    onClick = { showDeleteConfirm = true },
                     modifier = Modifier
                         .size(28.dp)
                         .background(
@@ -620,6 +622,15 @@ private fun GuestItem(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            title = "Hapus Tamu?",
+            message = "\"${guest.guestName}\" akan dihapus dari daftar tamu permanen.",
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = onDelete
+        )
     }
 }
 
