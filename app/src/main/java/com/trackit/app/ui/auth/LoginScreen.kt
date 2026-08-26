@@ -6,14 +6,15 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -22,8 +23,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +45,7 @@ import com.google.android.gms.common.api.ApiException
 import androidx.compose.ui.platform.LocalContext
 import com.trackit.app.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -53,6 +58,10 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var isRegisterMode by remember { mutableStateOf(false) }
     var isVisible by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(true) }
+
+    val salmonCoral = Color(0xFFFD827E)
+    val textDark = Color(0xFF2C2C2C)
 
     LaunchedEffect(Unit) {
         isVisible = true
@@ -81,8 +90,6 @@ fun LoginScreen(
                 viewModel.loginWithGoogle(idToken)
             } ?: viewModel.setError("Gagal mendapatkan token Google.")
         } catch (e: ApiException) {
-            // Status code 10 = DEVELOPER_ERROR (SHA-1 belum terdaftar di Firebase)
-            // Status code 12501 = user cancelled
             if (e.statusCode != 12501) {
                 viewModel.setError("Google Sign-In error (code: ${e.statusCode}). Pastikan SHA-1 sudah terdaftar di Firebase Console.")
             }
@@ -92,7 +99,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.White)
     ) {
         AnimatedVisibility(
             visible = isVisible,
@@ -106,108 +113,216 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 28.dp, vertical = 48.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
-            // Header
-            AnimatedContent(targetState = isRegisterMode, label = "HeaderTitle") { register ->
-                Text(
-                    text = if (register) "Buat Akun" else "Masuk",
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            AnimatedContent(targetState = isRegisterMode, label = "HeaderSubtitle") { register ->
-                Text(
-                    text = if (register) "Daftarkan akun cloud Anda" else "Login untuk sinkronisasi multi-perangkat",
-                    fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Card Form
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                // 1. Wavy Topographic Header Shape (Tinggi sekitar 38%)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
                 ) {
-                    // Email
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                        leadingIcon = {
-                            Icon(Icons.Default.Email, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        singleLine = true
-                    )
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val width = size.width
+                        val height = size.height
 
-                    // Password
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                        leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        // Draw coral wavy background shape
+                        val backgroundPath = Path().apply {
+                            moveTo(0f, 0f)
+                            lineTo(width, 0f)
+                            lineTo(width, height * 0.72f)
+                            cubicTo(
+                                width * 0.7f, height * 0.9f,
+                                width * 0.35f, height * 0.6f,
+                                0f, height * 0.82f
+                            )
+                            close()
+                        }
+                        drawPath(path = backgroundPath, color = salmonCoral)
+
+                        // Clip topographic lines inside the background shape
+                        clipPath(backgroundPath) {
+                            val lineCount = 10
+                            for (i in -lineCount..lineCount) {
+                                val offset = i * 22.dp.toPx()
+                                val path = Path().apply {
+                                    moveTo(0f, height * 0.82f + offset)
+                                    cubicTo(
+                                        width * 0.35f, height * 0.6f + offset * 0.8f,
+                                        width * 0.7f, height * 0.9f + offset * 1.2f,
+                                        width, height * 0.72f + offset
+                                    )
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = Color.White.copy(alpha = 0.08f),
+                                    style = Stroke(width = 2.dp.toPx())
                                 )
                             }
-                        },
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
+                        }
+                    }
+                }
+
+                // 2. Form Content Section (Padding horizontal 32dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    // Header "Sign in" / "Buat Akun"
+                    AnimatedContent(targetState = isRegisterMode, label = "HeaderTitle") { register ->
+                        Column {
+                            Text(
+                                text = if (register) "Sign up" else "Sign in",
+                                fontSize = 34.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = textDark
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            // Line indicator di bawah Title
+                            Box(
+                                modifier = Modifier
+                                    .width(42.dp)
+                                    .height(4.dp)
+                                    .background(salmonCoral, shape = RoundedCornerShape(2.dp))
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Form Fields minimalis (Underline style)
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        singleLine = true
-                    )
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        // Email Field
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Email",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textDark.copy(alpha = 0.7f)
+                            )
+                            TextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                placeholder = { Text("demo@email.com", color = Color.LightGray) },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Email, contentDescription = null, tint = salmonCoral)
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Next
+                                ),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = salmonCoral,
+                                    unfocusedIndicatorColor = Color.LightGray,
+                                    focusedLabelColor = salmonCoral,
+                                    unfocusedLabelColor = Color.Gray
+                                ),
+                                singleLine = true
+                            )
+                        }
+
+                        // Password Field
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Password",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textDark.copy(alpha = 0.7f)
+                            )
+                            TextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                placeholder = { Text("enter your password", color = Color.LightGray) },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = salmonCoral)
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = null,
+                                            tint = Color.Gray
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done
+                                ),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = salmonCoral,
+                                    unfocusedIndicatorColor = Color.LightGray,
+                                    focusedLabelColor = salmonCoral,
+                                    unfocusedLabelColor = Color.Gray
+                                ),
+                                singleLine = true
+                            )
+                        }
+                    }
+
+                    // Remember Me & Forgot Password Row
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = rememberMe,
+                                onCheckedChange = { rememberMe = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = salmonCoral,
+                                    uncheckedColor = Color.LightGray,
+                                    checkmarkColor = Color.White
+                                )
+                            )
+                            Text(
+                                text = "Remember Me",
+                                fontSize = 13.sp,
+                                color = textDark.copy(alpha = 0.8f),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                // Simple toast for informational purposes
+                                android.widget.Toast.makeText(context, "Silakan hubungi administrator jika Anda lupa password.", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Text(
+                                text = "Forgot Password?",
+                                fontSize = 13.sp,
+                                color = salmonCoral,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
 
                     // Error Message
                     AnimatedVisibility(visible = uiState.errorMessage != null) {
                         Text(
                             text = uiState.errorMessage ?: "",
                             color = MaterialTheme.colorScheme.error,
-                            fontSize = 13.sp
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
 
-                    // Primary Button
+                    // Primary Login Button (Coral colored)
+                    Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = {
                             if (isRegisterMode) viewModel.registerWithEmail(email, password)
@@ -215,23 +330,26 @@ fun LoginScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(52.dp),
                         enabled = email.isNotBlank() && password.isNotBlank() && !uiState.isLoading,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = salmonCoral,
+                            disabledContainerColor = salmonCoral.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(22.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = Color.White,
                                 strokeWidth = 2.dp
                             )
                         } else {
                             AnimatedContent(targetState = isRegisterMode, label = "ButtonText") { register ->
                                 Text(
-                                    text = if (register) "Daftar Sekarang" else "Masuk ke TrackIt",
+                                    text = if (register) "Sign Up" else "Login",
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    color = Color.White,
                                     fontSize = 16.sp
                                 )
                             }
@@ -239,88 +357,100 @@ fun LoginScreen(
                     }
 
                     // Toggle register/login
-                    TextButton(
-                        onClick = {
-                            isRegisterMode = !isRegisterMode
-                            viewModel.clearError()
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        AnimatedContent(targetState = isRegisterMode, label = "ToggleText") { register ->
-                            Text(
-                                text = if (register) "Sudah punya akun? Masuk" else "Belum punya akun? Daftar",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        Text(
+                            text = if (isRegisterMode) "Already have an Account? " else "Don't have an Account? ",
+                            fontSize = 14.sp,
+                            color = textDark.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            text = if (isRegisterMode) "Sign in" else "Sign up",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = salmonCoral,
+                            modifier = Modifier.clickable {
+                                isRegisterMode = !isRegisterMode
+                                viewModel.clearError()
+                            }
+                        )
                     }
+
+                    // Divider "atau"
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
+                        Text(
+                            " atau ",
+                            color = Color.Gray,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
+                    }
+
+                    // Google Login Button (Clean White + Official Google Logo)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = { launcher.launch(googleSignInClient.signInIntent) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .border(1.dp, Color.LightGray.copy(alpha = 0.7f), RoundedCornerShape(14.dp)),
+                        enabled = !uiState.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = textDark
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_google),
+                            contentDescription = "Google Logo",
+                            tint = Color.Unspecified, // Tetap gunakan warna asli di XML
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Lanjutkan dengan Google",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = textDark
+                        )
+                    }
+
+                    // Skip / Offline Mode Button
+                    Spacer(modifier = Modifier.height(14.dp))
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.skipLogin()
+                            onSkip()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.7f))
+                    ) {
+                        Text(
+                            "Lewati, gunakan mode Offline",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Gray
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(36.dp))
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Divider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-                Text(
-                    " atau ",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Google Button
-            Button(
-                onClick = { launcher.launch(googleSignInClient.signInIntent) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                enabled = !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                shape = RoundedCornerShape(16.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-            ) {
-                Icon(
-                    Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Lanjutkan dengan Google",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Skip button
-            OutlinedButton(
-                onClick = {
-                    viewModel.skipLogin()
-                    onSkip()
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Text("Lewati, gunakan mode Offline", fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
         }
     }
-}
 }

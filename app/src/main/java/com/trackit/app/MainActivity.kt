@@ -169,8 +169,9 @@ class MainActivity : FragmentActivity() {
                     val bypassBiometric by preferencesManager.bypassBiometricOnce.collectAsState(initial = false)
                     val isBiometricEnabled by preferencesManager.isBiometricEnabled.collectAsState(initial = null)
                     val hasSkippedLogin by preferencesManager.hasSkippedLogin.collectAsState(initial = null)
+                    val hasSeenWelcome by preferencesManager.hasSeenWelcome.collectAsState(initial = null)
 
-                    if (isBiometricEnabled == null || hasSkippedLogin == null) {
+                    if (isBiometricEnabled == null || hasSkippedLogin == null || hasSeenWelcome == null) {
                         // Wait for preferences to load from DataStore
                         return@Surface
                     }
@@ -193,7 +194,9 @@ class MainActivity : FragmentActivity() {
                         
                         val isUserLoggedIn = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null
                         val startDest = when {
-                            !isUserLoggedIn && hasSkippedLogin == false -> Screen.Login.route
+                            !isUserLoggedIn && hasSkippedLogin == false -> {
+                                if (hasSeenWelcome == false) Screen.Welcome.route else Screen.Login.route
+                            }
                             startVoice -> Screen.AddTransaction.createRoute(startVoice = true)
                             else -> Screen.Dashboard.route
                         }

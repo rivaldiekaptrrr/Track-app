@@ -34,6 +34,7 @@ class PreferencesManager @Inject constructor(
         val THEME_MODE = intPreferencesKey("theme_mode")
         val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         val HAS_SKIPPED_LOGIN = booleanPreferencesKey("has_skipped_login")
+        val HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
     }
 
     val isTtsEnabled: Flow<Boolean> = context.dataStore.data
@@ -64,6 +65,11 @@ class PreferencesManager @Inject constructor(
     val hasSkippedLogin: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[HAS_SKIPPED_LOGIN] ?: false
+        }
+
+    val hasSeenWelcome: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[HAS_SEEN_WELCOME] ?: false
         }
 
     val isDailyReminderEnabled: Flow<Boolean> = context.dataStore.data
@@ -120,6 +126,12 @@ class PreferencesManager @Inject constructor(
     suspend fun setHasSkippedLogin(skipped: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HAS_SKIPPED_LOGIN] = skipped
+        }
+    }
+
+    suspend fun setHasSeenWelcome(seen: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[HAS_SEEN_WELCOME] = seen
         }
     }
 

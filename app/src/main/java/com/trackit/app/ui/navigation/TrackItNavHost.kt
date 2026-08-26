@@ -23,6 +23,7 @@ import com.trackit.app.ui.settings.CustomKeywordScreen
 import com.trackit.app.ui.settings.SettingsScreen
 import com.trackit.app.ui.transaction.AddEditTransactionScreen
 import com.trackit.app.ui.auth.LoginScreen
+import com.trackit.app.ui.auth.WelcomeScreen
 
 @Composable
 fun TrackItNavHost(
@@ -193,6 +194,18 @@ fun TrackItNavHost(
                     onSkip = {
                         navController.navigate(Screen.Dashboard.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.Welcome.route) {
+                val authViewModel: com.trackit.app.ui.auth.AuthViewModel = hiltViewModel()
+                WelcomeScreen(
+                    onContinue = {
+                        authViewModel.setSeenWelcome()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Welcome.route) { inclusive = true }
                         }
                     }
                 )

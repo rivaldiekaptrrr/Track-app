@@ -115,6 +115,12 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun setSeenWelcome() {
+        viewModelScope.launch {
+            preferencesManager.setHasSeenWelcome(true)
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
