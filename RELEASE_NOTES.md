@@ -1,3 +1,4 @@
+- **UPDATE v3.2.7**: Peningkatan stabilitas Mode Expense (menolak transaksi Rp 0), tombol mikrofon langsung dari Empty State, konfirmasi keamanan hapus kategori budget, dan akurasi timestamp riwayat sinkronisasi.
 - **HOTFIX v3.2.6**: Memperbaiki bug kritis (force close) yang terjadi saat login di perangkat kedua akibat konflik sinkronisasi profil Wedding, serta mencegah data tertimpa secara tidak sengaja.
 - **UPDATE v3.2.5**: Rombak UI Manajemen Tamu menjadi lebih bersih, mendukung multiselect Sesi (Akad/Resepsi/Keduanya), kelompok dinamis dengan fitur tambah opsi, filter dropdown horizontal, dan penyesuaian import kontak batch.
 - **UPDATE v3.2.4**: Add Edit Guest dialog in Guest Management, allowing users to modify guest details by clicking on them
