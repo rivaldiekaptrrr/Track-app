@@ -1,4 +1,4 @@
-﻿package com.trackit.app.ui.wedding.budget
+package com.trackit.app.ui.wedding.budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,7 +24,9 @@ data class WeddingBudgetUiState(
     val totalPaid: Double = 0.0,
     val filterCategory: String = "ALL",
     val isLoading: Boolean = true,
-    val showAddSheet: Boolean = false
+    val showAddSheet: Boolean = false,
+    val availableCategories: List<Pair<String, String>> = emptyList(),
+    val availableSources: List<Pair<String, String>> = emptyList()
 ) {
     val filtered get() = if (filterCategory == "ALL") expenses
                          else expenses.filter { it.category == filterCategory }
@@ -87,10 +89,22 @@ class WeddingBudgetViewModel @Inject constructor(
             ) { expenses, totalEst, totalPaid ->
                 Triple(expenses, totalEst ?: 0.0, totalPaid ?: 0.0)
             }.collect { (expenses, totalEst, totalPaid) ->
+                val defaultCatMap = EXPENSE_CATEGORIES.toMap()
+                val existingCatKeys = expenses.map { it.category }.distinct()
+                val allCatKeys = (defaultCatMap.keys + existingCatKeys).distinct()
+                val availableCats = allCatKeys.map { key -> key to (defaultCatMap[key] ?: key) }
+
+                val defaultSrcMap = FUND_SOURCES.toMap()
+                val existingSrcKeys = expenses.map { it.paidBySource }.distinct()
+                val allSrcKeys = (defaultSrcMap.keys + existingSrcKeys).distinct()
+                val availableSrcs = allSrcKeys.map { key -> key to (defaultSrcMap[key] ?: key) }
+
                 _uiState.update { it.copy(
                     expenses = expenses,
                     totalEstimated = totalEst,
                     totalPaid = totalPaid,
+                    availableCategories = availableCats,
+                    availableSources = availableSrcs,
                     isLoading = false
                 )}
             }

@@ -101,7 +101,7 @@ fun WeddingBudgetScreen(
                                 label = { Text("Semua") }
                             )
                         }
-                        items(EXPENSE_CATEGORIES) { (key, label) ->
+                        items(uiState.availableCategories) { (key, label) ->
                             FilterChip(
                                 selected = uiState.filterCategory == key,
                                 onClick = { viewModel.setFilter(key) },
@@ -144,6 +144,8 @@ fun WeddingBudgetScreen(
 
     if (showAddExpenseDialog) {
         AddExpenseDialog(
+            availableCategories = uiState.availableCategories,
+            availableSources = uiState.availableSources,
             onDismiss = { showAddExpenseDialog = false },
             onAdd = { cat, title, est, source, notes ->
                 viewModel.addExpense(weddingProfileId, cat, title, est, source, notes)
@@ -343,15 +345,20 @@ private fun ExpenseItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddExpenseDialog(
+    availableCategories: List<Pair<String, String>>,
+    availableSources: List<Pair<String, String>>,
     onDismiss: () -> Unit,
     onAdd: (category: String, title: String, estimated: Double, source: String, notes: String?) -> Unit
 ) {
-    var selectedCategory by remember { mutableStateOf("VENUE") }
+    var selectedCategory by remember { mutableStateOf(availableCategories.firstOrNull()?.first ?: "VENUE") }
     var title by remember { mutableStateOf("") }
     var estimated by remember { mutableStateOf("") }
-    var selectedSource by remember { mutableStateOf("BERSAMA") }
+    var selectedSource by remember { mutableStateOf(availableSources.firstOrNull()?.first ?: "BERSAMA") }
     var notes by remember { mutableStateOf("") }
     var submitted by remember { mutableStateOf(false) }
+    
+    var showAddCustomCategoryDialog by remember { mutableStateOf(false) }
+    var showAddCustomSourceDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -360,7 +367,7 @@ private fun AddExpenseDialog(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // Category
                 var catExpanded by remember { mutableStateOf(false) }
-                val catLabel = EXPENSE_CATEGORIES.find { it.first == selectedCategory }?.second ?: ""
+                val catLabel = availableCategories.find { it.first == selectedCategory }?.second ?: selectedCategory
                 ExposedDropdownMenuBox(expanded = catExpanded, onExpandedChange = { catExpanded = it }) {
                     OutlinedTextField(
                         value = catLabel, onValueChange = {},
@@ -369,11 +376,19 @@ private fun AddExpenseDialog(
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }) {
-                        EXPENSE_CATEGORIES.forEach { (key, label) ->
+                        availableCategories.forEach { (key, label) ->
                             DropdownMenuItem(text = { Text(label) }, onClick = {
                                 selectedCategory = key; catExpanded = false
                             })
                         }
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("+ Tambah Kategori Baru", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+                            onClick = {
+                                catExpanded = false
+                                showAddCustomCategoryDialog = true
+                            }
+                        )
                     }
                 }
                 // Title
@@ -393,7 +408,7 @@ private fun AddExpenseDialog(
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 // Source
                 var srcExpanded by remember { mutableStateOf(false) }
-                val srcLabel = FUND_SOURCES.find { it.first == selectedSource }?.second ?: ""
+                val srcLabel = availableSources.find { it.first == selectedSource }?.second ?: selectedSource
                 ExposedDropdownMenuBox(expanded = srcExpanded, onExpandedChange = { srcExpanded = it }) {
                     OutlinedTextField(
                         value = srcLabel, onValueChange = {},
@@ -402,9 +417,17 @@ private fun AddExpenseDialog(
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(expanded = srcExpanded, onDismissRequest = { srcExpanded = false }) {
-                        FUND_SOURCES.forEach { (key, label) ->
+                        availableSources.forEach { (key, label) ->
                             DropdownMenuItem(text = { Text(label) }, onClick = { selectedSource = key; srcExpanded = false })
                         }
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("+ Tambah Sumber Dana Baru", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+                            onClick = {
+                                srcExpanded = false
+                                showAddCustomSourceDialog = true
+                            }
+                        )
                     }
                 }
                 // Notes
@@ -423,6 +446,66 @@ private fun AddExpenseDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
+
+    if (showAddCustomCategoryDialog) {
+        var newCatName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCustomCategoryDialog = false },
+            title = { Text("Tambah Kategori Pengeluaran") },
+            text = {
+                OutlinedTextField(
+                    value = newCatName,
+                    onValueChange = { newCatName = it },
+                    label = { Text("Nama Kategori Baru") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newCatName.isNotBlank()) {
+                            selectedCategory = newCatName.trim()
+                            showAddCustomCategoryDialog = false
+                        }
+                    }
+                ) { Text("Tambah") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCustomCategoryDialog = false }) { Text("Batal") }
+            }
+        )
+    }
+
+    if (showAddCustomSourceDialog) {
+        var newSourceName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCustomSourceDialog = false },
+            title = { Text("Tambah Sumber Dana") },
+            text = {
+                OutlinedTextField(
+                    value = newSourceName,
+                    onValueChange = { newSourceName = it },
+                    label = { Text("Nama Sumber Dana Baru") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newSourceName.isNotBlank()) {
+                            selectedSource = newSourceName.trim()
+                            showAddCustomSourceDialog = false
+                        }
+                    }
+                ) { Text("Tambah") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCustomSourceDialog = false }) { Text("Batal") }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

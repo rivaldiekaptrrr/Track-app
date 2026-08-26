@@ -12,7 +12,8 @@ import javax.inject.Inject
 data class WeddingTasksUiState(
     val allTasks: List<WeddingTaskEntity> = emptyList(),
     val filterPic: String = "ALL", // ALL, GROOM, BRIDE, BOTH, FAMILY, WO
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val availablePics: List<Pair<String, String>> = emptyList()
 ) {
     val filtered get() = if (filterPic == "ALL") allTasks
                          else allTasks.filter { it.pic == filterPic }
@@ -35,6 +36,14 @@ fun Int.phaseLabel(): String = when (this) {
     else -> "H-$this Bulan"
 }
 
+val DEFAULT_PICS = listOf(
+    "GROOM" to "CPP",
+    "BRIDE" to "CPW",
+    "BOTH" to "Bersama",
+    "FAMILY" to "Panitia",
+    "WO" to "WO"
+)
+
 @HiltViewModel
 class WeddingTasksViewModel @Inject constructor(
     private val repo: WeddingTaskRepository
@@ -46,7 +55,16 @@ class WeddingTasksViewModel @Inject constructor(
     fun loadForProfile(weddingProfileId: String) {
         viewModelScope.launch {
             repo.getAllByProfile(weddingProfileId).collect { tasks ->
-                _uiState.update { it.copy(allTasks = tasks, isLoading = false) }
+                val defaultPicMap = DEFAULT_PICS.toMap()
+                val existingPicKeys = tasks.map { it.pic }.distinct()
+                val allPicKeys = (defaultPicMap.keys + existingPicKeys).distinct()
+                val availablePics = allPicKeys.map { key -> key to (defaultPicMap[key] ?: key) }
+
+                _uiState.update { it.copy(
+                    allTasks = tasks,
+                    availablePics = availablePics,
+                    isLoading = false
+                ) }
             }
         }
     }

@@ -31,7 +31,8 @@ val VENDOR_STATUSES = listOf(
 data class WeddingVendorUiState(
     val vendors: List<WeddingVendorEntity> = emptyList(),
     val filterCategory: String = "ALL",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val availableCategories: List<Pair<String, String>> = emptyList()
 ) {
     val filtered get() = if (filterCategory == "ALL") vendors
                          else vendors.filter { it.category == filterCategory }
@@ -50,7 +51,16 @@ class WeddingVendorViewModel @Inject constructor(
     fun loadForProfile(weddingProfileId: String) {
         viewModelScope.launch {
             repo.getAllByProfile(weddingProfileId).collect { vendors ->
-                _uiState.update { it.copy(vendors = vendors, isLoading = false) }
+                val defaultCatMap = VENDOR_CATEGORIES.toMap()
+                val existingCatKeys = vendors.map { it.category }.distinct()
+                val allCatKeys = (defaultCatMap.keys + existingCatKeys).distinct()
+                val availableCats = allCatKeys.map { key -> key to (defaultCatMap[key] ?: key) }
+
+                _uiState.update { it.copy(
+                    vendors = vendors,
+                    availableCategories = availableCats,
+                    isLoading = false
+                ) }
             }
         }
     }

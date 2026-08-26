@@ -65,9 +65,9 @@ fun WeddingVendorScreen(
                             FilterChip(selected = uiState.filterCategory == "ALL",
                                 onClick = { viewModel.setFilter("ALL") }, label = { Text("Semua") })
                         }
-                        items(VENDOR_CATEGORIES) { (key, label) ->
+                        items(uiState.availableCategories) { (key, label) ->
                             FilterChip(selected = uiState.filterCategory == key,
-                                onClick = { viewModel.setFilter(key) }, label = { Text(label.substring(2)) })
+                                onClick = { viewModel.setFilter(key) }, label = { Text(label) })
                         }
                     }
                 }
@@ -100,6 +100,7 @@ fun WeddingVendorScreen(
 
     if (showAddDialog) {
         AddVendorDialog(
+            availableCategories = uiState.availableCategories,
             onDismiss = { showAddDialog = false },
             onAdd = { cat, name, pic, phone, ig, value, notes ->
                 viewModel.addVendor(weddingProfileId, cat, name, pic, phone, ig, value, notes)
@@ -111,6 +112,7 @@ fun WeddingVendorScreen(
     editingVendor?.let { vendor ->
         EditVendorDialog(
             vendor = vendor,
+            availableCategories = uiState.availableCategories,
             onDismiss = { editingVendor = null },
             onSave = { cat, name, pic, phone, ig, value, notes ->
                 viewModel.updateVendor(vendor, cat, name, pic, phone, ig, value, notes)
@@ -242,10 +244,11 @@ private fun VendorItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddVendorDialog(
+    availableCategories: List<Pair<String, String>>,
     onDismiss: () -> Unit,
     onAdd: (cat: String, name: String, pic: String?, phone: String?, ig: String?, value: Double, notes: String?) -> Unit
 ) {
-    var selectedCat by remember { mutableStateOf("VENUE") }
+    var selectedCat by remember { mutableStateOf(availableCategories.firstOrNull()?.first ?: "VENUE") }
     var name by remember { mutableStateOf("") }
     var pic by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -254,6 +257,8 @@ private fun AddVendorDialog(
     var notes by remember { mutableStateOf("") }
     var catExpanded by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
+    
+    var showAddCustomCategoryDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -262,15 +267,23 @@ private fun AddVendorDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ExposedDropdownMenuBox(expanded = catExpanded, onExpandedChange = { catExpanded = it }) {
                     OutlinedTextField(
-                        value = VENDOR_CATEGORIES.find { it.first == selectedCat }?.second ?: "",
+                        value = availableCategories.find { it.first == selectedCat }?.second ?: selectedCat,
                         onValueChange = {}, label = { Text("Kategori") }, readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = catExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }) {
-                        VENDOR_CATEGORIES.forEach { (key, label) ->
+                        availableCategories.forEach { (key, label) ->
                             DropdownMenuItem(text = { Text(label) }, onClick = { selectedCat = key; catExpanded = false })
                         }
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("+ Tambah Kategori Baru", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+                            onClick = {
+                                catExpanded = false
+                                showAddCustomCategoryDialog = true
+                            }
+                        )
                     }
                 }
                 OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
@@ -305,12 +318,43 @@ private fun AddVendorDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
+
+    if (showAddCustomCategoryDialog) {
+        var newCatName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCustomCategoryDialog = false },
+            title = { Text("Tambah Kategori Vendor") },
+            text = {
+                OutlinedTextField(
+                    value = newCatName,
+                    onValueChange = { newCatName = it },
+                    label = { Text("Nama Kategori Baru") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newCatName.isNotBlank()) {
+                            selectedCat = newCatName.trim()
+                            showAddCustomCategoryDialog = false
+                        }
+                    }
+                ) { Text("Tambah") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCustomCategoryDialog = false }) { Text("Batal") }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditVendorDialog(
     vendor: WeddingVendorEntity,
+    availableCategories: List<Pair<String, String>>,
     onDismiss: () -> Unit,
     onSave: (cat: String, name: String, pic: String?, phone: String?, ig: String?, value: Double, notes: String?) -> Unit
 ) {
@@ -323,6 +367,8 @@ private fun EditVendorDialog(
     var notes by remember { mutableStateOf(vendor.notes ?: "") }
     var catExpanded by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
+    
+    var showAddCustomCategoryDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -331,15 +377,23 @@ private fun EditVendorDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ExposedDropdownMenuBox(expanded = catExpanded, onExpandedChange = { catExpanded = it }) {
                     OutlinedTextField(
-                        value = VENDOR_CATEGORIES.find { it.first == selectedCat }?.second ?: "",
+                        value = availableCategories.find { it.first == selectedCat }?.second ?: selectedCat,
                         onValueChange = {}, label = { Text("Kategori") }, readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = catExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }) {
-                        VENDOR_CATEGORIES.forEach { (key, label) ->
+                        availableCategories.forEach { (key, label) ->
                             DropdownMenuItem(text = { Text(label) }, onClick = { selectedCat = key; catExpanded = false })
                         }
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("+ Tambah Kategori Baru", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+                            onClick = {
+                                catExpanded = false
+                                showAddCustomCategoryDialog = true
+                            }
+                        )
                     }
                 }
                 OutlinedTextField(value = name, onValueChange = { name = it; submitted = false },
@@ -374,4 +428,34 @@ private fun EditVendorDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
+
+    if (showAddCustomCategoryDialog) {
+        var newCatName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCustomCategoryDialog = false },
+            title = { Text("Tambah Kategori Vendor") },
+            text = {
+                OutlinedTextField(
+                    value = newCatName,
+                    onValueChange = { newCatName = it },
+                    label = { Text("Nama Kategori Baru") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newCatName.isNotBlank()) {
+                            selectedCat = newCatName.trim()
+                            showAddCustomCategoryDialog = false
+                        }
+                    }
+                ) { Text("Tambah") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCustomCategoryDialog = false }) { Text("Batal") }
+            }
+        )
+    }
 }

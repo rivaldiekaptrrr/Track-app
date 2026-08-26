@@ -83,14 +83,7 @@ fun WeddingTasksScreen(
 
                 // PIC filter chips
                 item {
-                    val filters = listOf(
-                        "ALL" to "Semua",
-                        "GROOM" to "CPP",
-                        "BRIDE" to "CPW",
-                        "BOTH" to "Bersama",
-                        "FAMILY" to "Panitia",
-                        "WO" to "WO"
-                    )
+                    val filters = listOf("ALL" to "Semua") + uiState.availablePics
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -140,6 +133,7 @@ fun WeddingTasksScreen(
 
     if (showAddDialog) {
         AddTaskDialog(
+            availablePics = uiState.availablePics,
             onDismiss = { showAddDialog = false },
             onAdd = { title, desc, phase, pic ->
                 viewModel.addTask(weddingProfileId, title, desc, phase, pic)
@@ -151,6 +145,7 @@ fun WeddingTasksScreen(
     editingTask?.let { task ->
         EditTaskDialog(
             task = task,
+            availablePics = uiState.availablePics,
             onDismiss = { editingTask = null },
             onSave = { title, desc, phase, pic ->
                 viewModel.updateTask(task, title, desc, phase, pic)
@@ -207,7 +202,7 @@ private fun TaskItem(
         else -> Color(0xFF00695C)
     }
     val picLabel = when (task.pic) {
-        "GROOM" -> "CPP"; "BRIDE" -> "CPW"; "FAMILY" -> "Panitia"; "WO" -> "WO"; else -> "Bersama"
+        "GROOM" -> "CPP"; "BRIDE" -> "CPW"; "FAMILY" -> "Panitia"; "WO" -> "WO"; else -> task.pic
     }
 
     ElevatedCard(
@@ -275,18 +270,20 @@ private fun TaskItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddTaskDialog(
+    availablePics: List<Pair<String, String>>,
     onDismiss: () -> Unit,
     onAdd: (title: String, desc: String?, phaseMonth: Int, pic: String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var desc by remember { mutableStateOf("") }
     var selectedPhase by remember { mutableStateOf(6) }
-    var selectedPic by remember { mutableStateOf("BOTH") }
+    var selectedPic by remember { mutableStateOf(availablePics.firstOrNull()?.first ?: "BOTH") }
     var phaseExpanded by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
+    
+    var showAddCustomPicDialog by remember { mutableStateOf(false) }
 
     val phases = listOf(12 to "H-12 Bulan", 6 to "H-6 Bulan", 3 to "H-3 Bulan", 1 to "H-1 Bulan", 0 to "Hari-H")
-    val picOptions = listOf("GROOM" to "CPP", "BRIDE" to "CPW", "BOTH" to "Bersama", "FAMILY" to "Panitia", "WO" to "WO")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -321,8 +318,15 @@ private fun AddTaskDialog(
                 // PIC chips
                 Text("PIC", style = MaterialTheme.typography.labelMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(picOptions) { (key, label) ->
+                    items(availablePics) { (key, label) ->
                         FilterChip(selected = selectedPic == key, onClick = { selectedPic = key }, label = { Text(label) })
+                    }
+                    item {
+                        FilterChip(
+                            selected = false,
+                            onClick = { showAddCustomPicDialog = true },
+                            label = { Text("+ PIC Baru", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }
+                        )
                     }
                 }
             }
@@ -337,12 +341,43 @@ private fun AddTaskDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
+
+    if (showAddCustomPicDialog) {
+        var newPicName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCustomPicDialog = false },
+            title = { Text("Tambah Penanggung Jawab (PIC)") },
+            text = {
+                OutlinedTextField(
+                    value = newPicName,
+                    onValueChange = { newPicName = it },
+                    label = { Text("Nama PIC Baru") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newPicName.isNotBlank()) {
+                            selectedPic = newPicName.trim()
+                            showAddCustomPicDialog = false
+                        }
+                    }
+                ) { Text("Tambah") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCustomPicDialog = false }) { Text("Batal") }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTaskDialog(
     task: WeddingTaskEntity,
+    availablePics: List<Pair<String, String>>,
     onDismiss: () -> Unit,
     onSave: (title: String, desc: String?, phaseMonth: Int, pic: String) -> Unit
 ) {
@@ -352,9 +387,10 @@ private fun EditTaskDialog(
     var selectedPic by remember { mutableStateOf(task.pic) }
     var phaseExpanded by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
+    
+    var showAddCustomPicDialog by remember { mutableStateOf(false) }
 
     val phases = listOf(12 to "H-12 Bulan", 6 to "H-6 Bulan", 3 to "H-3 Bulan", 1 to "H-1 Bulan", 0 to "Hari-H")
-    val picOptions = listOf("GROOM" to "CPP", "BRIDE" to "CPW", "BOTH" to "Bersama", "FAMILY" to "Panitia", "WO" to "WO")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -387,8 +423,15 @@ private fun EditTaskDialog(
                 }
                 Text("PIC", style = MaterialTheme.typography.labelMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(picOptions) { (key, label) ->
+                    items(availablePics) { (key, label) ->
                         FilterChip(selected = selectedPic == key, onClick = { selectedPic = key }, label = { Text(label) })
+                    }
+                    item {
+                        FilterChip(
+                            selected = false,
+                            onClick = { showAddCustomPicDialog = true },
+                            label = { Text("+ PIC Baru", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }
+                        )
                     }
                 }
             }
@@ -403,5 +446,35 @@ private fun EditTaskDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
+
+    if (showAddCustomPicDialog) {
+        var newPicName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCustomPicDialog = false },
+            title = { Text("Tambah Penanggung Jawab (PIC)") },
+            text = {
+                OutlinedTextField(
+                    value = newPicName,
+                    onValueChange = { newPicName = it },
+                    label = { Text("Nama PIC Baru") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newPicName.isNotBlank()) {
+                            selectedPic = newPicName.trim()
+                            showAddCustomPicDialog = false
+                        }
+                    }
+                ) { Text("Tambah") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCustomPicDialog = false }) { Text("Batal") }
+            }
+        )
+    }
 }
 
