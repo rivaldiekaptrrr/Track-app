@@ -1,0 +1,5 @@
+interface:
+  display_name: "kotlin-skill"
+  short_description: "all about kotlin overpower audit."
+policy:
+  allow_implicit_invocation: false

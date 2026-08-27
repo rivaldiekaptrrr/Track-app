@@ -14,6 +14,8 @@ import javax.inject.Inject
 import com.trackit.app.data.repository.AuthRepository
 import com.trackit.app.util.SyncPreferences
 
+import com.trackit.app.util.SyncManager
+
 data class WeddingSettingsUiState(
     val isDailyReminderEnabled: Boolean = false,
     val dailyReminderTime: String = "20:00",
@@ -34,7 +36,8 @@ class WeddingSettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val weddingProfileRepository: WeddingProfileRepository,
     private val authRepository: AuthRepository,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WeddingSettingsUiState())
@@ -78,6 +81,10 @@ class WeddingSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.signOut()
             syncPreferences.setOnlineMode(false)
+            syncPreferences.setUserId(null)
+            preferencesManager.setHasSkippedLogin(false)
+            syncManager.stopSync()
+            syncManager.clearLocalData()
             _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
         }
     }

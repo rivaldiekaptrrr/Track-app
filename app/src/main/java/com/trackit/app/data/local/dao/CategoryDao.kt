@@ -33,4 +33,7 @@ interface CategoryDao {
 
     @Query("SELECT * FROM categories WHERE name = :name AND profileId = :profileId LIMIT 1")
     suspend fun getByNameAndProfile(name: String, profileId: Long): CategoryEntity?
+
+    @Query("SELECT * FROM categories")
+    suspend fun getAllCategoriesSync(): List<CategoryEntity>
 }

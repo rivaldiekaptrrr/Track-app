@@ -106,6 +106,7 @@ class AuthViewModel @Inject constructor(
             syncPreferences.setUserId(null)
             preferencesManager.setHasSkippedLogin(false)
             syncManager.stopSync()
+            syncManager.clearLocalData()
         }
     }
 

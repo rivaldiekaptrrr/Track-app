@@ -63,6 +63,7 @@ private val LightColorScheme = lightColorScheme(
 fun TrackItTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
+    isWeddingMode: Boolean = false,
     disableStatusBarModifier: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -75,6 +76,8 @@ fun TrackItTheme(
         else -> LightColorScheme
     }
 
+    val typography = if (isWeddingMode) WeddingTypography else Typography
+
     val view = LocalView.current
     if (!view.isInEditMode && !disableStatusBarModifier) {
         SideEffect {
@@ -86,7 +89,7 @@ fun TrackItTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }

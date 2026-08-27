@@ -9,6 +9,7 @@ import com.trackit.app.data.repository.AuthRepository
 import com.trackit.app.data.repository.BudgetRepository
 import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.util.SyncPreferences
+import com.trackit.app.util.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -36,7 +37,8 @@ class SettingsViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val preferencesManager: PreferencesManager,
     private val authRepository: AuthRepository,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -190,6 +192,8 @@ class SettingsViewModel @Inject constructor(
             syncPreferences.setOnlineMode(false)
             syncPreferences.setUserId(null)
             preferencesManager.setHasSkippedLogin(false)
+            syncManager.stopSync()
+            syncManager.clearLocalData()
             _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
         }
     }

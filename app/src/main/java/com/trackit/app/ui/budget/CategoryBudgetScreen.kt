@@ -165,12 +165,12 @@ private fun CategoryBudgetCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Category icon
+                // Category icon (Categorical Squircle Badge)
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(CircleShape)
-                        .background(categoryColor.copy(alpha = 0.15f)),
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(categoryColor.copy(alpha = 0.20f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

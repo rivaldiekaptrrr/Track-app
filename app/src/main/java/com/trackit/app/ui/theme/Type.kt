@@ -16,6 +16,8 @@ val PlusJakartaSans = FontFamily(
     Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold)
 )
 
+val PlayfairDisplay = FontFamily.Serif
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = PlusJakartaSans,
@@ -43,6 +45,69 @@ val Typography = Typography(
     ),
     titleMedium = TextStyle(
         fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp,
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp,
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp,
+    ),
+    labelLarge = TextStyle(
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp,
+    ),
+    labelSmall = TextStyle(
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp,
+    ),
+)
+
+// Elegant Typography specially designed for Wedding Mode
+val WeddingTypography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = PlayfairDisplay,
+        fontWeight = FontWeight.Bold,
+        fontSize = 34.sp,
+        lineHeight = 40.sp,
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = PlayfairDisplay,
+        fontWeight = FontWeight.Bold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = PlayfairDisplay,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
+    ),
+    titleLarge = TextStyle(
+        fontFamily = PlayfairDisplay,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
+    ),
+    titleMedium = TextStyle(
+        fontFamily = PlayfairDisplay,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 24.sp,

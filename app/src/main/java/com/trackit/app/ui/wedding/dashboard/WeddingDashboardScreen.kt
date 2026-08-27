@@ -206,6 +206,105 @@ fun WeddingDashboardScreen(
                 }
             }
 
+            // === BENTO WIDGET: FINANCIAL SUMMARY ===
+            item {
+                val totalPaid = uiState.totalPaid
+                val totalBudgetCap = uiState.totalBudgetCap
+                val progress = if (totalBudgetCap > 0) (totalPaid / totalBudgetCap).toFloat().coerceIn(0f, 1f) else 0f
+                val percentage = (progress * 100).roundToInt()
+                
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                    onClick = onNavigateToBudget
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Left Side (Financial Details)
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Ringkasan Anggaran",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            
+                            Text(
+                                text = CurrencyUtils.formatRupiah(totalPaid),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "dari ${CurrencyUtils.formatRupiah(totalBudgetCap)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            
+                            Row(
+                                verticalAlignment = Alignment.Bottom,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = CurrencyUtils.formatRupiah((totalBudgetCap - totalPaid).coerceAtLeast(0.0)),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Sisa Anggaran",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
+                            }
+                        }
+                        
+                        // Right Side (Radial/Circular Progress)
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(start = 16.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier.size(72.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 5.dp,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            )
+                            Text(
+                                text = "$percentage%",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
             // === BENTO GRID 1: QUICK ACTIONS ===
             item {
                 Row(
@@ -265,27 +364,62 @@ fun WeddingDashboardScreen(
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                         onClick = onNavigateToBudget
                     ) {
+                        val lunasProgress = if (uiState.totalExpenseCount > 0)
+                            uiState.vendorLunasCount.toFloat() / uiState.totalExpenseCount else 0f
                         Column(
                             modifier = Modifier.padding(16.dp).fillMaxSize(),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = Color(0xFF43A047), modifier = Modifier.size(32.dp))
+                            // Top: Vendor Lunas
                             Column {
-                                Text("Vendor Terbayar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF43A047), modifier = Modifier.size(28.dp))
                                 Spacer(Modifier.height(4.dp))
+                                Text("Vendor Lunas", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.height(2.dp))
                                 Text(
-                                    "${(uiState.vendorProgress * 100).roundToInt()}%",
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    "${uiState.vendorLunasCount} / ${uiState.totalExpenseCount}",
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF43A047)
                                 )
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(6.dp))
                                 LinearProgressIndicator(
-                                    progress = { uiState.vendorProgress },
-                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                    progress = { lunasProgress },
+                                    modifier = Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)),
                                     color = Color(0xFF43A047),
-                                    trackColor = Color(0xFF43A047).copy(alpha = 0.2f)
+                                    trackColor = Color(0xFF43A047).copy(alpha = 0.15f)
                                 )
+                            }
+                            // Divider + Terakhir Dibayar
+                            if (uiState.lastPaidExpenseName != null) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
+                                Column {
+                                    Text("Terakhir Dibayar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(2.dp))
+                                    val lastPaidName = uiState.lastPaidExpenseName ?: ""
+                                    Text(
+                                        lastPaidName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                    val relativeTime = uiState.lastPaidDate?.let { ts ->
+                                        val diff = (System.currentTimeMillis() - ts) / (1000 * 60 * 60 * 24)
+                                        when {
+                                            diff == 0L -> "Hari ini"
+                                            diff == 1L -> "Kemarin"
+                                            diff < 7L  -> "$diff hari lalu"
+                                            else       -> "${diff / 7} minggu lalu"
+                                        }
+                                    } ?: ""
+                                    Text(
+                                        "${CurrencyUtils.formatRupiah(uiState.lastPaidAmount)} • $relativeTime",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }
@@ -330,85 +464,104 @@ fun WeddingDashboardScreen(
                 }
             }
 
-            // === BENTO WIDGET: FINANCIAL SUMMARY ===
-            item {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-                    onClick = onNavigateToBudget
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.MonetizationOn, null, tint = MaterialTheme.colorScheme.primary)
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Text("Ringkasan Anggaran", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(Modifier.height(20.dp))
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column {
-                                Text("Pagu Total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(CurrencyUtils.formatRupiah(uiState.totalBudgetCap), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("Sisa Hutang", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(
-                                    CurrencyUtils.formatRupiah((uiState.totalEstimated - uiState.totalPaid).coerceAtLeast(0.0)),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        }
+
+
+            // === BUDGET CATEGORIES (List) ===
+            if (uiState.categoryBudgets.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp, bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Budget per Kategori",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            "Lihat Semua",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { onNavigateToBudget() }
+                        )
                     }
                 }
-            }
-
-            // === UPCOMING TASKS (List) ===
-            if (uiState.upcomingTasks.isNotEmpty()) {
-                item {
-                    Text(
-                        "Tugas Mendekat",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                    )
-                }
-                items(uiState.upcomingTasks) { task ->
+                
+                items(uiState.categoryBudgets, key = { it.categoryKey }) { budget ->
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+                        onClick = onNavigateToBudget
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Icon Box (with soft background)
                             Box(
                                 modifier = Modifier
-                                    .size(12.dp)
-                                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp))
-                            )
-                            Spacer(Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(task.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    "PIC: ${task.pic}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    .size(48.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = getWeddingCategoryIcon(budget.iconName),
+                                    contentDescription = budget.categoryName,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
-                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                            Spacer(Modifier.width(16.dp))
+                            
+                            // Category name, nominal amounts, progress bar
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = budget.categoryName,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "${(budget.progress * 100).roundToInt()}%",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                
+                                Text(
+                                    text = "${CurrencyUtils.formatRupiah(budget.totalPaid)} / ${CurrencyUtils.formatRupiah(budget.totalEstimated)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(Modifier.height(6.dp))
+                                
+                                LinearProgressIndicator(
+                                    progress = { budget.progress },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(5.dp)
+                                        .clip(RoundedCornerShape(2.5.dp)),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                )
+                            }
                         }
                     }
                 }
@@ -625,5 +778,23 @@ private fun BentoStatCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+ 
+private fun getWeddingCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (iconName) {
+        "apartment" -> Icons.Default.Apartment
+        "restaurant" -> Icons.Default.Restaurant
+        "brush" -> Icons.Default.Brush
+        "face" -> Icons.Default.Face
+        "checkroom" -> Icons.Default.Checkroom
+        "camera" -> Icons.Default.PhotoCamera
+        "email" -> Icons.Default.Email
+        "giftcard" -> Icons.Default.CardGiftcard
+        "redeem" -> Icons.Default.Redeem
+        "car" -> Icons.Default.DirectionsCar
+        "music" -> Icons.Default.MusicNote
+        "celebration" -> Icons.Default.Celebration
+        else -> Icons.Default.MoreHoriz
     }
 }

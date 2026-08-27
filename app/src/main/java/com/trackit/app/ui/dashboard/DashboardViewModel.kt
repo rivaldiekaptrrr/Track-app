@@ -11,6 +11,7 @@ import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.util.DateUtils
+import com.trackit.app.util.SyncManager
 import com.trackit.app.util.SyncPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +32,8 @@ data class DashboardUiState(
     val allProfiles: List<ProfileEntity> = emptyList(),
     val lastSyncTime: Long = System.currentTimeMillis(),
     val selectedMonthMillis: Long = System.currentTimeMillis(),
-    val isExpenseOnlyMode: Boolean = false
+    val isExpenseOnlyMode: Boolean = false,
+    val isSyncing: Boolean = false
 )
 
 data class TransactionWithCategory(
@@ -47,7 +49,8 @@ class DashboardViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val profileRepository: ProfileRepository,
     private val preferencesManager: PreferencesManager,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _selectedMonth = MutableStateFlow(System.currentTimeMillis())
@@ -59,6 +62,15 @@ class DashboardViewModel @Inject constructor(
     init {
         loadDashboardData()
         loadExpenseOnlyMode()
+        observeSyncState()
+    }
+
+    private fun observeSyncState() {
+        viewModelScope.launch {
+            syncManager.isSyncing.collect { syncing ->
+                _uiState.update { it.copy(isSyncing = syncing) }
+            }
+        }
     }
 
     private fun loadExpenseOnlyMode() {

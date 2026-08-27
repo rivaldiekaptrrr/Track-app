@@ -56,11 +56,21 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
+
+import com.trackit.app.data.local.TrackItDatabase
+import com.trackit.app.data.local.PreferencesManager
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 /**
  * Manages synchronization between the local Room database and Firestore.
@@ -74,6 +84,8 @@ import javax.inject.Singleton
 @Singleton
 class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val database: TrackItDatabase,
+    private val preferencesManager: PreferencesManager,
     private val restClient: FirestoreRestClient,
     private val transactionDao: TransactionDao,
     private val weddingProfileDao: WeddingProfileDao,
@@ -97,8 +109,42 @@ class SyncManager @Inject constructor(
     private val syncScope = CoroutineScope(Dispatchers.IO)
     private var syncJob: Job? = null
 
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+
     companion object {
         private const val TAG = "SyncManager"
+    }
+
+    /**
+     * Clears all local Room database tables and seeds fresh default profile & categories.
+     * Prevents user data leak when switching/logging out accounts.
+     */
+    suspend fun clearLocalData() {
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Clearing local database tables on logout...")
+                database.clearAllTables()
+                
+                // Re-seed default profile and categories
+                val profileId = profileDao.insert(
+                    ProfileEntity(
+                        name = "Pribadi",
+                        iconName = "person",
+                        colorHex = "#1565C0"
+                    )
+                )
+                preferencesManager.setActiveProfileId(profileId)
+                val defaultCategories = TrackItDatabase.getDefaultCategories().map { it.copy(profileId = profileId) }
+                categoryDao.insertAll(defaultCategories)
+                budgetSettingDao.insert(
+                    BudgetSettingEntity(profileId = profileId, monthlyBudget = 0.0)
+                )
+                Log.d(TAG, "Local database reset & seeded with defaults successfully.")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error clearing local data on logout: ${e.message}", e)
+            }
+        }
     }
 
     /**
@@ -110,30 +156,65 @@ class SyncManager @Inject constructor(
         if (syncJob?.isActive == true) return
 
         syncJob = syncScope.launch {
-            if (!syncPreferences.isOnlineMode.first()) return@launch
-            val userId = authRepository.currentUser?.uid ?: return@launch
+            try {
+                _isSyncing.value = true
+                if (!syncPreferences.isOnlineMode.first()) return@launch
+                val userId = authRepository.currentUser?.uid ?: return@launch
 
-            Log.d(TAG, "Starting full pull sync for user ${userId.take(5)}...")
+                Log.d(TAG, "Starting full parallel pull sync for user ${userId.take(5)}...")
+                val startTime = System.currentTimeMillis()
 
-            pullTransactions(userId)
-            pullWeddingProfiles(userId)
-            pullWeddingExpenses(userId)
-            pullWeddingTasks(userId)
-            pullWeddingVendors(userId)
-            pullWeddingGuests(userId)
-            pullWeddingCommittee(userId)
-            pullWeddingPaymentTerms(userId)
-            pullWeddingSeserahan(userId)
-            pullWeddingDocuments(userId)
-            pullWeddingEvents(userId)
-            pullWeddingRundownItems(userId)
-            pullProfiles(userId)
-            pullCategories(userId)
-            pullBudgetSettings(userId)
-            pullCategoryBudgets(userId)
+                // Phase 1: Parent / Independent entities in parallel
+                val profilesRestored = coroutineScope {
+                    val deferredProfiles = async { pullProfilesAndUpdateActive(userId) }
+                    val deferredCategories = async { pullCategories(userId) }
+                    val deferredWeddingProfiles = async { pullWeddingProfiles(userId) }
 
-            syncPreferences.updateLastSyncTime()
-            Log.d(TAG, "Full pull sync complete.")
+                    val restored = deferredProfiles.await()
+                    deferredCategories.await()
+                    deferredWeddingProfiles.await()
+                    restored
+                }
+
+                // If Firestore had no profiles (never pushed), push local defaults now
+                // so the next login can restore them properly.
+                if (!profilesRestored) {
+                    Log.d(TAG, "No profiles in Firestore — pushing local defaults for backup.")
+                    val localProfiles = profileDao.getAllProfilesSync()
+                    for (profile in localProfiles) {
+                        restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                    }
+                    val localCategories = categoryDao.getAllCategoriesSync()
+                    for (cat in localCategories) {
+                        restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                    }
+                }
+
+                // Phase 2: All Dependent entities in parallel
+                coroutineScope {
+                    awaitAll(
+                        async { pullTransactions(userId) },
+                        async { pullBudgetSettings(userId) },
+                        async { pullCategoryBudgets(userId) },
+                        async { pullWeddingExpenses(userId) },
+                        async { pullWeddingTasks(userId) },
+                        async { pullWeddingVendors(userId) },
+                        async { pullWeddingGuests(userId) },
+                        async { pullWeddingCommittee(userId) },
+                        async { pullWeddingPaymentTerms(userId) },
+                        async { pullWeddingSeserahan(userId) },
+                        async { pullWeddingDocuments(userId) },
+                        async { pullWeddingEvents(userId) },
+                        async { pullWeddingRundownItems(userId) }
+                    )
+                }
+
+                val elapsed = System.currentTimeMillis() - startTime
+                syncPreferences.updateLastSyncTime()
+                Log.d(TAG, "Full parallel pull sync complete in ${elapsed}ms.")
+            } finally {
+                _isSyncing.value = false
+            }
         }
     }
 
@@ -146,16 +227,52 @@ class SyncManager @Inject constructor(
     private suspend fun pullTransactions(userId: String) {
         val docs = restClient.listDocuments("users/$userId/transactions")
         Log.d(TAG, "Fetched ${docs.size} transactions from Firestore.")
+
+        // Load locally available categoryIds for FK safety check
+        val localCategoryIds: Set<String> = try {
+            categoryDao.getAllCategoriesSync().map { it.id }.toSet()
+        } catch (e: Exception) {
+            emptySet()
+        }
+
         for (doc in docs) {
             val remote = doc.toTransactionEntity() ?: continue
-            val existing = transactionDao.getByCreatedAt(remote.createdAt)
-            if (existing != null) {
-                transactionDao.update(remote.copy(id = existing.id))
+
+            // Defensive: if referenced categoryId doesn't exist locally yet,
+            // set it to null to avoid FOREIGN KEY constraint crash.
+            // Room has onDelete = SET_NULL for this FK anyway.
+            val safeRemote = if (remote.categoryId != null && !localCategoryIds.contains(remote.categoryId)) {
+                Log.w(TAG, "Category ${remote.categoryId} not found locally. Setting null for tx ${remote.id.take(6)}.")
+                remote.copy(categoryId = null)
             } else {
-                transactionDao.insert(remote)
+                remote
+            }
+
+            try {
+                val existing = transactionDao.getByCreatedAt(safeRemote.createdAt)
+                if (existing != null) {
+                    transactionDao.update(safeRemote.copy(id = existing.id))
+                } else {
+                    transactionDao.insert(safeRemote)
+                }
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                // FK violation still happened — insert without category as fallback
+                Log.e(TAG, "FK constraint for tx ${safeRemote.id.take(6)}, retrying with null categoryId. Error: ${e.message}")
+                try {
+                    val fallback = safeRemote.copy(categoryId = null)
+                    val existing = transactionDao.getByCreatedAt(fallback.createdAt)
+                    if (existing != null) {
+                        transactionDao.update(fallback.copy(id = existing.id))
+                    } else {
+                        transactionDao.insert(fallback)
+                    }
+                } catch (e2: Exception) {
+                    Log.e(TAG, "Skipping transaction ${safeRemote.id.take(6)} after double failure: ${e2.message}")
+                }
             }
         }
     }
+
 
     private suspend fun pullWeddingProfiles(userId: String) {
         val docs = restClient.listDocuments("users/$userId/wedding_profiles")
@@ -550,28 +667,61 @@ class SyncManager @Inject constructor(
      *                           Pass false for existing-account logins.
      */
     fun performInitialSync(userId: String, isNewRegistration: Boolean) {
-        if (!isNewRegistration) {
-            Log.d(TAG, "performInitialSync skipped — existing account login, not a new registration.")
-            return
-        }
         syncScope.launch {
-            Log.d(TAG, "Starting initial push for new user ${userId.take(5)}...")
-            val allTransactions = transactionDao.getAllTransactionsAllProfiles().first()
-            var successCount = 0
-            for (transaction in allTransactions) {
-                val docId = "${transaction.createdAt}_${transaction.profileId}"
-                val ok = restClient.put("users/$userId/transactions/$docId", transaction.toFirestoreJson())
-                if (ok) successCount++
+            if (isNewRegistration) {
+                Log.d(TAG, "Starting initial push for new user ${userId.take(5)}...")
+                // New account: push all local data up to Firestore for the first time.
+                val allProfiles = profileDao.getAllProfilesSync()
+                for (profile in allProfiles) {
+                    restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                }
+                val allCategories = categoryDao.getAllCategoriesSync()
+                for (cat in allCategories) {
+                    restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                }
+                val allTransactions = transactionDao.getAllTransactionsAllProfiles().first()
+                var successCount = 0
+                for (transaction in allTransactions) {
+                    val docId = "${transaction.createdAt}_${transaction.profileId}"
+                    val ok = restClient.put("users/$userId/transactions/$docId", transaction.toFirestoreJson())
+                    if (ok) successCount++
+                }
+                Log.d(TAG, "Initial push done. $successCount/${allTransactions.size} transactions pushed.")
+            } else {
+                // Existing account login: only push profiles & categories if they're
+                // missing in Firestore (first-ever online login for this user).
+                // This ensures next logout+login can restore them.
+                val remoteProfiles = restClient.listDocuments("users/$userId/profiles")
+                if (remoteProfiles.isEmpty()) {
+                    Log.d(TAG, "Existing account has no Firestore profiles — pushing local data as initial backup.")
+                    val allProfiles = profileDao.getAllProfilesSync()
+                    for (profile in allProfiles) {
+                        restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                    }
+                    val allCategories = categoryDao.getAllCategoriesSync()
+                    for (cat in allCategories) {
+                        restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                    }
+                    Log.d(TAG, "Initial backup of profiles & categories done.")
+                } else {
+                    Log.d(TAG, "performInitialSync skipped — profiles already in Firestore.")
+                }
             }
-            Log.d(TAG, "Initial push done. $successCount/${allTransactions.size} transactions pushed.")
         }
     }
 
     // ======================= PULL: PROFILES =======================
 
-    private suspend fun pullProfiles(userId: String) {
+    /**
+     * Pulls profiles from Firestore. If remote profiles exist, updates activeProfileId
+     * in DataStore to match the first remote profile (fixes mismatch after account switch).
+     * Returns true if at least one profile was restored from Firestore.
+     */
+    private suspend fun pullProfilesAndUpdateActive(userId: String): Boolean {
         val docs = restClient.listDocuments("users/$userId/profiles")
         Log.d(TAG, "Fetched ${docs.size} profiles from Firestore.")
+        if (docs.isEmpty()) return false
+
         for (doc in docs) {
             val remote = doc.toProfileEntity() ?: continue
             val existing = profileDao.getProfileById(remote.id)
@@ -581,6 +731,16 @@ class SyncManager @Inject constructor(
                 profileDao.insert(remote)
             }
         }
+
+        // After restoring profiles, set the activeProfileId to the first remote profile.
+        // This fixes the case where clearLocalData() seeded a new default profile with
+        // a different autoincrement ID, causing transactions to appear empty.
+        val firstRemote = docs.firstOrNull()?.toProfileEntity()
+        if (firstRemote != null) {
+            Log.d(TAG, "Setting activeProfileId to ${firstRemote.id} from Firestore restore.")
+            preferencesManager.setActiveProfileId(firstRemote.id)
+        }
+        return true
     }
 
     // ======================= PULL: CATEGORIES =======================

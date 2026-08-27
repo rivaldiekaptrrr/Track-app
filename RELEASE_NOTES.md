@@ -1,13 +1,6 @@
-- **UPDATE v3.3.0**: Perombakan total UI Onboarding dan Layar Login dengan desain ilustrasi 2-in-1 Tracker & Wedding Planner yang elegan, serta perubahan tema default menjadi mode terang.
-- **UPDATE v3.2.8**: Refaktorisasi ID Kategori & Transaksi ke UUID String untuk sinkronisasi multi-device yang andal, aman dari tabrakan ID, serta pembaruan migrasi database ke versi 13.
-- **UPDATE v3.2.7**: Peningkatan stabilitas Mode Expense (menolak transaksi Rp 0), tombol mikrofon langsung dari Empty State, konfirmasi keamanan hapus kategori budget, dan akurasi timestamp riwayat sinkronisasi.
-- **HOTFIX v3.2.6**: Memperbaiki bug kritis (force close) yang terjadi saat login di perangkat kedua akibat konflik sinkronisasi profil Wedding, serta mencegah data tertimpa secara tidak sengaja.
-- **UPDATE v3.2.5**: Rombak UI Manajemen Tamu menjadi lebih bersih, mendukung multiselect Sesi (Akad/Resepsi/Keduanya), kelompok dinamis dengan fitur tambah opsi, filter dropdown horizontal, dan penyesuaian import kontak batch.
-- **UPDATE v3.2.4**: Add Edit Guest dialog in Guest Management, allowing users to modify guest details by clicking on them
-- **UPDATE v3.2.3**: Change PDF export theme color to premium Blue (replacing Purple)
-- **HOTFIX v3.2.2**: Fix compile errors in MainActivity, WeddingPdfExporter, and WeddingCsvExporter
-- **HOTFIX v3.2.1**: Fix crash when saving Export PDF/Excel caused by unconfigured file paths directory.
-- Add Export PDF and Excel feature exclusively for Wedding Budget
-- PDF output now includes structured layout with 6 data columns and a summary
-- Excel/CSV output includes 9 columns with dedicated Notes (Catatan) field
-- Improve Wedding Settings UI by explicitly showing "PDF/Excel" label
+* Perombakan total UI **Onboarding** dan **Layar Login**.
+* Menggunakan desain ilustrasi **2-in-1 Tracker & Wedding Planner**.
+* Menerapkan tampilan yang **elegan dan modern** (Premium Soft-Tint Button).
+* Mengubah tema default aplikasi menjadi **Mode Terang (Light Mode)**.
+* **Fitur Baru Wedding Dashboard**: Peningkatan card **Vendor Lunas** dan penambahan informasi **Terakhir Dibayar**.
+* **Perbaikan Bug**: Perbaikan status cicilan otomatis untuk tagihan vendor.
