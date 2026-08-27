@@ -68,7 +68,9 @@ fun TrackItNavHost(
         "edit_transaction/{transactionId}",
         Screen.CustomKeywords.route,
         Screen.ProfileManagement.route,
-        Screen.CategoryBudget.route
+        Screen.CategoryBudget.route,
+        Screen.Login.route,
+        Screen.Welcome.route
     )
     val shouldShowNavBar = hideNavBarRoutes.none { currentRoute?.startsWith(it.substringBefore("{")) == true }
 

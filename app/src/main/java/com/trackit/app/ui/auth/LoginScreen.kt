@@ -24,6 +24,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -61,8 +63,9 @@ fun LoginScreen(
     var isVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(true) }
 
-    val salmonCoral = Color(0xFFFD827E)
-    val textDark = Color(0xFF2C2C2C)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
+    val textDark = MaterialTheme.colorScheme.onBackground
 
     LaunchedEffect(Unit) {
         isVisible = true
@@ -100,7 +103,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         AnimatedVisibility(
             visible = isVisible,
@@ -115,51 +118,20 @@ fun LoginScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                // 1. Wavy Topographic Header Shape (Tinggi sekitar 38%)
+                // 1. Header Illustration (Matching Welcome Screen's 2-in-1 theme)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp)
+                        .height(180.dp)
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val width = size.width
-                        val height = size.height
-
-                        // Draw coral wavy background shape
-                        val backgroundPath = Path().apply {
-                            moveTo(0f, 0f)
-                            lineTo(width, 0f)
-                            lineTo(width, height * 0.72f)
-                            cubicTo(
-                                width * 0.7f, height * 0.9f,
-                                width * 0.35f, height * 0.6f,
-                                0f, height * 0.82f
-                            )
-                            close()
-                        }
-                        drawPath(path = backgroundPath, color = salmonCoral)
-
-                        // Clip topographic lines inside the background shape
-                        clipPath(backgroundPath) {
-                            val lineCount = 10
-                            for (i in -lineCount..lineCount) {
-                                val offset = i * 22.dp.toPx()
-                                val path = Path().apply {
-                                    moveTo(0f, height * 0.82f + offset)
-                                    cubicTo(
-                                        width * 0.35f, height * 0.6f + offset * 0.8f,
-                                        width * 0.7f, height * 0.9f + offset * 1.2f,
-                                        width, height * 0.72f + offset
-                                    )
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = Color.White.copy(alpha = 0.08f),
-                                    style = Stroke(width = 2.dp.toPx())
-                                )
-                            }
-                        }
-                    }
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(id = R.drawable.img_onboarding_2in1),
+                        contentDescription = "Login Header Illustration",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                    )
                 }
 
                 // 2. Form Content Section (Padding horizontal 32dp)
@@ -169,32 +141,30 @@ fun LoginScreen(
                         .padding(horizontal = 32.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    // Header "Sign in" / "Buat Akun"
+                    // Header "Welcome Back! 👋" / "Buat Akun Baru"
                     AnimatedContent(targetState = isRegisterMode, label = "HeaderTitle") { register ->
                         Column {
                             Text(
-                                text = if (register) "Sign up" else "Sign in",
-                                fontSize = 34.sp,
+                                text = if (register) "Buat Akun Baru" else "Welcome Back! 👋",
+                                fontSize = 30.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = textDark
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            // Line indicator di bawah Title
-                            Box(
-                                modifier = Modifier
-                                    .width(42.dp)
-                                    .height(4.dp)
-                                    .background(salmonCoral, shape = RoundedCornerShape(2.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (register) "Yuk, mulai perjalanan keuanganmu" else "Yuk, masuk ke akunmu",
+                                fontSize = 14.sp,
+                                color = textDark.copy(alpha = 0.6f)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Form Fields minimalis (Underline style)
+                    // Form Fields (Figma Outlined Style)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Email Field
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -202,28 +172,27 @@ fun LoginScreen(
                                 text = "Email",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = textDark.copy(alpha = 0.7f)
+                                color = textDark.copy(alpha = 0.8f),
+                                modifier = Modifier.padding(bottom = 6.dp)
                             )
-                            TextField(
+                            OutlinedTextField(
                                 value = email,
                                 onValueChange = { email = it },
-                                placeholder = { Text("demo@email.com", color = Color.LightGray) },
+                                placeholder = { Text("Masukkan email", color = textDark.copy(alpha = 0.4f)) },
                                 leadingIcon = {
-                                    Icon(Icons.Default.Email, contentDescription = null, tint = salmonCoral)
+                                    Icon(Icons.Default.Email, contentDescription = null, tint = primaryColor)
                                 },
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Email,
                                     imeAction = ImeAction.Next
                                 ),
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = TextFieldDefaults.colors(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = primaryColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                     focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = salmonCoral,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = salmonCoral,
-                                    unfocusedLabelColor = Color.Gray
+                                    unfocusedContainerColor = Color.Transparent
                                 ),
                                 singleLine = true
                             )
@@ -235,21 +204,22 @@ fun LoginScreen(
                                 text = "Password",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = textDark.copy(alpha = 0.7f)
+                                color = textDark.copy(alpha = 0.8f),
+                                modifier = Modifier.padding(bottom = 6.dp)
                             )
-                            TextField(
+                            OutlinedTextField(
                                 value = password,
                                 onValueChange = { password = it },
-                                placeholder = { Text("enter your password", color = Color.LightGray) },
+                                placeholder = { Text("Masukkan password", color = textDark.copy(alpha = 0.4f)) },
                                 leadingIcon = {
-                                    Icon(Icons.Default.Lock, contentDescription = null, tint = salmonCoral)
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = primaryColor)
                                 },
                                 trailingIcon = {
                                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                         Icon(
                                             if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                             contentDescription = null,
-                                            tint = Color.Gray
+                                            tint = textDark.copy(alpha = 0.5f)
                                         )
                                     }
                                 },
@@ -259,14 +229,12 @@ fun LoginScreen(
                                     imeAction = ImeAction.Done
                                 ),
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = TextFieldDefaults.colors(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = primaryColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                     focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = salmonCoral,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = salmonCoral,
-                                    unfocusedLabelColor = Color.Gray
+                                    unfocusedContainerColor = Color.Transparent
                                 ),
                                 singleLine = true
                             )
@@ -285,9 +253,9 @@ fun LoginScreen(
                                 checked = rememberMe,
                                 onCheckedChange = { rememberMe = it },
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = salmonCoral,
-                                    uncheckedColor = Color.LightGray,
-                                    checkmarkColor = Color.White
+                                    checkedColor = primaryColor,
+                                    uncheckedColor = MaterialTheme.colorScheme.outline,
+                                    checkmarkColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             )
                             Text(
@@ -306,7 +274,7 @@ fun LoginScreen(
                             Text(
                                 text = "Forgot Password?",
                                 fontSize = 13.sp,
-                                color = salmonCoral,
+                                color = primaryColor,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -323,7 +291,7 @@ fun LoginScreen(
                     }
 
                     // Primary Login Button (Coral colored)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = {
                             if (isRegisterMode) viewModel.registerWithEmail(email, password)
@@ -334,15 +302,15 @@ fun LoginScreen(
                             .height(52.dp),
                         enabled = email.isNotBlank() && password.isNotBlank() && !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = salmonCoral,
-                            disabledContainerColor = salmonCoral.copy(alpha = 0.5f)
+                            containerColor = primaryColor,
+                            disabledContainerColor = primaryColor.copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(22.dp),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -350,7 +318,7 @@ fun LoginScreen(
                                 Text(
                                     text = if (register) "Sign Up" else "Login",
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     fontSize = 16.sp
                                 )
                             }
@@ -372,7 +340,7 @@ fun LoginScreen(
                             text = if (isRegisterMode) "Sign in" else "Sign up",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = salmonCoral,
+                            color = primaryColor,
                             modifier = Modifier.clickable {
                                 isRegisterMode = !isRegisterMode
                                 viewModel.clearError()
@@ -381,33 +349,33 @@ fun LoginScreen(
                     }
 
                     // Divider "atau"
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
                         Text(
                             " atau ",
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
                     }
 
                     // Google Login Button (Clean White + Official Google Logo)
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { launcher.launch(googleSignInClient.signInIntent) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
-                            .border(1.dp, Color.LightGray.copy(alpha = 0.7f), RoundedCornerShape(14.dp)),
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
                         enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = textDark
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         shape = RoundedCornerShape(14.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
@@ -423,12 +391,12 @@ fun LoginScreen(
                             text = "Lanjutkan dengan Google",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp,
-                            color = textDark
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     // Skip / Offline Mode Button
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = {
                             viewModel.skipLogin()
@@ -438,18 +406,18 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.7f))
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Text(
                             "Lewati, gunakan mode Offline",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(36.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

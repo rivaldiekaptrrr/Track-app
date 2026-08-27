@@ -182,7 +182,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding expenses from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingExpenseEntity() ?: continue
-            weddingExpenseDao.insert(remote)
+            try {
+                weddingExpenseDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping wedding expense ${remote.expenseId}: parent profile not yet synced. ${e.message}")
+            }
         }
     }
 
@@ -191,7 +195,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding tasks from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingTaskEntity() ?: continue
-            weddingTaskDao.insert(remote)
+            try {
+                weddingTaskDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping wedding task ${remote.taskId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -200,7 +208,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding vendors from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingVendorEntity() ?: continue
-            weddingVendorDao.insert(remote)
+            try {
+                weddingVendorDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping wedding vendor ${remote.vendorId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -209,7 +221,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding guests from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingGuestEntity() ?: continue
-            weddingGuestDao.insert(remote)
+            try {
+                weddingGuestDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping wedding guest ${remote.guestId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -218,7 +234,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} committee members from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingCommitteeEntity() ?: continue
-            weddingCommitteeDao.insert(remote)
+            try {
+                weddingCommitteeDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping committee member ${remote.memberId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -227,7 +247,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} payment terms from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingPaymentTermEntity() ?: continue
-            weddingPaymentTermDao.insert(remote)
+            try {
+                weddingPaymentTermDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping payment term ${remote.termId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -236,7 +260,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} seserahan items from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingSeserahanEntity() ?: continue
-            weddingSeserahanDao.insert(remote)
+            try {
+                weddingSeserahanDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping seserahan ${remote.itemId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -245,7 +273,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding documents from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingDocumentEntity() ?: continue
-            weddingDocumentDao.insert(remote)
+            try {
+                weddingDocumentDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping wedding document ${remote.docId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -254,7 +286,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} wedding events from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingEventEntity() ?: continue
-            weddingEventDao.insert(remote)
+            try {
+                weddingEventDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping wedding event ${remote.eventId}: FK violation. ${e.message}")
+            }
         }
     }
 
@@ -263,7 +299,11 @@ class SyncManager @Inject constructor(
         Log.d(TAG, "Fetched ${docs.size} rundown items from Firestore.")
         for (doc in docs) {
             val remote = doc.toWeddingRundownItemEntity() ?: continue
-            weddingRundownItemDao.insert(remote)
+            try {
+                weddingRundownItemDao.insert(remote)
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                Log.w(TAG, "Skipping rundown item ${remote.itemId}: FK violation. ${e.message}")
+            }
         }
     }
 

@@ -25,7 +25,7 @@ data class SettingsUiState(
     val dailyReminderTime: String = "20:00",
     val isExpenseOnlyMode: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val isBiometricEnabled: Boolean = true,
+    val isBiometricEnabled: Boolean = false,
     val isOnlineMode: Boolean = false,
     val currentUserEmail: String? = null
 )

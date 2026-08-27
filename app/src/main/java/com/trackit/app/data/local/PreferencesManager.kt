@@ -59,7 +59,7 @@ class PreferencesManager @Inject constructor(
         
     val isBiometricEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
-            preferences[BIOMETRIC_ENABLED] ?: true // Default to true
+            preferences[BIOMETRIC_ENABLED] ?: false // Default to false
         }
 
     val hasSkippedLogin: Flow<Boolean> = context.dataStore.data
@@ -89,8 +89,8 @@ class PreferencesManager @Inject constructor(
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data
         .map { preferences ->
-            val ordinal = preferences[THEME_MODE] ?: ThemeMode.SYSTEM.ordinal
-            ThemeMode.values().getOrElse(ordinal) { ThemeMode.SYSTEM }
+            val ordinal = preferences[THEME_MODE] ?: ThemeMode.LIGHT.ordinal
+            ThemeMode.values().getOrElse(ordinal) { ThemeMode.LIGHT }
         }
 
     suspend fun setTtsEnabled(enabled: Boolean) {

@@ -1,3 +1,4 @@
+- **UPDATE v3.3.0**: Perombakan total UI Onboarding dan Layar Login dengan desain ilustrasi 2-in-1 Tracker & Wedding Planner yang elegan, serta perubahan tema default menjadi mode terang.
 - **UPDATE v3.2.8**: Refaktorisasi ID Kategori & Transaksi ke UUID String untuk sinkronisasi multi-device yang andal, aman dari tabrakan ID, serta pembaruan migrasi database ke versi 13.
 - **UPDATE v3.2.7**: Peningkatan stabilitas Mode Expense (menolak transaksi Rp 0), tombol mikrofon langsung dari Empty State, konfirmasi keamanan hapus kategori budget, dan akurasi timestamp riwayat sinkronisasi.
 - **HOTFIX v3.2.6**: Memperbaiki bug kritis (force close) yang terjadi saat login di perangkat kedua akibat konflik sinkronisasi profil Wedding, serta mencegah data tertimpa secara tidak sengaja.

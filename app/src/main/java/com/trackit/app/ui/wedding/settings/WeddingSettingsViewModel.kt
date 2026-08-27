@@ -18,7 +18,7 @@ data class WeddingSettingsUiState(
     val isDailyReminderEnabled: Boolean = false,
     val dailyReminderTime: String = "20:00",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val isBiometricEnabled: Boolean = true,
+    val isBiometricEnabled: Boolean = false,
     val quoteText: String = "",
     val quoteEnabled: Boolean = true,
     val quoteFontSize: String = "SEDANG",
