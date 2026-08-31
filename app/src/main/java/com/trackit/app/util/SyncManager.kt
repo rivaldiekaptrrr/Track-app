@@ -749,14 +749,26 @@ class SyncManager @Inject constructor(
         val docs = restClient.listDocuments("users/$userId/categories")
         Log.d(TAG, "Fetched ${docs.size} categories from Firestore.")
         for (doc in docs) {
-            val remote = doc.toCategoryEntity() ?: continue
-            // Use name+profileId to identify existing category (avoid Long ID collision)
-            val existing = categoryDao.getByNameAndProfile(remote.name, remote.profileId)
-            if (existing != null) {
-                categoryDao.update(remote.copy(id = existing.id))
-            } else {
-                categoryDao.insert(remote)
+            val docName = doc.optString("name", "")
+            val docId = docName.substringAfterLast("/")
+            
+            // Self-heal: Delete malformed duplicates from Firestore
+            if (docId.contains("_")) {
+                Log.d(TAG, "Cleaning up legacy duplicate category doc: $docId")
+                restClient.delete("users/$userId/categories/$docId")
+                continue
             }
+
+            val remote = doc.toCategoryEntity() ?: continue
+            
+            // Delete matching local default to preserve the remote UUID
+            val existingByName = categoryDao.getByNameAndProfile(remote.name, remote.profileId)
+            if (existingByName != null && existingByName.id != remote.id) {
+                categoryDao.delete(existingByName)
+            }
+            
+            // Insert or replace based on the correct UUID
+            categoryDao.insert(remote)
         }
     }
 
@@ -777,6 +789,15 @@ class SyncManager @Inject constructor(
         val docs = restClient.listDocuments("users/$userId/category_budgets")
         Log.d(TAG, "Fetched ${docs.size} category budgets from Firestore.")
         for (doc in docs) {
+            val docName = doc.optString("name", "")
+            val docId = docName.substringAfterLast("/")
+            
+            if (docId.contains("_")) {
+                Log.d(TAG, "Cleaning up legacy duplicate budget doc: $docId")
+                restClient.delete("users/$userId/category_budgets/$docId")
+                continue
+            }
+
             val remote = doc.toCategoryBudgetEntity() ?: continue
             categoryBudgetDao.insert(remote)
         }
@@ -807,7 +828,7 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            val docId = "${category.profileId}_${category.id}"
+            val docId = category.id
             restClient.put("users/$userId/categories/$docId", category.toFirestoreJson())
         }
     }
@@ -816,7 +837,7 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            val docId = "${category.profileId}_${category.id}"
+            val docId = category.id
             restClient.delete("users/$userId/categories/$docId")
         }
     }
@@ -845,7 +866,7 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            val docId = "${budget.profileId}_${budget.categoryId}"
+            val docId = budget.categoryId
             restClient.put("users/$userId/category_budgets/$docId", budget.toFirestoreJson())
         }
     }
@@ -854,7 +875,7 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            val docId = "${budget.profileId}_${budget.categoryId}"
+            val docId = budget.categoryId
             restClient.delete("users/$userId/category_budgets/$docId")
         }
     }

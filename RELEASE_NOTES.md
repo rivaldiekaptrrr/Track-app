@@ -1,6 +1,3 @@
-* Perombakan total UI **Onboarding** dan **Layar Login**.
-* Menggunakan desain ilustrasi **2-in-1 Tracker & Wedding Planner**.
-* Menerapkan tampilan yang **elegan dan modern** (Premium Soft-Tint Button).
-* Mengubah tema default aplikasi menjadi **Mode Terang (Light Mode)**.
-* **Fitur Baru Wedding Dashboard**: Peningkatan card **Vendor Lunas** dan penambahan informasi **Terakhir Dibayar**.
-* **Perbaikan Bug**: Perbaikan status cicilan otomatis untuk tagihan vendor.
+* **Perbaikan Sinkronisasi Kategori**: Memperbaiki masalah di mana Kategori dan Kata Kunci AI yang dikustomisasi menghilang atau kembali ke default setelah melakukan Logout dan Login.
+* **Stabilitas Transaksi Lama**: Mencegah lepasnya kategori pada riwayat transaksi saat melakukan *restore* data dari cloud.
+* **Pemeliharaan Internal**: Peningkatan stabilitas dan pembersihan dokumen duplikat di Firestore.
