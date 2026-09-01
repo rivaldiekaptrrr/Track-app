@@ -369,10 +369,31 @@ buildFeatures {
 
 **Solusi:** Tambahkan rule di `proguard-rules.pro`:
 ```proguard
-# Jaga class OkHttp dari minifikasi
+# Jaga class okhttp3 dari minifikasi
 -dontwarn okhttp3.**
 -keep class okhttp3.** { *; }
 
 # Jaga class updater
 -keep class com.trackit.app.updater.** { *; }
 ```
+
+---
+
+### ❌ In-App Update Berulang (Updater Loop / Minta Update Terus)
+
+**Gejala:** User mendapat notifikasi update, mengunduh dan memasangnya. Namun setelah aplikasi dibuka kembali, notifikasi update muncul lagi untuk versi yang sama.
+
+**Penyebab (Kesalahan Tagging):**
+Hal ini terjadi karena **tag rilis (contoh: `v1.2.0`) dibuat pada commit yang salah**.
+Kemungkinan kamu lupa melakukan `git add build.gradle.kts` atau `git commit` gagal, tetapi kamu tetap menjalankan perintah `git tag v1.2.0` dan mem-pushnya. 
+Akibatnya, GitHub Actions merakit APK dari commit lama yang `versionCode` dan `versionName`-nya belum berubah. Aplikasi membaca ada rilis `v1.2.0` di GitHub, tapi setelah didownload ternyata isinya masih versi lama, sehingga terjadi *loop*.
+
+**Solusi Pencegahan:**
+1. Pastikan perubahan versi berhasil di-commit: jalankan `git log -1` dan pastikan commit terakhir adalah commit perubahan versi.
+2. JANGAN membuat tag sebelum commit berhasil.
+
+**Cara Memperbaikinya Jika Sudah Terjadi:**
+Jangan mencoba menghapus tag dan mem-push tag yang sama. Solusi paling bersih adalah merilis versi *patch* baru:
+1. Naikkan lagi `versionCode` (+1) dan `versionName` (contoh ke `v1.2.1`) di `build.gradle.kts`.
+2. Commit perubahan tersebut (`git add app/build.gradle.kts` lalu `git commit -m "fix: bump version to break updater loop"`).
+3. Buat tag baru (`git tag v1.2.1`) dan push (`git push origin main v1.2.1`).
