@@ -505,20 +505,12 @@ private fun SummarySection(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(incomeColor),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = onCardColor,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Sync",
+                        tint = onCardColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(14.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
 
                     val syncTime = remember(lastSyncTime) {
@@ -536,7 +528,7 @@ private fun SummarySection(
 }
 
 @Composable
-private fun TransactionItem(
+fun TransactionItem(
     transactionWithCategory: TransactionWithCategory,
     onClick: () -> Unit,
     onDelete: () -> Unit

@@ -401,28 +401,60 @@ fun WeddingSettingsScreen(
                                 fontWeight = FontWeight.Medium
                             )
                         }
-                        Row(
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = RoundedCornerShape(12.dp)
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ThemeModeOption(
-                                label = "Terang",
-                                isSelected = uiState.themeMode == ThemeMode.LIGHT,
-                                onClick = { viewModel.setThemeMode(ThemeMode.LIGHT) }
-                            )
-                            ThemeModeOption(
-                                label = "Gelap",
-                                isSelected = uiState.themeMode == ThemeMode.DARK,
-                                onClick = { viewModel.setThemeMode(ThemeMode.DARK) }
-                            )
-                            ThemeModeOption(
-                                label = "Sistem",
-                                isSelected = uiState.themeMode == ThemeMode.SYSTEM,
-                                onClick = { viewModel.setThemeMode(ThemeMode.SYSTEM) }
-                            )
+                        var themeDropdownExpanded by remember { mutableStateOf(false) }
+                        val currentThemeLabel = when (uiState.themeMode) {
+                            ThemeMode.LIGHT -> "Terang"
+                            ThemeMode.DARK -> "Gelap"
+                            ThemeMode.SYSTEM -> "Sistem"
+                        }
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { themeDropdownExpanded = true }
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = currentThemeLabel,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Pilih Tema",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            
+                            DropdownMenu(
+                                expanded = themeDropdownExpanded,
+                                onDismissRequest = { themeDropdownExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Terang") },
+                                    onClick = { 
+                                        viewModel.setThemeMode(ThemeMode.LIGHT)
+                                        themeDropdownExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Gelap") },
+                                    onClick = { 
+                                        viewModel.setThemeMode(ThemeMode.DARK)
+                                        themeDropdownExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Sistem") },
+                                    onClick = { 
+                                        viewModel.setThemeMode(ThemeMode.SYSTEM)
+                                        themeDropdownExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
 

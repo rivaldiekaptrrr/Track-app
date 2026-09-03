@@ -103,7 +103,7 @@ object FirestoreMapper {
                 amount = f.dblOrZero("amount"),
                 description = f.strOrNull("description") ?: "",
                 categoryId = f.strOrNull("categoryId"),
-                date = f.longOrNull("date") ?: System.currentTimeMillis(),
+                date = f.longOrNull("date") ?: DateUtils.todayMillis(),
                 createdAt = f.longOrNull("createdAt") ?: System.currentTimeMillis(),
                 isRecurring = f.boolOrFalse("isRecurring"),
                 recurringType = f.strOrNull("recurringType"),

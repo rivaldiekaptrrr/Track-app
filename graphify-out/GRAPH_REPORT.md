@@ -1,28 +1,28 @@
-# Graph Report - Track-app  (2026-08-24)
+# Graph Report - Track-app  (2026-09-02)
 
 ## Corpus Check
-- 4562 files · ~3,361,840 words
+- 4563 files · ~3,392,226 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 56057 nodes · 62486 edges · 4340 communities (4257 shown, 83 thin omitted)
+- 56124 nodes · 62615 edges · 4338 communities (4255 shown, 83 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 337 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `46bd8860`
+- Built from commit: `20ee3433`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - TransactionEntity
 - Counter
-- DateUtils
-- Intent
-- CategoryBudgetEntity
+- kotlin-skill/SKILL.md
+- MainActivity.kt
+- SyncManager
 - CategoryEntity
 - API Reference: GDPR DSAR Workflow Automation
-- MainActivity.kt
+- performing-network-traffic-analysis-with-zeek/scripts/agent.py
 - ProfileEntity
 - TransactionViewModel
 - implementing-canary-tokens-for-network-intrusion/scripts/agent.py
@@ -43,16 +43,16 @@
 - assets/scripts/validate_data.py
 - src/ui-ux-pro-max/scripts/validate_data.py
 - skills/ui-ux-pro-max/scripts/validate_data.py
-- WeddingEventEntity
+- TrackItDatabase
 - gray
 - gray
-- search
+- BM25
 - search
 - Security Checklist
 - skills/ui-ux-pro-max/scripts/tests/test_design_system_mode.py
 - WeddingGuestEntity
 - Lampiran A: Draf Konten Preset Adat (Starting Point untuk Sprint 3–4)
-- SyncManager
+- WeddingExpenseEntity
 - WeddingTaskEntity
 - Tailwind CSS Utility Reference
 - Tailwind CSS Utility Reference
@@ -95,7 +95,7 @@
 - search_stack
 - Form & Input Components
 - Tailwind CSS Responsive Design
-- .generate
+- CategoryBudgetViewModel
 - Form & Input Components
 - Tailwind CSS Responsive Design
 - devDependencies
@@ -111,7 +111,7 @@
 - Component Specifications
 - shadcn/ui Accessibility Patterns
 - WeddingCommitteeEntity
-- TrackItDatabase
+- WeddingVendorEntity
 - 🚀 CI/CD & In-App Update — Panduan Lengkap TrackIt
 - architect.md
 - .claude/skills/design-system/scripts/html-token-validator.py
@@ -256,7 +256,7 @@
 - CIP Design Reference
 - Icon Design Reference
 - Copywriting Formulas
-- button
+- AppUpdateCheckerTest
 - Copywriting Formulas
 - detect_domain
 - detect_domain
@@ -339,13 +339,13 @@
 - /skill-create - Local Skill Generation
 - Primitive Tokens
 - .claude/skills/design-system/scripts/validate-tokens.cjs
-- input
+- button
 - Key Controls by Series
 - .check_shadcn_config
 - .generate_config_string
 - Primitive Tokens
 - assets/skills/design-system/scripts/validate-tokens.cjs
-- input
+- card
 - agentskills-skill.schema.json
 - .check_shadcn_config
 - .generate_config_string
@@ -375,7 +375,7 @@
 - .claude/skills/brand/scripts/inject-brand-context.cjs
 - CIP Design Style Guide
 - .claude/skills/design-system/scripts/embed-tokens.cjs
-- primitive
+- duration
 - patch
 - .claude/skills/ui-styling/scripts/tests/test_tailwind_config_gen.py
 - Core Visual Elements
@@ -425,7 +425,7 @@
 - Component Tokens
 - assets/skills/design-system/scripts/generate-tokens.cjs
 - button
-- primitive
+- duration
 - Slide Strategies
 - ._base_config
 - src/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py
@@ -1744,7 +1744,7 @@
 - Building SOC Metrics and KPI Tracking
 - Building SOC Playbook for Ransomware
 - Building Threat Intelligence Feed Integration
-- PyMISP
+- WeddingRundownPresets
 - Building Threat Intelligence Platform
 - Building Vulnerability Scanning Workflow
 - Key Functions
@@ -2082,7 +2082,7 @@
 - implementing-supply-chain-security-with-in-toto/scripts/agent.py
 - implementing-syslog-centralization-with-rsyslog/scripts/agent.py
 - implementing-threat-intelligence-lifecycle-management/scripts/agent.py
-- implementing-threat-modeling-with-mitre-attack/scripts/agent.py
+- assets/scripts/tests/test_text_layout_resilience.py
 - Implementing Ticketing System for Incidents
 - implementing-vulnerability-management-with-greenbone/scripts/agent.py
 - Workflows - Vulnerability SLA Breach Alerting
@@ -2199,7 +2199,7 @@
 - Exception Request Form
 - Key Functions
 - Collecting Open-Source Intelligence
-- collecting-threat-intelligence-with-misp/scripts/agent.py
+- VoiceWidgetProvider.kt
 - Key Functions
 - Conducting Pass-the-Ticket Attack
 - Microsegmentation Implementation Plan Template
@@ -2691,7 +2691,7 @@
 - SSLTLSAssessmentAgent
 - Performing SSL/TLS Security Assessment
 - MISP / PyMISP API Reference
-- performing-threat-intelligence-sharing-with-misp/scripts/agent.py
+- 3. ⚙️ Konfigurasi SDK & Tools
 - API Reference: Vulnerability Scanning with Nessus Agent
 - Industry Standards
 - main
@@ -3332,7 +3332,6 @@
 - run_zero_trust_assessment
 - Sliver C2 Command Reference
 - MISP / PyMISP API Reference
-- operationalizing-misp-threat-feeds/scripts/agent.py
 - API Reference: Access Review and Certification
 - Active Directory Penetration Test — Report Template
 - Standards and References - Alert Triage with Elastic SIEM
@@ -3576,7 +3575,7 @@
 - API Reference: Implementing API Security Testing with 42Crunch
 - implementing-api-security-testing-with-42crunch/scripts/agent.py
 - Attack Path Analysis Report Template
-- implementing-attack-surface-management/scripts/agent.py
+- VulnerabilityScanner
 - AWS IAM Permission Boundary Implementation Template
 - Azure AD PIM Implementation Template
 - API Reference: Implementing Cloud Workload Protection
@@ -4101,7 +4100,7 @@
 - Standards Reference for Container Scanning
 - Aqua Security Container Scanning Workflows
 - Workflows - XM Cyber Attack Path Analysis
-- ServiceFingerprinter
+- implementing-attack-surface-management/scripts/agent.py
 - Standards - AWS Macie for Data Classification
 - Standards - Distroless Container Images
 - BAS Security Validation Report Template
@@ -4207,7 +4206,6 @@
 - testing-for-system-prompt-leakage/scripts/agent.py
 - Standards and Framework Mapping — Triaging Windows with KAPE
 - Standards and Framework Mapping
-- validate-agentskills.py
 - loop-me/SKILL.md
 - improve-skill.md
 - Standards Mapping — Abusing Shadow Credentials for Privilege Escalation
@@ -4330,16 +4328,16 @@
 - implement-spec/SKILL.md
 
 ## God Nodes (most connected - your core abstractions)
-1. `TailwindConfigGenerator` - 60 edges
-2. `TailwindConfigGenerator` - 56 edges
-3. `CategoryEntity` - 49 edges
-4. `TransactionEntity` - 45 edges
-5. `SyncManager` - 45 edges
+1. `SyncManager` - 73 edges
+2. `TailwindConfigGenerator` - 60 edges
+3. `TailwindConfigGenerator` - 56 edges
+4. `CategoryEntity` - 56 edges
+5. `TransactionEntity` - 45 edges
 6. `search()` - 43 edges
 7. `search()` - 43 edges
 8. `search()` - 43 edges
 9. `DesignSystemGenerator` - 42 edges
-10. `TrackItDatabase` - 39 edges
+10. `TrackItDatabase` - 40 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `import_targets_from_csv()` --calls--> `User`  [INFERRED]
@@ -4351,52 +4349,52 @@
 - `TestTokenizer` --uses--> `BM25`  [INFERRED]
   .agents/skills/ui-ux-pro-max-skill/.claude/skills/ui-ux-pro-max/scripts/tests/test_core.py → .agents/skills/ui-ux-pro-max-skill/.claude/skills/design/scripts/cip/core.py
 - `TestBm25CoreBehavior` --uses--> `BM25`  [INFERRED]
-  .agents/skills/ui-ux-pro-max-skill/src/ui-ux-pro-max/scripts/tests/test_core.py → .agents/skills/ui-ux-pro-max-skill/.claude/skills/design/scripts/cip/core.py
+  .agents/skills/ui-ux-pro-max-skill/cli/assets/scripts/tests/test_core.py → .agents/skills/ui-ux-pro-max-skill/.claude/skills/design/scripts/cip/core.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (4340 total, 83 thin omitted)
+## Communities (4338 total, 83 thin omitted)
 
 ### Community 0 - "TransactionEntity"
-Cohesion: 0.06
-Nodes (9): CategorySpending, Flow, TransactionDao, TransactionEntity, Flow, TransactionRepository, CoroutineWorker, Result (+1 more)
+Cohesion: 0.04
+Nodes (22): CategorySpending, Flow, TransactionDao, TransactionEntity, Flow, TransactionRepository, BudgetCheckWorker, CoroutineWorker (+14 more)
 
 ### Community 1 - "Counter"
+Cohesion: 0.04
+Nodes (61): analyze_attribute_types(), analyze_organizations(), analyze_temporal_trends(), analyze_threat_levels(), compute_ioc_stats(), connect_misp(), extract_tags(), fetch_events() (+53 more)
+
+### Community 2 - "kotlin-skill/SKILL.md"
+Cohesion: 0.06
+Nodes (30): 10. Security, 11. Firebase Rules / backend security, 12. Performance, 13. Image handling, 14. Offline-first / koneksi buruk, 15. Logging, 16. Crash monitoring, 17. Testing (+22 more)
+
+### Community 3 - "MainActivity.kt"
 Cohesion: 0.05
-Nodes (57): analyze_attribute_types(), analyze_organizations(), analyze_temporal_trends(), analyze_threat_levels(), compute_ioc_stats(), connect_misp(), extract_tags(), fetch_events() (+49 more)
+Nodes (29): android, Bundle, com, MainActivity, BiometricPrompt, BiometricLockScreen(), UpdateDialog(), ExportReportDialog() (+21 more)
 
-### Community 2 - "DateUtils"
-Cohesion: 0.06
-Nodes (23): CategoryBreakdownItem(), ChartScreen(), Modifier, PieChart(), CategoryChartData, ChartUiState, ChartViewModel, StateFlow (+15 more)
-
-### Community 3 - "Intent"
-Cohesion: 0.06
-Nodes (35): VoiceTileService, UpdateDialog(), ExportReportDialog(), RestoreGDriveDialog(), SettingsScreen(), androidx, SettingsItem(), ThemeModeOption() (+27 more)
-
-### Community 4 - "CategoryBudgetEntity"
-Cohesion: 0.08
-Nodes (11): CategoryBudgetDao, Flow, CategoryBudgetEntity, CategoryBudgetRepository, Flow, CategoryBudgetItem, CategoryBudgetUiState, CategoryBudgetViewModel (+3 more)
+### Community 4 - "SyncManager"
+Cohesion: 0.05
+Nodes (13): BudgetSettingDao, Flow, CategoryBudgetDao, Flow, BudgetSettingEntity, CategoryBudgetEntity, BudgetRepository, Flow (+5 more)
 
 ### Community 5 - "CategoryEntity"
 Cohesion: 0.05
-Nodes (24): CategoryDao, Flow, CategoryEntity, CategoryRepository, Flow, CategoryFormDialog(), CategoryManagementViewModel, CustomKeywordScreen() (+16 more)
+Nodes (25): CategoryDao, Flow, CategoryEntity, CategoryRepository, Flow, CategoryFormDialog(), CategoryManagementViewModel, CustomKeywordScreen() (+17 more)
 
 ### Community 6 - "API Reference: GDPR DSAR Workflow Automation"
 Cohesion: 0.04
 Nodes (48): API Reference: GDPR DSAR Workflow Automation, `apply_extension(dsar_id, reason)`, `apply_redactions(mapped_data, approved_exemptions)`, Article 15 Categories Mapped, Built-in PII Patterns, CLI Arguments, CLI Usage, `consolidate_results(*result_sets)` (+40 more)
 
-### Community 7 - "MainActivity.kt"
-Cohesion: 0.13
-Nodes (8): android, Bundle, com, MainActivity, BiometricPrompt, BiometricLockScreen(), TrackItTheme(), FragmentActivity
+### Community 7 - "performing-network-traffic-analysis-with-zeek/scripts/agent.py"
+Cohesion: 0.24
+Nodes (13): analyze_conn_log(), analyze_dns_log(), analyze_http_log(), analyze_notice_log(), main(), parse_zeek_log(), Run Zeek on a PCAP file to generate logs., Parse a Zeek TSV log file into structured records. (+5 more)
 
 ### Community 8 - "ProfileEntity"
-Cohesion: 0.05
-Nodes (26): Flow, ProfileDao, Flow, WeddingProfileDao, ProfileEntity, WeddingProfileEntity, Flow, ProfileRepository (+18 more)
+Cohesion: 0.06
+Nodes (22): Flow, ProfileDao, Flow, WeddingProfileDao, ProfileEntity, WeddingProfileEntity, Flow, ProfileRepository (+14 more)
 
 ### Community 9 - "TransactionViewModel"
-Cohesion: 0.08
-Nodes (6): com, StateFlow, ViewModel, TransactionFormState, TransactionViewModel, NumberUtils
+Cohesion: 0.07
+Nodes (7): com, StateFlow, ViewModel, TransactionFormState, TransactionViewModel, CategoryBudgetNotifier, NumberUtils
 
 ### Community 10 - "implementing-canary-tokens-for-network-intrusion/scripts/agent.py"
 Cohesion: 0.06
@@ -4416,11 +4414,11 @@ Nodes (43): 1.1 Purpose, 1.2 Engagement Type, 1.3 Key Stakeholders, 1. Engagemen
 
 ### Community 14 - "PreferencesManager"
 Cohesion: 0.03
-Nodes (25): Flow, PreferencesManager, ThemeMode, DARK, LIGHT, SYSTEM, AuthRepository, AuthResult (+17 more)
+Nodes (30): Flow, PreferencesManager, ThemeMode, DARK, LIGHT, SYSTEM, AuthRepository, AuthResult (+22 more)
 
 ### Community 15 - "FirestoreMapper"
-Cohesion: 0.10
-Nodes (9): FirebaseModule, AppUpdateChecker, FirestoreMapper, FirestoreRestClient, AppUpdateCheckerTest, OkHttpClient, Call, FirebaseAuth (+1 more)
+Cohesion: 0.14
+Nodes (5): FirebaseModule, FirestoreMapper, FirestoreRestClient, FirebaseAuth, JSONObject
 
 ### Community 16 - "BloodHoundAnalyzer"
 Cohesion: 0.07
@@ -4452,7 +4450,7 @@ Nodes (26): DesignSystemGenerator, Generates design system recommendations from 
 
 ### Community 29 - "assets/scripts/validate_data.py"
 Cohesion: 0.08
-Nodes (46): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons, TestCurrentReactGuidance, TestSemanticColors, _catalog_date(), _check_app_interface_contract(), _check_catalog_contract() (+38 more)
+Nodes (45): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons, TestCurrentReactGuidance, TestSemanticColors, _catalog_date(), _check_app_interface_contract(), _check_catalog_contract() (+37 more)
 
 ### Community 30 - "src/ui-ux-pro-max/scripts/validate_data.py"
 Cohesion: 0.08
@@ -4462,9 +4460,9 @@ Nodes (45): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons
 Cohesion: 0.08
 Nodes (45): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons, TestCurrentReactGuidance, TestSemanticColors, _catalog_date(), _check_app_interface_contract(), _check_catalog_contract() (+37 more)
 
-### Community 32 - "WeddingEventEntity"
-Cohesion: 0.06
-Nodes (20): Flow, WeddingEventDao, WeddingRundownItemDao, WeddingEventEntity, WeddingRundownItemEntity, Flow, WeddingEventRepository, WeddingRundownRepository (+12 more)
+### Community 32 - "TrackItDatabase"
+Cohesion: 0.04
+Nodes (23): Flow, WeddingEventDao, WeddingRundownItemDao, WeddingEventEntity, WeddingRundownItemEntity, com, TrackItDatabase, Flow (+15 more)
 
 ### Community 33 - "gray"
 Cohesion: 0.08
@@ -4474,9 +4472,9 @@ Nodes (27): $type, $value, $type, $value, $type, $value, $type, $value (+19 more
 Cohesion: 0.08
 Nodes (27): $type, $value, $type, $value, $type, $value, $type, $value (+19 more)
 
-### Community 35 - "search"
-Cohesion: 0.08
-Nodes (37): detect_domain(), get_cip_brief(), _load_csv(), Load CSV and return list of dicts, Core search function using BM25, Auto-detect the most relevant domain from query, Main search function with auto-domain detection, Search across all domains and combine results (+29 more)
+### Community 35 - "BM25"
+Cohesion: 0.07
+Nodes (42): BM25, detect_domain(), get_cip_brief(), _load_csv(), Load CSV and return list of dicts, Core search function using BM25, Auto-detect the most relevant domain from query, Main search function with auto-domain detection (+34 more)
 
 ### Community 36 - "search"
 Cohesion: 0.07
@@ -4491,20 +4489,20 @@ Cohesion: 0.09
 Nodes (17): _contrast_ratio(), _derive_dark_palette(), _filter_anti_patterns_for_mode(), _palette_is_dark(), WCAG relative luminance of a #RRGGBB string, or None if unparseable., True when a colors.csv row's Background is a dark surface., WCAG contrast ratio for two hex colors, or None if either is invalid., Keep product brand tokens while deriving accessible dark surfaces. (+9 more)
 
 ### Community 39 - "WeddingGuestEntity"
-Cohesion: 0.06
-Nodes (25): Flow, WeddingGuestDao, WeddingGuestEntity, Flow, WeddingGuestRepository, ContactPickerDialog(), ContactPickerItem(), AddGuestDialog() (+17 more)
+Cohesion: 0.05
+Nodes (32): Flow, WeddingGuestDao, WeddingGuestEntity, Flow, WeddingGuestRepository, VoiceTileService, ContactPickerDialog(), ContactPickerItem() (+24 more)
 
 ### Community 40 - "Lampiran A: Draf Konten Preset Adat (Starting Point untuk Sprint 3–4)"
 Cohesion: 0.04
 Nodes (47): 0. Riwayat Revisi, 1.1 Definisi Prioritas, 1.2 Success Metrics / KPI (Q4 2026 – Q1 2027), 1.3 Out of Scope (Rilis Q4 2026), 1. Executive Summary & Visi Produk, 2.1 Target User, 2.2 Pain Points Utama di Indonesia, 2.3 Risks & Assumptions (+39 more)
 
-### Community 41 - "SyncManager"
-Cohesion: 0.04
-Nodes (24): Flow, WeddingPaymentTermDao, WeddingExpenseEntity, WeddingPaymentTermEntity, Flow, WeddingExpenseRepository, AddExpenseDialog(), AddPaymentDialog() (+16 more)
+### Community 41 - "WeddingExpenseEntity"
+Cohesion: 0.05
+Nodes (22): Flow, WeddingExpenseDao, Flow, WeddingPaymentTermDao, WeddingExpenseEntity, WeddingPaymentTermEntity, Flow, WeddingExpenseRepository (+14 more)
 
 ### Community 42 - "WeddingTaskEntity"
 Cohesion: 0.07
-Nodes (14): Flow, WeddingTaskDao, WeddingTaskEntity, Flow, WeddingTaskRepository, WeddingTaskPresets, AddTaskDialog(), PhaseHeader() (+6 more)
+Nodes (15): Flow, WeddingTaskDao, WeddingTaskEntity, Flow, WeddingTaskRepository, WeddingTaskPresets, AddTaskDialog(), EditTaskDialog() (+7 more)
 
 ### Community 43 - "Tailwind CSS Utility Reference"
 Cohesion: 0.05
@@ -4516,7 +4514,7 @@ Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Bor
 
 ### Community 45 - "Color.kt"
 Cohesion: 0.04
-Nodes (50): AnnotatedString, LoginScreen(), CategoryBudgetCard(), CategoryBudgetScreen(), DashboardScreen(), EmptyState(), SummarySection(), TransactionItem() (+42 more)
+Nodes (61): AnnotatedString, LoginScreen(), OnboardingPage, WelcomeScreen(), CategoryBudgetCard(), CategoryBudgetScreen(), CategoryBreakdownItem(), ChartScreen() (+53 more)
 
 ### Community 46 - "Test-Driven Development Workflow"
 Cohesion: 0.05
@@ -4551,12 +4549,12 @@ Cohesion: 0.08
 Nodes (40): _contains_phrase(), _domain_keywords(), _exact_match_diagnostic(), _exact_row_identity(), _file_signature(), _get_bm25(), _legacy_successor_guidance(), _load_csv() (+32 more)
 
 ### Community 54 - "assets/scripts/tests/test_design_system_mode.py"
-Cohesion: 0.08
-Nodes (21): _contrast_ratio(), _derive_dark_palette(), _palette_is_dark(), _query_wants_dark(), WCAG relative luminance of a #RRGGBB string, or None if unparseable., True when a colors.csv row's Background is a dark surface., WCAG contrast ratio for two hex colors, or None if either is invalid., True when a styles.csv row describes itself as dark-first. (+13 more)
+Cohesion: 0.07
+Nodes (24): _contrast_ratio(), _derive_dark_palette(), _filter_anti_patterns_for_mode(), _palette_is_dark(), _query_wants_dark(), WCAG relative luminance of a #RRGGBB string, or None if unparseable., True when a colors.csv row's Background is a dark surface., WCAG contrast ratio for two hex colors, or None if either is invalid. (+16 more)
 
 ### Community 55 - "DesignSystemGenerator"
-Cohesion: 0.06
-Nodes (20): DesignSystemGenerator, Generates design system recommendations from aggregated searches., Load reasoning rules from CSV., Find matching reasoning rule for a category., Apply reasoning rules to search results., Select best matching result based on priority keywords., apply_decision_rules(), _object_without_duplicates() (+12 more)
+Cohesion: 0.05
+Nodes (26): DesignSystemGenerator, Generates design system recommendations from aggregated searches., Load reasoning rules from CSV., Execute searches across multiple domains., Find matching reasoning rule for a category., Apply reasoning rules to search results., Select best matching result based on priority keywords., Extract results list from search result dict. (+18 more)
 
 ### Community 56 - "src/ui-ux-pro-max/scripts/core.py"
 Cohesion: 0.08
@@ -4595,8 +4593,8 @@ Cohesion: 0.08
 Nodes (21): main(), MemoryForensicsAgent, Compare pslist vs psscan to find hidden processes., Run comprehensive memory analysis and generate report., Automates Volatility 3 memory forensics analysis., Execute a Volatility 3 plugin and return output., Identify the operating system from the memory dump., List all running processes. (+13 more)
 
 ### Community 65 - "WeddingSeserahanEntity"
-Cohesion: 0.10
-Nodes (9): Flow, WeddingSeserahanDao, WeddingSeserahanEntity, Flow, WeddingSeserahanRepository, StateFlow, ViewModel, WeddingSeserahanUiState (+1 more)
+Cohesion: 0.09
+Nodes (15): Flow, WeddingSeserahanDao, WeddingSeserahanEntity, Flow, WeddingSeserahanRepository, AddSeserahanItemDialog(), Color, Modifier (+7 more)
 
 ### Community 66 - "color"
 Cohesion: 0.05
@@ -4615,8 +4613,8 @@ Cohesion: 0.07
 Nodes (16): BM25, BM25 ranking algorithm for text search, Lowercase, normalize synonyms, split, remove punctuation, filter stopwords, Build BM25 index from documents, Score all documents against query, All indexed terms, for suggestion/typo-recovery purposes., format_markdown(), generate_design_system() (+8 more)
 
 ### Community 70 - "BM25"
-Cohesion: 0.09
-Nodes (13): BM25, BM25 ranking algorithm for text search, Lowercase, split, remove punctuation, filter short words, Build BM25 index from documents, Score all documents against query, BM25, BM25 ranking algorithm for text search, Lowercase, normalize synonyms, split, remove punctuation, filter stopwords (+5 more)
+Cohesion: 0.12
+Nodes (8): BM25, BM25 ranking algorithm for text search, Lowercase, normalize synonyms, split, remove punctuation, filter stopwords, Build BM25 index from documents, Score all documents against query, All indexed terms, for suggestion/typo-recovery purposes., TestBm25CoreBehavior, TestTokenizer
 
 ### Community 71 - "Design"
 Cohesion: 0.06
@@ -4670,9 +4668,9 @@ Nodes (32): Accordion, Alert, Alert Dialog, Avatar, Badge, Button, Card, Checkbo
 Cohesion: 0.06
 Nodes (32): 1. Mobile-First Design, 2. Consistent Breakpoint Usage, 3. Test at Breakpoint Boundaries, 4. Use Container for Content Width, 5. Progressive Enhancement, 6. Avoid Too Many Breakpoints, Best Practices, Breakpoint System (+24 more)
 
-### Community 84 - ".generate"
-Cohesion: 0.16
-Nodes (8): _filter_anti_patterns_for_mode(), Drop "avoid dark mode" advice once dark mode is the resolved answer., Execute searches across multiple domains., Extract results list from search result dict., Generate complete design system recommendation. variance/motion/density are…, Bucket a 1-10 dial value into its tier config. Returns None if value is None., _resolve_dial(), TestAntiPatternGating
+### Community 84 - "CategoryBudgetViewModel"
+Cohesion: 0.18
+Nodes (5): CategoryBudgetItem, CategoryBudgetUiState, CategoryBudgetViewModel, StateFlow, ViewModel
 
 ### Community 85 - "Form & Input Components"
 Cohesion: 0.06
@@ -4734,13 +4732,13 @@ Nodes (28): Accordion, Alert, ARIA Labels, Checkbox and Radio, Color Contrast, C
 Cohesion: 0.10
 Nodes (12): Flow, WeddingCommitteeDao, WeddingCommitteeEntity, Flow, WeddingCommitteeRepository, AddMemberDialog(), CommitteeMemberItem(), WeddingCommitteeScreen() (+4 more)
 
-### Community 100 - "TrackItDatabase"
-Cohesion: 0.04
-Nodes (22): BudgetSettingDao, Flow, Flow, WeddingExpenseDao, Flow, WeddingVendorDao, BudgetSettingEntity, WeddingVendorEntity (+14 more)
+### Community 100 - "WeddingVendorEntity"
+Cohesion: 0.11
+Nodes (9): Flow, WeddingVendorDao, WeddingVendorEntity, Flow, WeddingVendorRepository, StateFlow, ViewModel, WeddingVendorUiState (+1 more)
 
 ### Community 101 - "🚀 CI/CD & In-App Update — Panduan Lengkap TrackIt"
 Cohesion: 0.07
-Nodes (28): 1. Naikkan versi di `app/build.gradle.kts`, 1. Ngoding seperti biasa, 2. Commit & Push ke `main`, 2. Commit & Push ke `main`, 3. GitHub Actions berjalan otomatis, 3. Isi `RELEASE_NOTES.md` dengan Catatan Rilis, ❌ `403 Resource not accessible by integration` (GitHub Actions), 4. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis! (+20 more)
+Nodes (28): 1. Naikkan versi di `app/build.gradle.kts`, 1. Ngoding seperti biasa, 2. Commit & Push ke `main`, 2. Commit & Push ke `main`, 3. Buat dan Push Tag Versi — ⚡ Ini yang Memicu Rilis!, 3. GitHub Actions berjalan otomatis, ❌ `403 Resource not accessible by integration` (GitHub Actions), 4. Download APK untuk testing (+20 more)
 
 ### Community 102 - "architect.md"
 Cohesion: 0.07
@@ -4759,16 +4757,16 @@ Cohesion: 0.07
 Nodes (26): API Design Patterns, Authentication & Authorization, Backend Development Patterns, Background Jobs & Queues, Cache-Aside Pattern, Caching Strategies, Centralized Error Handler, Database Patterns (+18 more)
 
 ### Community 106 - "radius"
-Cohesion: 0.11
-Nodes (27): $type, $value, lg, sm, $type, $value, $type, $value (+19 more)
+Cohesion: 0.10
+Nodes (27): $type, $value, lg, xl, $type, $value, $type, $value (+19 more)
 
 ### Community 107 - "search"
 Cohesion: 0.08
 Nodes (10): Resolve a deprecated in-domain alias, or expose a cross-domain redirect., Main search function with auto-domain detection, search(), _style_search_destination(), TestSearchDomains, read_rows(), TestStyleTaxonomy, read_rows() (+2 more)
 
 ### Community 108 - "search"
-Cohesion: 0.08
-Nodes (10): Resolve a deprecated in-domain alias, or expose a cross-domain redirect., Main search function with auto-domain detection, search(), _style_search_destination(), TestSearchDomains, read_rows(), TestStyleTaxonomy, read_rows() (+2 more)
+Cohesion: 0.09
+Nodes (10): Resolve a deprecated in-domain alias, or expose a cross-domain redirect., Main search function with auto-domain detection, search(), _style_search_destination(), format_output(), Format results for Claude consumption (token-optimized), TestDiagnosticsContracts, TestSearchDomains (+2 more)
 
 ### Community 109 - "compilerOptions"
 Cohesion: 0.07
@@ -4887,8 +4885,8 @@ Cohesion: 0.08
 Nodes (30): ansi_ljust(), _detect_page_type(), format_ascii_box(), format_master_md(), format_page_override_md(), _generate_intelligent_overrides(), hex_to_ansi(), persist_design_system() (+22 more)
 
 ### Community 138 - "assets/scripts/design_system.py"
-Cohesion: 0.11
-Nodes (25): ansi_ljust(), _detect_page_type(), format_ascii_box(), format_markdown(), format_master_md(), format_page_override_md(), _generate_intelligent_overrides(), hex_to_ansi() (+17 more)
+Cohesion: 0.09
+Nodes (28): ansi_ljust(), _detect_page_type(), format_ascii_box(), format_markdown(), format_master_md(), format_page_override_md(), generate_design_system(), _generate_intelligent_overrides() (+20 more)
 
 ### Community 139 - "Workflow"
 Cohesion: 0.08
@@ -4947,8 +4945,8 @@ Cohesion: 0.09
 Nodes (22): 192 条行业特定推理规则, Catalog provenance 与刷新流程, Star 历史, [UI UX Pro Max](https://uupm.cc), v2.0 新特性, 兼容的智能体, 前置要求, 功能特性 (+14 more)
 
 ### Community 154 - "Screen"
-Cohesion: 0.09
-Nodes (20): AddTransaction, CategoryBudget, Chart, CustomKeywords, Dashboard, EditTransaction, Login, ProfileManagement (+12 more)
+Cohesion: 0.08
+Nodes (21): AddTransaction, CategoryBudget, Chart, CustomKeywords, Dashboard, EditTransaction, Login, ProfileManagement (+13 more)
 
 ### Community 155 - "Frontend Slides"
 Cohesion: 0.10
@@ -4971,8 +4969,8 @@ Cohesion: 0.15
 Nodes (19): _e(), generate_chart_slide(), generate_cta_slide(), generate_deck(), generate_metrics_slide(), generate_problem_slide(), generate_solution_slide(), generate_testimonial_slide() (+11 more)
 
 ### Community 160 - "fontSize"
-Cohesion: 0.11
-Nodes (20): $type, $value, $type, $value, $type, $value, $type, $value (+12 more)
+Cohesion: 0.10
+Nodes (21): $type, $value, $type, $value, $type, $value, $type, $value (+13 more)
 
 ### Community 161 - "shadcn/ui Theming & Customization"
 Cohesion: 0.10
@@ -5298,9 +5296,9 @@ Nodes (14): Available Styles, CLI Options, Commands, Generate Batch Variations, 
 Cohesion: 0.13
 Nodes (14): AIDA (Attention-Interest-Desire-Action), Before-After-Bridge, Contrast Patterns, Copywriting Formulas, Core Formulas, Cost of Inaction, FAB (Features-Advantages-Benefits), Formula-to-Slide Mapping (+6 more)
 
-### Community 245 - "button"
-Cohesion: 0.12
-Nodes (18): fg, font-size, hover-bg, padding-x, padding-y, button, $type, $value (+10 more)
+### Community 245 - "AppUpdateCheckerTest"
+Cohesion: 0.22
+Nodes (4): AppUpdateChecker, AppUpdateCheckerTest, OkHttpClient, Call
 
 ### Community 246 - "Copywriting Formulas"
 Cohesion: 0.13
@@ -5311,8 +5309,8 @@ Cohesion: 0.23
 Nodes (3): detect_domain(), Auto-detect the most relevant domain from query. Matches are weighted by…, TestDomainDetection
 
 ### Community 248 - "detect_domain"
-Cohesion: 0.11
-Nodes (9): detect_domain(), Auto-detect the most relevant domain from query. Matches are weighted by…, generate_design_system(), Main entry point for design system generation. Args: query: Search query (e.g.,…, format_output(), Format results for Claude consumption (token-optimized), TestDiagnosticsContracts, TestDomainDetection (+1 more)
+Cohesion: 0.23
+Nodes (3): detect_domain(), Auto-detect the most relevant domain from query. Matches are weighted by…, TestDomainDetection
 
 ### Community 249 - "CIP Design Reference"
 Cohesion: 0.13
@@ -5443,8 +5441,8 @@ Cohesion: 0.14
 Nodes (13): Animation Tokens, Base Layer, Button Example, Component Classes, CSS Variables Setup, Dark Mode Toggle, HSL Format Benefits, shadcn/ui Alignment (+5 more)
 
 ### Community 281 - "radius"
-Cohesion: 0.11
-Nodes (27): $type, $value, lg, sm, $type, $value, $type, $value (+19 more)
+Cohesion: 0.10
+Nodes (28): $type, $value, lg, sm, $type, $value, $type, $value (+20 more)
 
 ### Community 282 - "Layout Patterns"
 Cohesion: 0.14
@@ -5630,9 +5628,9 @@ Nodes (11): Border Radius, Color Scales, Gray Scale, Motion / Duration, Primary 
 Cohesion: 0.24
 Nodes (11): extensions, formatReport(), fs, getFiles(), main(), parseArgs(), path, patterns (+3 more)
 
-### Community 328 - "input"
-Cohesion: 0.10
-Nodes (27): $type, $value, $type, $value, bg, radius, bg, border (+19 more)
+### Community 328 - "button"
+Cohesion: 0.06
+Nodes (45): $type, $value, $type, $value, bg, fg, font-size, hover-bg (+37 more)
 
 ### Community 329 - "Key Controls by Series"
 Cohesion: 0.05
@@ -5654,9 +5652,9 @@ Nodes (11): Border Radius, Color Scales, Gray Scale, Motion / Duration, Primary 
 Cohesion: 0.24
 Nodes (11): extensions, formatReport(), fs, getFiles(), main(), parseArgs(), path, patterns (+3 more)
 
-### Community 334 - "input"
-Cohesion: 0.10
-Nodes (27): $type, $value, $type, $value, bg, radius, bg, border (+19 more)
+### Community 334 - "card"
+Cohesion: 0.18
+Nodes (13): $type, $value, border, padding, shadow, border, component, card (+5 more)
 
 ### Community 335 - "agentskills-skill.schema.json"
 Cohesion: 0.05
@@ -5774,9 +5772,9 @@ Nodes (10): Bold Dynamic, CIP Design Style Guide, Classic Traditional, Color Psy
 Cohesion: 0.18
 Nodes (8): args, fs, minimal, MINIMAL_TOKENS, path, projectRoot, tokensPath, wrapStyle
 
-### Community 364 - "primitive"
-Cohesion: 0.18
-Nodes (11): fast, normal, slow, $type, $value, $type, $value, primitive (+3 more)
+### Community 364 - "duration"
+Cohesion: 0.20
+Nodes (10): fast, normal, slow, $type, $value, $type, $value, duration (+2 more)
 
 ### Community 365 - "patch"
 Cohesion: 0.18
@@ -5971,12 +5969,12 @@ Cohesion: 0.36
 Nodes (9): flattenTokens(), fs, generateCSS(), generateTailwind(), main(), parseArgs(), path, resolveReference() (+1 more)
 
 ### Community 413 - "button"
-Cohesion: 0.12
-Nodes (18): fg, font-size, hover-bg, padding-x, padding-y, button, $type, $value (+10 more)
+Cohesion: 0.08
+Nodes (32): $type, $value, bg, fg, font-size, hover-bg, padding-x, padding-y (+24 more)
 
-### Community 414 - "primitive"
-Cohesion: 0.18
-Nodes (11): fast, normal, slow, $type, $value, $type, $value, primitive (+3 more)
+### Community 414 - "duration"
+Cohesion: 0.20
+Nodes (10): fast, normal, slow, $type, $value, $type, $value, duration (+2 more)
 
 ### Community 415 - "Slide Strategies"
 Cohesion: 0.20
@@ -5991,8 +5989,8 @@ Cohesion: 0.22
 Nodes (3): read_rows(), TestTextLayoutDataContracts, TestTextLayoutRetrieval
 
 ### Community 418 - "🚀 Panduan Setup & Menjalankan TrackIt"
-Cohesion: 0.15
-Nodes (13): 2. 💻 Instalasi Android Studio, 3. ⚙️ Konfigurasi SDK & Tools, 4. 📂 Membuka Proyek, 9. 🔧 Troubleshooting, ✅ Checklist Kesiapan, 📋 Daftar Isi, Langkah-langkah:, Langkah-langkah: (+5 more)
+Cohesion: 0.20
+Nodes (10): 2. 💻 Instalasi Android Studio, 4. 📂 Membuka Proyek, 9. 🔧 Troubleshooting, ✅ Checklist Kesiapan, 📋 Daftar Isi, Langkah-langkah:, Langkah-langkah:, Masalah Umum & Solusinya: (+2 more)
 
 ### Community 419 - "🎨 TrackIt: UI/UX Onboarding & Feature Discovery Strategy"
 Cohesion: 0.20
@@ -7051,8 +7049,8 @@ Cohesion: 0.08
 Nodes (23): Automatic Escalation (no analyst decision needed), Building SOC Escalation Matrix, Communication Templates, Context-Driven Escalation Triggers, Escalation Decision Matrix, Escalation Matrix Implementation, Management Escalation, Overview (+15 more)
 
 ### Community 724 - "MISPCollector"
-Cohesion: 0.09
-Nodes (13): main(), MISPCollector, Collect IOCs from recent events., Collect events matching specific tags., Filter IOCs against MISP warninglists to remove known-good indicators., Export events as STIX 2.1 bundles., Export IOCs to CSV file., Export network IOCs as Suricata rules. (+5 more)
+Cohesion: 0.04
+Nodes (51): main(), Configure default OSINT feeds in MISP., Collect statistics from all platform components., Manage Threat Intelligence Platform operations., Check health of all platform components., TIPManager, collect_iocs_by_type(), export_stix2() (+43 more)
 
 ### Community 725 - "RedTeamEngagementTracker"
 Cohesion: 0.12
@@ -11106,9 +11104,9 @@ Nodes (14): Building SOC Playbook for Ransomware, Common Scenarios, Key Concepts
 Cohesion: 0.13
 Nodes (14): Building Threat Intelligence Feed Integration, Common Scenarios, Key Concepts, Output Format, Prerequisites, Step 1: Identify and Catalog Intelligence Sources, Step 2: Ingest STIX/TAXII Feeds, Step 3: Ingest Open-Source Feeds (+6 more)
 
-### Community 1739 - "PyMISP"
-Cohesion: 0.15
-Nodes (9): main(), Configure default OSINT feeds in MISP., Collect statistics from all platform components., Manage Threat Intelligence Platform operations., Check health of all platform components., TIPManager, connect_misp(), Initialize PyMISP connection. (+1 more)
+### Community 1739 - "WeddingRundownPresets"
+Cohesion: 0.49
+Nodes (3): RundownItem, RundownPreset, WeddingRundownPresets
 
 ### Community 1740 - "Building Threat Intelligence Platform"
 Cohesion: 0.13
@@ -12458,9 +12456,9 @@ Nodes (13): deploy_config_ssh(), generate_client_config(), generate_report(), ge
 Cohesion: 0.21
 Nodes (13): calculate_confidence(), enrich_ioc_virustotal(), extract_iocs(), format_summary(), load_ioc_feed(), main(), normalize_ioc(), Calculate confidence score for an IOC (0-100). (+5 more)
 
-### Community 2077 - "implementing-threat-modeling-with-mitre-attack/scripts/agent.py"
-Cohesion: 0.21
-Nodes (13): assess_detection_coverage(), build_threat_profile(), generate_navigator_layer(), get_group_techniques(), main(), prioritize_defenses(), Prioritize defensive investments based on threat model., Run full threat modeling exercise for an industry. (+5 more)
+### Community 2077 - "assets/scripts/tests/test_text_layout_resilience.py"
+Cohesion: 0.22
+Nodes (3): read_rows(), TestTextLayoutDataContracts, TestTextLayoutRetrieval
 
 ### Community 2078 - "Implementing Ticketing System for Incidents"
 Cohesion: 0.14
@@ -12926,9 +12924,9 @@ Nodes (12): API Reference: Vulnerability Scanning Workflow Agent, CLI Usage, `cr
 Cohesion: 0.15
 Nodes (12): Collecting Open-Source Intelligence, Common Pitfalls, Key Concepts, Prerequisites, Step 1: Define Collection Requirements, Step 2: Passive DNS and WHOIS Investigation, Step 3: Shodan Infrastructure Mapping, Step 4: Maltego Graph Analysis (+4 more)
 
-### Community 2194 - "collecting-threat-intelligence-with-misp/scripts/agent.py"
-Cohesion: 0.15
-Nodes (12): collect_iocs_by_type(), export_stix2(), extract_attributes(), init_misp(), list_feeds(), List configured MISP feeds., Export MISP event as STIX 2.1 bundle., Initialize PyMISP client. (+4 more)
+### Community 2194 - "VoiceWidgetProvider.kt"
+Cohesion: 0.46
+Nodes (5): Context, VoiceWidgetProvider, AppWidgetManager, AppWidgetProvider, IntArray
 
 ### Community 2195 - "Key Functions"
 Cohesion: 0.15
@@ -14894,9 +14892,9 @@ Nodes (10): Expected Output, Overview, Performing SSL/TLS Security Assessment, P
 Cohesion: 0.18
 Nodes (10): CLI Usage, Connection Setup, Core PyMISP Methods, Creating Events, Distribution Levels, Installation, MISP Attribute Types, MISP / PyMISP API Reference (+2 more)
 
-### Community 2686 - "performing-threat-intelligence-sharing-with-misp/scripts/agent.py"
-Cohesion: 0.27
-Nodes (10): analyze(), create_event_from_data(), generate_report(), load_data(), main(), Validate MISP sharing and feed configuration., Create a MISP event with attributes and tags., Validate event data quality for sharing readiness. (+2 more)
+### Community 2686 - "3. ⚙️ Konfigurasi SDK & Tools"
+Cohesion: 0.67
+Nodes (3): 3. ⚙️ Konfigurasi SDK & Tools, Melalui SDK Manager:, Verifikasi via Terminal (opsional):
 
 ### Community 2687 - "API Reference: Vulnerability Scanning with Nessus Agent"
 Cohesion: 0.18
@@ -17446,10 +17444,6 @@ Nodes (7): Armory (extensions / aliases), Implant generation, Listeners (C2 jobs
 Cohesion: 0.25
 Nodes (7): Downstream deployment, Feed management, MISP / PyMISP API Reference, PyMISP client, REST restSearch return formats, Searching attributes/events, Warninglists
 
-### Community 3328 - "operationalizing-misp-threat-feeds/scripts/agent.py"
-Cohesion: 0.54
-Nodes (7): connect(), export_suricata(), main(), Path, search_iocs(), write_sigma(), write_wazuh_cdb()
-
 ### Community 3329 - "API Reference: Access Review and Certification"
 Cohesion: 0.25
 Nodes (7): API Reference: Access Review and Certification, Compliance Frameworks, CSV Input Format, Key Review Checks, References, Review Campaign Design, SoD Rules JSON Format
@@ -18422,9 +18416,9 @@ Nodes (6): audit_spec_security(), calculate_security_score(), load_spec(), main(
 Cohesion: 0.29
 Nodes (6): Analysis Summary, Attack Path Analysis Report Template, Critical Asset Risk Summary, Exposure Distribution, Remediation Progress, Top Choke Points for Remediation
 
-### Community 3573 - "implementing-attack-surface-management/scripts/agent.py"
-Cohesion: 0.29
-Nodes (4): main(), Runs vulnerability scans using Nuclei., Run nuclei against targets with specified severity/tags., VulnerabilityScanner
+### Community 3573 - "VulnerabilityScanner"
+Cohesion: 0.40
+Nodes (3): Runs vulnerability scans using Nuclei., Run nuclei against targets with specified severity/tags., VulnerabilityScanner
 
 ### Community 3574 - "AWS IAM Permission Boundary Implementation Template"
 Cohesion: 0.29
@@ -20518,9 +20512,9 @@ Nodes (4): Aqua Security Container Scanning Workflows, Workflow 1: CI/CD Image G
 Cohesion: 0.40
 Nodes (4): Workflow 1: Continuous Exposure Management Lifecycle, Workflow 2: Choke Point Remediation, Workflow 3: Attack Path to Remediation Ticket, Workflows - XM Cyber Attack Path Analysis
 
-### Community 4098 - "ServiceFingerprinter"
-Cohesion: 0.40
-Nodes (3): Probes live hosts and fingerprints services using httpx., Run httpx for HTTP probing and technology detection., ServiceFingerprinter
+### Community 4098 - "implementing-attack-surface-management/scripts/agent.py"
+Cohesion: 0.29
+Nodes (4): main(), Probes live hosts and fingerprints services using httpx., Run httpx for HTTP probing and technology detection., ServiceFingerprinter
 
 ### Community 4099 - "Standards - AWS Macie for Data Classification"
 Cohesion: 0.40
@@ -20942,10 +20936,6 @@ Nodes (4): MITRE ATT&CK, NIST Cybersecurity Framework 2.0, Standards and Framewo
 Cohesion: 0.40
 Nodes (4): MITRE ATT&CK, NIST Cybersecurity Framework 2.0, Standards and Framework Mapping, Supporting Standards and References
 
-### Community 4204 - "validate-agentskills.py"
-Cohesion: 0.60
-Nodes (4): main(), Minimal YAML: top-level keys (col 0) + scalar values for name/description., top_level_keys_and_scalars(), validate()
-
 ### Community 4205 - "loop-me/SKILL.md"
 Cohesion: 0.40
 Nodes (4): Definition of done, The loop lens, The workspace, Vocabulary
@@ -21279,7 +21269,7 @@ Cohesion: 0.67
 Nodes (3): MITRE ATT&CK v19.1 — 805/817 skills mapped, 🆕 MITRE Fight Fraud Framework (F3) — 94 fraud-relevant skills, Six frameworks, one skill library
 
 ## Knowledge Gaps
-- **26061 isolated node(s):** `ACLRule`, `ACLGroup`, `LicenseIssue`, `ExploitationStatus`, `TechnicalImpact` (+26056 more)
+- **26090 isolated node(s):** `ACLRule`, `ACLGroup`, `LicenseIssue`, `ExploitationStatus`, `TechnicalImpact` (+26085 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **83 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -21295,8 +21285,8 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 4 inferred relationships involving `TailwindConfigGenerator` (e.g. with `TestGeneratedConfigIsValidJs` and `TestTailwindConfigGenerator`) actually correct?**
   _`TailwindConfigGenerator` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `ACLRule`, `ACLGroup`, `LicenseIssue` to the rest of the system?**
-  _26061 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _26090 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `TransactionEntity` be split into smaller, more focused modules?**
-  _Cohesion score 0.06412583182093164 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04240766073871409 - nodes in this community are weakly interconnected._
 - **Should `Counter` be split into smaller, more focused modules?**
-  _Cohesion score 0.04794210764360018 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.042644757433489826 - nodes in this community are weakly interconnected._

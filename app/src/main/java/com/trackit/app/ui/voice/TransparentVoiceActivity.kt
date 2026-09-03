@@ -38,6 +38,7 @@ import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.TransactionRepository
 import com.trackit.app.ui.theme.TrackItTheme
 import com.trackit.app.util.CategoryIconMapper
+import com.trackit.app.util.DateUtils
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.util.VoiceParseResult
 import com.trackit.app.util.VoiceParser
@@ -193,7 +194,7 @@ class TransparentVoiceActivity : ComponentActivity() {
                             amount = result.amount!!.toDouble(),
                             description = result.description,
                             categoryId = matchedCategory.id,
-                            date = result.dateMillis ?: System.currentTimeMillis(),
+                            date = result.dateMillis ?: DateUtils.todayMillis(),
                             profileId = profileId,
                             type = result.type
                         )
@@ -300,7 +301,7 @@ class TransparentVoiceActivity : ComponentActivity() {
                 amount = parseResult.amount!!.toDouble(),
                 description = parseResult.description,
                 categoryId = category.id,
-                date = parseResult.dateMillis ?: System.currentTimeMillis(),
+                date = parseResult.dateMillis ?: DateUtils.todayMillis(),
                 profileId = profileId,
                 type = parseResult.type
             )

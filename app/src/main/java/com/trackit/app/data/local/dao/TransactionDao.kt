@@ -121,6 +121,23 @@ interface TransactionDao {
         WHERE date >= :startOfDay AND date < :endOfDay AND type = 'EXPENSE' AND profileId = :profileId
     """)
     suspend fun countExpensesForDaySync(startOfDay: Long, endOfDay: Long, profileId: Long): Int
+
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE profileId = :profileId AND date >= :startDate AND date <= :endDate AND type = :type
+        ORDER BY date ASC
+    """)
+    fun getTransactionsByDateRangeFlow(startDate: Long, endDate: Long, type: String, profileId: Long): Flow<List<TransactionEntity>>
+
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE profileId = :profileId AND type = :type
+        AND (:query = '' OR description LIKE '%' || :query || '%')
+        AND (:startDate = 0 OR date >= :startDate)
+        AND (:endDate = 0 OR date <= :endDate)
+        ORDER BY date DESC, createdAt DESC
+    """)
+    fun searchTransactions(query: String, startDate: Long, endDate: Long, type: String, profileId: Long): Flow<List<TransactionEntity>>
 }
 
 data class CategorySpending(

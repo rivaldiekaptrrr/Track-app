@@ -436,7 +436,9 @@ class SyncManager @Inject constructor(
 
             val docId = "${transaction.createdAt}_${transaction.profileId}"
             val result = withTimeoutOrNull(15_000L) {
-                restClient.put("users/$userId/transactions/$docId", transaction.toFirestoreJson())
+                val syncResult = restClient.put("users/$userId/transactions/$docId", transaction.toFirestoreJson())
+                notifySyncSuccess(syncResult)
+                syncResult
             }
             when {
                 result == null -> Log.e(TAG, "Sync TIMEOUT for transaction: $docId")
@@ -451,7 +453,9 @@ class SyncManager @Inject constructor(
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
             val docId = "${transaction.createdAt}_${transaction.profileId}"
-            restClient.delete("users/$userId/transactions/$docId")
+            val syncResult = restClient.delete("users/$userId/transactions/$docId")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -461,7 +465,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_profiles/${profile.id}", profile.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_profiles/${profile.id}", profile.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -469,7 +475,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_profiles/${profile.id}")
+            val syncResult = restClient.delete("users/$userId/wedding_profiles/${profile.id}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -479,7 +487,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_expenses/${expense.expenseId}", expense.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_expenses/${expense.expenseId}", expense.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -487,7 +497,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_expenses/${expense.expenseId}")
+            val syncResult = restClient.delete("users/$userId/wedding_expenses/${expense.expenseId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -497,7 +509,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_tasks/${task.taskId}", task.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_tasks/${task.taskId}", task.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -505,7 +519,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_tasks/${task.taskId}")
+            val syncResult = restClient.delete("users/$userId/wedding_tasks/${task.taskId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -515,7 +531,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_vendors/${vendor.vendorId}", vendor.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_vendors/${vendor.vendorId}", vendor.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -523,7 +541,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_vendors/${vendor.vendorId}")
+            val syncResult = restClient.delete("users/$userId/wedding_vendors/${vendor.vendorId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -533,7 +553,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_guests/${guest.guestId}", guest.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_guests/${guest.guestId}", guest.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -541,7 +563,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_guests/${guest.guestId}")
+            val syncResult = restClient.delete("users/$userId/wedding_guests/${guest.guestId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -551,7 +575,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_committee/${member.memberId}", member.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_committee/${member.memberId}", member.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -559,7 +585,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_committee/${member.memberId}")
+            val syncResult = restClient.delete("users/$userId/wedding_committee/${member.memberId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -569,7 +597,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_payment_terms/${term.termId}", term.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_payment_terms/${term.termId}", term.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -577,7 +607,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_payment_terms/${term.termId}")
+            val syncResult = restClient.delete("users/$userId/wedding_payment_terms/${term.termId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -587,7 +619,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_seserahan/${item.itemId}", item.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_seserahan/${item.itemId}", item.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -595,7 +629,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_seserahan/${item.itemId}")
+            val syncResult = restClient.delete("users/$userId/wedding_seserahan/${item.itemId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -605,7 +641,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_documents/${doc.docId}", doc.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_documents/${doc.docId}", doc.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -613,7 +651,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_documents/${doc.docId}")
+            val syncResult = restClient.delete("users/$userId/wedding_documents/${doc.docId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -623,7 +663,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_events/${event.eventId}", event.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_events/${event.eventId}", event.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -631,7 +673,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_events/${event.eventId}")
+            val syncResult = restClient.delete("users/$userId/wedding_events/${event.eventId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -639,7 +683,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/wedding_rundown_items/${item.itemId}", item.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/wedding_rundown_items/${item.itemId}", item.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -647,7 +693,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/wedding_rundown_items/${item.itemId}")
+            val syncResult = restClient.delete("users/$userId/wedding_rundown_items/${item.itemId}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -673,11 +721,15 @@ class SyncManager @Inject constructor(
                 // New account: push all local data up to Firestore for the first time.
                 val allProfiles = profileDao.getAllProfilesSync()
                 for (profile in allProfiles) {
-                    restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                    val syncResult = restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                    notifySyncSuccess(syncResult)
+                    syncResult
                 }
                 val allCategories = categoryDao.getAllCategoriesSync()
                 for (cat in allCategories) {
-                    restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                    val syncResult = restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                    notifySyncSuccess(syncResult)
+                    syncResult
                 }
                 val allTransactions = transactionDao.getAllTransactionsAllProfiles().first()
                 var successCount = 0
@@ -696,11 +748,15 @@ class SyncManager @Inject constructor(
                     Log.d(TAG, "Existing account has no Firestore profiles — pushing local data as initial backup.")
                     val allProfiles = profileDao.getAllProfilesSync()
                     for (profile in allProfiles) {
-                        restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                        val syncResult = restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+                        notifySyncSuccess(syncResult)
+                        syncResult
                     }
                     val allCategories = categoryDao.getAllCategoriesSync()
                     for (cat in allCategories) {
-                        restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                        val syncResult = restClient.put("users/$userId/categories/${cat.id}", cat.toFirestoreJson())
+                        notifySyncSuccess(syncResult)
+                        syncResult
                     }
                     Log.d(TAG, "Initial backup of profiles & categories done.")
                 } else {
@@ -755,7 +811,9 @@ class SyncManager @Inject constructor(
             // Self-heal: Delete malformed duplicates from Firestore
             if (docId.contains("_")) {
                 Log.d(TAG, "Cleaning up legacy duplicate category doc: $docId")
-                restClient.delete("users/$userId/categories/$docId")
+                val syncResult = restClient.delete("users/$userId/categories/$docId")
+                notifySyncSuccess(syncResult)
+                syncResult
                 continue
             }
 
@@ -794,7 +852,9 @@ class SyncManager @Inject constructor(
             
             if (docId.contains("_")) {
                 Log.d(TAG, "Cleaning up legacy duplicate budget doc: $docId")
-                restClient.delete("users/$userId/category_budgets/$docId")
+                val syncResult = restClient.delete("users/$userId/category_budgets/$docId")
+                notifySyncSuccess(syncResult)
+                syncResult
                 continue
             }
 
@@ -810,7 +870,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/profiles/${profile.id}", profile.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -818,7 +880,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/profiles/${profile.id}")
+            val syncResult = restClient.delete("users/$userId/profiles/${profile.id}")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -829,7 +893,9 @@ class SyncManager @Inject constructor(
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
             val docId = category.id
-            restClient.put("users/$userId/categories/$docId", category.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/categories/$docId", category.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -838,7 +904,9 @@ class SyncManager @Inject constructor(
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
             val docId = category.id
-            restClient.delete("users/$userId/categories/$docId")
+            val syncResult = restClient.delete("users/$userId/categories/$docId")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -848,7 +916,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.put("users/$userId/budget_settings/${budgetSetting.profileId}", budgetSetting.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/budget_settings/${budgetSetting.profileId}", budgetSetting.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -856,7 +926,9 @@ class SyncManager @Inject constructor(
         syncScope.launch {
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
-            restClient.delete("users/$userId/budget_settings/$profileId")
+            val syncResult = restClient.delete("users/$userId/budget_settings/$profileId")
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -867,7 +939,9 @@ class SyncManager @Inject constructor(
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
             val docId = budget.categoryId
-            restClient.put("users/$userId/category_budgets/$docId", budget.toFirestoreJson())
+            val syncResult = restClient.put("users/$userId/category_budgets/$docId", budget.toFirestoreJson())
+            notifySyncSuccess(syncResult)
+            syncResult
         }
     }
 
@@ -876,7 +950,15 @@ class SyncManager @Inject constructor(
             if (!syncPreferences.isOnlineMode.first()) return@launch
             val userId = authRepository.currentUser?.uid ?: return@launch
             val docId = budget.categoryId
-            restClient.delete("users/$userId/category_budgets/$docId")
+            val syncResult = restClient.delete("users/$userId/category_budgets/$docId")
+            notifySyncSuccess(syncResult)
+            syncResult
+        }
+    }
+
+    private suspend fun notifySyncSuccess(result: Boolean?) {
+        if (result == true) {
+            syncPreferences.updateLastSyncTime()
         }
     }
 }

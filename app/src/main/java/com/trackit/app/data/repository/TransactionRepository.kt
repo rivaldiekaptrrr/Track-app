@@ -43,6 +43,12 @@ class TransactionRepository @Inject constructor(
     suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long, profileId: Long): List<TransactionEntity> =
         transactionDao.getTransactionsByDateRange(startDate, endDate, profileId)
 
+    fun getTransactionsByDateRangeFlow(startDate: Long, endDate: Long, type: String, profileId: Long): Flow<List<TransactionEntity>> =
+        transactionDao.getTransactionsByDateRangeFlow(startDate, endDate, type, profileId)
+
+    fun searchTransactions(query: String, startDate: Long, endDate: Long, type: String, profileId: Long): Flow<List<TransactionEntity>> =
+        transactionDao.searchTransactions(query, startDate, endDate, type, profileId)
+
     fun getAllTimeIncome(profileId: Long): Flow<Double> =
         transactionDao.getAllTimeIncome(profileId)
 
