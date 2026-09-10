@@ -113,6 +113,25 @@ Biometric prompt muncul → scan sidik jari → masuk Dashboard
 
 ---
 
+## Opsi C: Menggunakan Xcode / iOS Simulator (macOS)
+
+Jika Anda ingin menjalankan TrackIt di iPhone atau iOS Simulator:
+
+### Yang Harus Disiapkan
+| No | Komponen | Download |
+|----|----------|----------|
+| 1 | **macOS** (Sonoma / Sequoia) | — |
+| 2 | **Xcode 15+** | [Mac App Store](https://apps.apple.com/app/xcode/id497799835) |
+| 3 | **JDK 17** | `brew install openjdk@17` |
+
+### 3 Langkah Menjalankan di iOS
+1. Buka terminal di macOS, jalankan `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode`.
+2. Buka folder `iosApp/` atau `iosApp.xcodeproj` di **Xcode**.
+3. Pilih perangkat **iOS Simulator (iPhone 15 Pro)** di toolbar atas, lalu klik tombol **Run ▶️**.
+
+
+---
+
 ## Build APK (Opsional)
 
 ```bash

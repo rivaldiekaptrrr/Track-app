@@ -19,14 +19,15 @@
 
 ## Gambaran Umum Sistem
 
-Sistem CI/CD TrackIt berjalan di **GitHub Actions** dan menggunakan dua alur yang berbeda dalam **satu file workflow** (`.github/workflows/android-build.yml`). Alur dipilih secara otomatis berdasarkan apakah kamu push kode biasa atau push **tag versi** (`v*`).
+Sistem CI/CD TrackIt berjalan di **GitHub Actions** secara **Dual-Platform (Android & iOS)** dalam **satu file workflow** (`.github/workflows/multiplatform-build.yml`). Alur dipilih secara otomatis berdasarkan apakah kamu push kode biasa atau push **tag versi** (`v*`).
 
 ```
-Push ke main  →  Build + Test + APK Artifact  (Internal/Developer)
-Push tag v*   →  Build + Test + APK Artifact + GitHub Release  (Publik/User)
+Push ke main  →  Build Android (Linux) + Validate iOS (macOS)  (Internal/Developer)
+Push tag v*   →  Build Android + iOS + GitHub Release Publik  (Publik/User)
 ```
 
 Fitur **"Cek Pembaruan"** di dalam aplikasi hanya akan mendeteksi update dari **GitHub Release** yang dibuat oleh Alur 2.
+
 
 ---
 

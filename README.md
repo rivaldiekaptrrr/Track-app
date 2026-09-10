@@ -1,82 +1,63 @@
-# 🎤 TrackIt — Smart Voice Expense Tracker
+# 🎤 TrackIt — Cross-Platform Smart Voice Expense Tracker (Android & iOS)
 
-> Aplikasi pencatatan keuangan pribadi berbasis Android dengan teknologi **Offline Voice Tracking** (Speech-to-Text), **Natural Machine Learning** untuk kategorisasi otomatis, keamanan biometrik, notifikasi anggaran cerdas, dan **Pembaruan Aplikasi Mandiri (In-App Update)** langsung dari GitHub Releases.
+> Aplikasi pencatatan keuangan pribadi cerdas dan perencana pernikahan lintas platform (**Android & iOS**) berbasis **Compose Multiplatform (CMP)** dan **Kotlin Multiplatform (KMP)**. Dilengkapi teknologi **Offline Voice Tracking** (Speech-to-Text), **Natural Machine Learning** untuk kategorisasi otomatis, keamanan biometrik (Fingerprint & Face ID), dan pipeline **CI/CD Otomatis** untuk build Android (`.apk`) & iOS sekaligus di GitHub Actions.
 
 ---
 
 ## 📋 Daftar Isi
 
 - [Tentang Aplikasi](#-tentang-aplikasi)
+- [Dukungan Platform](#-dukungan-platform)
 - [Fitur Utama](#-fitur-utama)
 - [Tech Stack](#-tech-stack)
-- [Arsitektur Sistem](#-arsitektur-sistem)
+- [Arsitektur Sistem Multiplatform](#-arsitektur-sistem-multiplatform)
 - [Struktur Proyek](#-struktur-proyek)
 - [Alur Pengguna](#-alur-pengguna)
-- [Skema Database](#-skema-database)
-- [Cara Menjalankan](#-cara-menjalankan)
+- [Cara Menjalankan (Android & iOS)](#-cara-menjalankan-android--ios)
+- [CI/CD & Rilis Otomatis](#-cicd--rilis-otomatis)
 - [Konfigurasi & Perizinan](#-konfigurasi--perizinan)
-- [Screenshot Fitur](#-screenshot-fitur)
 
 ---
 
 ## 🎯 Tentang Aplikasi
 
-**TrackIt** adalah aplikasi pencatatan keuangan pribadi yang dirancang untuk menghilangkan hambatan dalam mencatat pemasukan dan pengeluaran. Dengan memanfaatkan **Android SpeechRecognizer secara Offline**, pengguna cukup mengucapkan transaksi menggunakan bahasa natural (misal: *"beli sayur 50 ribu"* atau *"dapat gaji 5 juta"*) dan form akan terisi otomatis beserta kategorinya!
+**TrackIt** adalah aplikasi pencatatan keuangan pribadi dan wedding planner yang dirancang untuk menghilangkan hambatan dalam mencatat pemasukan dan pengeluaran. Dengan memanfaatkan teknologi **Voice Tracking** dan pengenalan bahasa alami (*Natural Language Parser*), pengguna cukup mengucapkan transaksi (misal: *"beli sayur 50 ribu"* atau *"dapat gaji 5 juta"*) dan sistem akan mengisi formulir secara otomatis beserta kategorinya!
 
 ### Target Pengguna
-- 🎯 **Semua Orang** yang ingin mengelola, melacak, dan mengontrol keuangan pribadinya dengan lebih mudah.
+- 🎯 **Semua Orang** yang ingin mengelola, melacak, dan mengontrol keuangan pribadinya di **Android maupun iPhone (iOS)**.
 - 💼 **Individu Super Sibuk** yang membutuhkan kecepatan pencatatan pengeluaran semudah berbicara.
-- 🔒 **Pengguna Peduli Privasi** — semua proses pengenalan suara dan data disimpan **100% offline** di dalam perangkat Anda.
+- 💍 **Calon Pengantin** yang membutuhkan manajemen anggaran pernikahan, vendor, rundown acara, dan tamu undangan.
+- 🔒 **Pengguna Peduli Privasi** — data tersimpan aman secara lokal dengan proteksi Biometrik (Fingerprint & Face ID).
+
+---
+
+## 📱 Dukungan Platform
+
+| Platform | Target OS | Teknologi UI | Engine Keamanan |
+| :--- | :--- | :--- | :--- |
+| 🤖 **Android** | Android 8.0+ (API 26 s/d 34+) | Compose Multiplatform / Material 3 | `androidx.biometric.BiometricPrompt` |
+| 🍎 **iOS** | iOS 15.0+ (iPhone & Simulator) | SwiftUI Wrapper + Compose Multiplatform | Apple `LocalAuthentication` (`LAContext` Face ID / Touch ID) |
 
 ---
 
 ## ✨ Fitur Utama
 
-### 🔴 Fase 1 — Core (Fondasi Utama)
+### 🔴 Core Financial Management
+* **Pemasukan & Pengeluaran:** Pencatatan cepat dengan filter tanggal, bulan, tahun, dan pencarian instan.
+* **Interactive Charting:** Visualisasi pengeluaran via Donut/Pie Chart & Tren Grafis Garis interaktif (*tap-to-inspect* tooltip) berbasis Compose Canvas murni.
+* **Multi-Profile:** Pisahkan pembukuan pribadi, keluarga, atau bisnis dengan mudah.
+* **Smart Budget Alert:** Pantau batas anggaran kategori dengan peringatan otomatis.
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Pemasukan & Pengeluaran** | Mendukung pencatatan dua tipe transaksi dengan filter UI pintar. |
-| **Dashboard & Navigasi Premium** | UI modern dengan Animated Bottom Navigation yang mendukung *long-press* untuk switch Profile. |
-| **Premium UI/UX** | *Digital Card* untuk visualisasi saldo, *Interactive Empty State*, *Haptic Feedback*, dan *Onboarding Edukasi*. |
-| **Multi-Profile** | Pisahkan pembukuan pribadi dan bisnis/pekerjaan dengan mudah. |
-| **Kategori Kustom** | Tersedia 12 kategori bawaan, dan pengguna **bebas membuat/mengedit** kategori (Ikon & Warna). |
-| **Smart Calculator** | Evaluasi operasi matematika langsung pada kolom nominal (misal: `45000+12000`). |
-| **Penyimpanan Offline** | Semua data tersimpan di Room Database lokal — tidak memerlukan internet. |
+### 💍 Wedding Planner Mode
+* **Manajemen Anggaran & Biaya:** Tracking pengeluaran pernikahan per pos anggaran.
+* **Vendor & Dokumen:** Pengelolaan status vendor, kontak, kontrak, dan termin pembayaran.
+* **Tamu & Buku Tamu:** Pendataan tamu undangan, RSVP, dan kehadiran.
+* **Rundown Acara & Panitia:** Susunan acara detail menit-demi-menit beserta PIC panitia.
+* **Ekspor Laporan:** Ekspor laporan pernikahan dan keuangan ke format **PDF (A4)** & **CSV (Excel)**.
 
-### 🟡 Fase 2 — Smart (Otomatisasi Suara)
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Offline Voice Tracking** | Pengenalan suara tanpa internet menggunakan Android SpeechRecognizer. |
-| **Batch Voice Input** | Kemampuan mencatat banyak transaksi dalam satu nafas (misal: *"beli tas 30 ribu baju 40 ribu"* dipisah otomatis). |
-| **Atomic Smart Dictionary** | AI otomatis belajar kata baru sambil membuang angka & kata hubung agar kamus (*Natural Language Parser*) tetap efisien. |
-| **Voice Widget (Transparent)** | Widget *home screen* transparan pintar dengan sistem **Antrean Kategori** untuk batch input secepat kilat. |
-| **Voice Feedback (TTS)** | Robot asisten membacakan konfirmasi dinamis ("Tersimpan, 3 transaksi") setelah *auto-save*. |
-
-### 🟢 Fase 3 — Security (Keamanan & Backup)
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Biometric Login & Auto-Lock** | Autentikasi sidik jari untuk akses aplikasi, dan **otomatis terkunci** saat masuk ke latar belakang (*onStop*). |
-| **Privacy Screen** | `FLAG_SECURE` mencegah konten aplikasi terlihat di layar Recent Apps. |
-| **Auto Backup & Restore** | Pencadangan otomatis secara berkala dan pemulihan data instan (satu-klik) dengan *auto-restart*. |
-
-### 🔵 Fase 4 — Advanced (Laporan & Notifikasi)
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Export Laporan** | Ekspor transaksi bulanan ke format **PDF (A4)** dan **CSV (Excel)**. |
-| **Budget Alert** | Notifikasi otomatis dikirim jika ≥ 80% anggaran tercapai. |
-| **Transaksi Berulang** | Transaksi otomatis harian/mingguan/bulanan via WorkManager. |
-
-### 🟣 Fase 5 — Maintenance & Delivery (Pembaruan Mandiri)
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **In-App Update (Auto)** | Mengecek versi terbaru dari GitHub Releases API secara *silent* di background setiap kali aplikasi dibuka. |
-| **Pembaruan Manual** | Cek ketersediaan update melalui menu Settings dengan indikator *loading* responsif. |
-| **Download & Install Otomatis** | Mengunduh APK baru dengan progress bar *real-time* dan meluncurkan *Android Installer* secara langsung tanpa perlu repot ke browser. |
+### 🟢 Security & Cloud Synchronization
+* **Biometric Authentication:** Proteksi instan sidik jari (Android) dan Face ID (iOS).
+* **Cloud Sync (Firestore REST):** Sinkronisasi cloud multi-perangkat via REST API berkecepatan tinggi yang bebas pemblokiran gRPC.
 
 ---
 
@@ -84,148 +65,115 @@
 
 | Komponen | Teknologi |
 |----------|-----------|
-| **Bahasa** | Kotlin 1.9.22 |
-| **UI Framework** | Jetpack Compose + Material Design 3 |
-| **Arsitektur** | MVVM (Model-View-ViewModel) |
-| **Local Database** | Room Database 2.6.1 |
-| **Dependency Injection** | Hilt (Dagger) 2.50 |
-| **Reactive Streams** | Kotlin Coroutines + Flow |
-| **Voice Engine** | Android SpeechRecognizer & TextToSpeech (Offline) |
-| **Keamanan** | AndroidX Biometric API 1.1.0 |
-| **Background Tasks** | WorkManager 2.9.0 |
-| **Build System** | Gradle 8.5 + AGP 8.2.2 + KSP |
-| **CI/CD Pipeline** | GitHub Actions (Auto Build APK) |
-| **Min SDK** | Android 8.0 (API 26) |
-| **Target SDK** | Android 14 (API 34) |
+| **Bahasa Utama** | Kotlin 1.9.22 (Multiplatform) & Swift (iOS Wrapper) |
+| **UI Framework** | Compose Multiplatform 1.6+ & Jetpack Compose (Material 3) |
+| **Dependency Injection** | Koin Multiplatform (`io.insert-koin`) |
+| **Networking & REST** | Ktor Client (OkHttp Engine untuk Android, Darwin Engine untuk iOS) |
+| **Local Persistence** | Room Database & Multiplatform DataStore |
+| **Reactive Streams** | Kotlin Coroutines & StateFlow |
+| **CI/CD Pipeline** | GitHub Actions (Dual-platform: `ubuntu-latest` & `macos-latest`) |
 
 ---
 
-## 🏗 Arsitektur Sistem
+## 🏗 Arsitektur Sistem Multiplatform
 
-TrackIt menggunakan arsitektur **MVVM (Model-View-ViewModel)** dengan Clean Architecture principles:
+```mermaid
+flowchart TB
+    A["TrackIt App"]
 
-```
-┌───────────────────────────────────────────────┐
-│                   UI Layer                     │
-│  ┌─────────────┐  ┌──────────────────────┐    │
-│  │  Composable  │──│    ViewModel         │    │
-│  │  Screens     │  │  (StateFlow/Flow)    │    │
-│  └─────────────┘  └──────────┬───────────┘    │
-│                               │                │
-├───────────────────────────────┼────────────────┤
-│                   Data Layer  │                │
-│  ┌────────────────────────────▼──────────┐     │
-│  │          Repository                   │     │
-│  │  (Abstraksi akses data)               │     │
-│  └────────────────────┬──────────────────┘     │
-│                       │                        │
-│  ┌────────────────────▼──────────────────┐     │
-│  │        Room Database                  │     │
-│  │  ┌──────┐  ┌──────────┐  ┌────────┐  │     │
-│  │  │ DAOs │  │ Entities │  │Queries │  │     │
-│  │  └──────┘  └──────────┘  └────────┘  │     │
-│  └───────────────────────────────────────┘     │
-│                                                │
-├────────────────────────────────────────────────┤
-│              External Services                 │
-│  ┌───────────────┐  ┌───────────────┐          │
-│  │SpeechRecognizer│  │ TextToSpeech  │          │
-│  │ (STT Offline)  │  │ (TTS Engine)  │          │
-│  └───────────────┘  └───────────────┘          │
-└────────────────────────────────────────────────┘
+    A --> B["commonMain (Shared)"]
+    A --> C["androidMain"]
+    A --> D["iosMain"]
+
+    %% Common Layer
+    B --> B1["Compose Multiplatform UI"]
+    B --> B2["ViewModels & Koin DI"]
+    B --> B3["Business Logic & Utilities"]
+    B --> B4["Repository Interfaces"]
+
+    B1 --> B2
+    B2 --> B3
+    B3 --> B4
+
+    %% Platform Implementations
+    C --> C1["Android BiometricPrompt"]
+    C --> C2["Android FileProvider / Share"]
+    C --> C3["Ktor OkHttp Engine"]
+
+    D --> D1["iOS Face ID / LAContext"]
+    D --> D2["iOS UIActivityViewController"]
+    D --> D3["Ktor Darwin Engine"]
 ```
 
 ---
 
-## 🔄 Alur Pengguna
+## 📂 Struktur Proyek
 
-### Alur 1: Menambah Transaksi via Suara (Ajaib 🪄)
 ```
-Buka App → Biometric Auth → Dashboard → Tekan FAB (+)
-→ Tekan ikon Mikrofon 🎤 → Ucapkan: "beli sate ayam 25 ribu"
-→ AI memproses kalimat → Nominal terisi 25.000, Kategori terisi Makanan
-→ Klik Simpan → TTS berkata: "Tersimpan, pengeluaran Makanan 25.000 rupiah"
-```
-
-### Alur 2: Fitur Self-Learning (Belajar Otomatis)
-```text
-Ucapkan: "bayar langganan gym 150 ribu"
-→ Nominal terisi 150.000, Kategori KOSONG (karena 'gym' belum dikenal)
-→ Anda memilih kategori "Kesehatan" secara manual → Simpan
-→ Sistem otomatis menambahkan kata "langganan gym" ke dalam otak kategori "Kesehatan".
-→ Besok saat Anda menyebut "gym" lagi, aplikasi otomatis memasukannya ke "Kesehatan"!
-```
-
-### Alur 3: Multi-Transaction (Batch Voice Input via Widget)
-```text
-Buka Home Screen → Tekan Widget Voice 🎤 → Ucapkan: "beli kopi 20 ribu beli cemilan 15 ribu"
-→ AI memecah ucapan menjadi 2 transaksi.
-→ Transaksi yang dikenali langsung disimpan di latar belakang (tanpa UI).
-→ Untuk yang tidak dikenali, muncul BottomSheet interaktif: "Pilih kategori untuk kopi".
-→ Setelah dipilih, antrean bergeser menanyakan: "Pilih kategori untuk cemilan".
-→ Setelah antrean habis, TTS berkata: "Tersimpan, 2 transaksi".
-```
-
-### Alur 4: Pembaruan Mandiri (In-App Update)
-```text
-(Skenario Auto) Buka Aplikasi → Aplikasi diam-diam mengecek versi ke GitHub
-→ Ditemukan versi baru → Dialog "Pembaruan Tersedia" muncul di layar
-→ Klik "Unduh Sekarang" → Progress bar berjalan (0% - 100%)
-→ Selesai mengunduh → Klik "Pasang" → Sistem Android melakukan instalasi versi terbaru.
+Track-app/
+├── .github/workflows/
+│   └── multiplatform-build.yml     # CI/CD Dual-Platform (Android & iOS)
+├── composeApp/                     # Modul Shared Kotlin Multiplatform
+│   ├── build.gradle.kts            # Konfigurasi target Android & iOS
+│   └── src/
+│       ├── commonMain/             # Logika, ViewModel, dan UI Compose Lintas Platform
+│       │   └── kotlin/com/trackit/app/
+│       │       ├── di/             # Koin Modules (AppModule, NetworkModule)
+│       │       ├── ui/             # Screens & Theme (Theme.kt, Color.kt)
+│       │       └── util/           # Expect declarations (Biometric, Exporter, Platform)
+│       ├── androidMain/            # Implementasi Actual untuk platform Android
+│       └── iosMain/                # Implementasi Actual untuk platform iOS & MainViewController
+├── iosApp/                         # Aplikasi iOS Xcode (SwiftUI)
+│   └── iosApp/
+│       ├── iOSApp.swift            # Entry point aplikasi iOS
+│       ├── ContentView.swift       # SwiftUI Wrapper untuk ComposeUIViewController
+│       └── Info.plist              # Konfigurasi izin Face ID & identitas bundle
+├── app/                            # Modul Android Application
+├── build.gradle.kts                # Root Gradle configuration
+└── settings.gradle.kts             # Pengaturan repositori multiplatform
 ```
 
 ---
 
-## 🗄 Skema Database
+## 🚀 Cara Menjalankan (Android & iOS)
 
-### Tabel `transactions`
-| Kolom | Tipe | Keterangan |
-|-------|------|------------|
-| `id` | Long (PK) | Auto-increment |
-| `amount` | Double | Nominal transaksi |
-| `description` | String | Deskripsi opsional |
-| `categoryId` | Long? (FK) | Referensi ke `categories.id` |
-| `type` | String | `INCOME` atau `EXPENSE` |
-| `date` | Long | Epoch milliseconds |
-| `isRecurring` | Boolean | Apakah transaksi berulang |
+### 🤖 Menjalankan di Android
+1. Buka folder proyek di **Android Studio**.
+2. Tunggu proses **Gradle Sync** selesai.
+3. Pilih konfigurasi target `app` atau `composeApp`.
+4. Klik tombol **Run ▶️** pada emulator atau perangkat fisik Android (API 26+).
 
-### Tabel `categories`
-| Kolom | Tipe | Keterangan |
-|-------|------|------------|
-| `id` | Long (PK) | Auto-increment |
-| `name` | String | Nama kategori (misal: "Makanan") |
-| `iconName` | String | Nama ikon Material (misal: "restaurant") |
-| `colorHex` | String | Warna hex (misal: "#E8963B") |
-| `customKeywords`| String | Kata kunci AI (*comma separated*) |
-| `type` | String | `INCOME` atau `EXPENSE` |
+### 🍎 Menjalankan di iOS (macOS / Xcode)
+1. Buka berkas `iosApp/iosApp.xcodeproj` atau folder `iosApp` di **Xcode**.
+2. Pastikan target perangkat dipilih ke **iOS Simulator** (misal: iPhone 15 Pro).
+3. Klik tombol **Run ▶️** di Xcode. Xcode akan otomatis memanggil tugas Gradle KMP untuk menyusun `ComposeApp.framework` dan menjalankannya di Simulator.
 
 ---
 
-## 🚀 Cara Menjalankan
+## ⚙️ CI/CD & Rilis Otomatis
 
-### Prasyarat
-- **Android Studio** Hedgehog (2023.1.1) atau lebih baru
-- Perangkat Android / Emulator (API 26+)
-- *Catatan: Untuk SpeechRecognizer offline, pastikan sudah mengunduh Bahasa Indonesia di pengaturan HP Anda (Settings > System > Language > Speech).*
+Proyek ini telah dikonfigurasi dengan pipeline **GitHub Actions** dual-platform di [`.github/workflows/multiplatform-build.yml`](.github/workflows/multiplatform-build.yml):
 
-### Langkah-langkah
-1. **Clone / Buka** folder di Android Studio.
-2. **Tunggu Gradle Sync** selesai.
-3. **Klik Run** ▶️ pada konfigurasi `app`.
-4. Jika HP tidak mendukung offline voice, fitur input manual tetap dapat berjalan sempurna.
+1. **`build-android` (`ubuntu-latest`):**
+   * Mengomputasi APK release Android (`./gradlew assembleRelease`).
+   * Menghasilkan artefak `app-trackit-android-v*.apk`.
+2. **`build-ios` (`macos-latest`):**
+   * Mengonfigurasi lingkungan Xcode dan SDK iOS.
+   * Memvalidasi kompilasi binari framework iOS.
+3. **`create-release`:**
+   * Otomatis membuat GitHub Release resmi dan melampirkan file APK saat tag versi (`v*`) di-push ke repository.
 
 ---
 
 ## 🔐 Konfigurasi & Perizinan
 
-| Perizinan | Kegunaan |
-|-----------|----------|
-| `RECORD_AUDIO` | Akses mikrofon untuk Speech-to-Text |
-| `USE_BIOMETRIC` | Autentikasi sidik jari |
-| `POST_NOTIFICATIONS` | Mengirim notifikasi budget alert |
-| `REQUEST_INSTALL_PACKAGES` | Menginstal versi baru APK (In-App Update) |
-| `INTERNET` | Mengunduh APK pembaruan dari GitHub |
+| Perizinan / Kunci | Platform | Kegunaan |
+| :--- | :---: | :--- |
+| `USE_BIOMETRIC` | Android | Autentikasi sidik jari di Android |
+| `NSFaceIDUsageDescription` | iOS | Izin autentikasi Face ID / Touch ID di iPhone |
+| `RECORD_AUDIO` | Android | Pengenalan suara mikrofon (Speech-to-Text) |
+| `INTERNET` | Keduanya | Sinkronisasi cloud Firestore REST API |
 
 ---
 
-*Dibuat dengan ❤️ menggunakan Kotlin, Jetpack Compose, dan Material Design 3*
+*Dibuat dengan ❤️ menggunakan Kotlin Multiplatform, Compose Multiplatform, dan SwiftUI.*

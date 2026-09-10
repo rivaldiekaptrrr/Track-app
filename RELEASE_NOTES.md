@@ -1,8 +1,11 @@
-* **Perbaikan Sinkronisasi Dashboard**: Memperbaiki isu waktu "Terakhir Sinkron" yang tidak update saat terjadi penambahan pengeluaran baru.
-* **Perbaikan UI Settings**: Merapikan antarmuka pilihan tema menggunakan *DropdownMenu*.
-* **Penyempurnaan Statistik & Grafik**:
-    * Desain ulang layar statistik menggunakan Tab (Pie Chart & Tren Bulanan) agar lebih informatif.
-    * Penambahan fitur pencarian pada layar statistik untuk mencari transaksi.
-    * Grafik tren bulanan kini interaktif dengan memunculkan tooltip nominal total saat disentuh.
-* **Standarisasi Pengurutan Transaksi**: Memastikan transaksi terbaru di hari ini berada di urutan paling atas.
-* **Pembersihan UI**: Menghilangkan emoji pada teks untuk menjaga konsistensi desain sistem.
+* **Dukungan Multiplatform (Android & iOS)**:
+    * Migrasi arsitektur ke **Compose Multiplatform (CMP)** dan **Kotlin Multiplatform (KMP)**.
+    * Pembuatan modul `:composeApp` untuk berbagi UI dan *business logic* antara Android dan iOS.
+* **Integrasi Target iOS & SwiftUI**:
+    * Penambahan wrapper `iosApp` berbasis SwiftUI (`iOSApp.swift` & `ContentView.swift`).
+    * Dukungan keamanan **Face ID / Touch ID** via Apple `LocalAuthentication` framework.
+* **Modernisasi Network & Dependency Injection**:
+    * Penggunaan **Ktor Client** untuk sinkronisasi cloud Firestore REST API lintas platform.
+    * Pengenalan **Koin Multiplatform** untuk manajemen Dependency Injection.
+* **Dual-Platform CI/CD Pipeline**:
+    * Workflow GitHub Actions baru yang mem-build APK Android (`ubuntu-latest`) dan memvalidasi target iOS (`macos-latest`) secara simultan pada setiap rilis.

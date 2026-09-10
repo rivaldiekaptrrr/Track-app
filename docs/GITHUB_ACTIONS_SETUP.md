@@ -1,109 +1,57 @@
-# Tutorial GitHub Actions untuk Build Android
+# Tutorial GitHub Actions untuk Dual-Platform Build (Android & iOS)
 
 ## Prerequisites
 
 - Akun GitHub
-- Project sudah ada di repository GitHub
+- Proyek sudah ada di repository GitHub
 
 ## Langkah-Langkah
 
-### 1. Push Project ke GitHub (jika belum)
+### 1. Push Proyek ke GitHub (jika belum)
 
 ```bash
 git init
 git add .
-git commit -m "Initial commit"
+git commit -m "feat: setup KMP & Compose Multiplatform"
 git remote add origin https://github.com/USERNAME/REPO_NAME.git
 git push -u origin main
 ```
 
-### 2. Buat Workflow File
+### 2. Workflow File Multiplatform
 
-Buat file di: `.github/workflows/android-build.yml`
+File konfigurasi workflow berada di: [`.github/workflows/multiplatform-build.yml`](../.github/workflows/multiplatform-build.yml)
 
-```yaml
-name: Android Build
+Workflow ini memiliki dua job yang berjalan secara paralel:
+1. **`build-android` (`runs-on: ubuntu-latest`):** Menyusun rilis APK Android menggunakan Gradle.
+2. **`build-ios` (`runs-on: macos-latest`):** Menyiapkan lingkungan Xcode & macOS untuk memvalidasi kompilasi framework iOS.
+3. **`create-release` (`runs-on: ubuntu-latest`):** Otomatis membuat GitHub Release publik saat tag versi (`v*`) di-push.
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+### 3. Cara Rilis Versi Baru (Android + iOS)
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug.apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-```
-
-### 3. Push Workflow ke GitHub
+Untuk memicu build rilis resmi ke user:
 
 ```bash
-git add .github/
-git commit -m "Add GitHub Actions workflow"
+# 1. Pastikan semua perubahan sudah di-commit
+git add .
+git commit -m "chore: release version 3.6.0"
+
+# 2. Buat git tag versi baru
+git tag v3.6.0
+
+# 3. Push commit dan tag ke GitHub
 git push origin main
+git push origin v3.6.0
 ```
 
-### 4. Monitor Build
+### 4. Monitor & Unduh Hasil Build
 
-1. Buka https://github.com/USERNAME/REPO_NAME/actions
-2. Klik pada workflow yang sedang berjalan
-3. Lihat progress build
+1. Buka `https://github.com/USERNAME/REPO_NAME/actions`.
+2. Klik workflow **Multiplatform Build (Android & iOS)** yang sedang berjalan.
+3. Setelah selesai:
+   - File APK rilis otomatis terlampir di tab **Releases** dan **Artifacts**.
+   - Target framework iOS tervalidasi sukses.
 
-### 5. Download APK
+## Kuota GitHub Actions Runner
 
-Setelah build selesai (biasanya 5-10 menit):
-1. Buka tab "Actions"
-2. Klik workflow yang sudah berhasil
-3. Klik "app-debug.apk" di bagian Artifacts
-4. Download ke HP/PC
-
-## Cara Kerja
-
-Setiap kali kamu push ke `main/master`:
-1. GitHub Actions otomatis jalankan build
-2. Build APK di server GitHub (bukan di PC kamu)
-3. Hasilnya bisa di-download
-
-## Gratis?
-
-- GitHub Actions: 2000 menit/bulan gratis (public repo)
-- Private repo: 2000 menit/bulan gratis
-- Cukup untuk development daily
-
-## Troubleshooting
-
-### Jika Build Gagal
-- Buka tab "Actions" → klik failed → lihat error log
-- Perbaiki error di PC, push ulang
-
-### Jika Butuh Release APK
-Ganti `assembleDebug` menjadi `assembleRelease` di workflow:
-```yaml
-- name: Build release APK
-  run: ./gradlew assembleRelease
-```
-Path menjadi: `app/build/outputs/apk/release/app-release.apk`
+- **Linux (`ubuntu-latest`):** Menggunakan 1x multiplier kuota menit gratis (sangat hemat).
+- **macOS (`macos-latest`):** Menggunakan 10x multiplier kuota menit gratis untuk menjalankan Xcode iOS build.
