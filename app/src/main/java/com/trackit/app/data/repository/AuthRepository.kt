@@ -3,6 +3,7 @@ package com.trackit.app.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.trackit.app.util.FirestoreRestClient
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,10 +15,27 @@ sealed class AuthResult {
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val restClient: FirestoreRestClient
 ) {
     val currentUser: FirebaseUser? get() = auth.currentUser
     val isLoggedIn: Boolean get() = auth.currentUser != null
+
+    suspend fun deleteAccount(): AuthResult {
+        val user = auth.currentUser ?: return AuthResult.Error("Tidak ada pengguna yang sedang login")
+        return try {
+            val userId = user.uid
+            try {
+                restClient.delete("users/$userId")
+            } catch (e: Exception) {
+                // Ignore cloud deletion errors to ensure user deletion proceeds
+            }
+            user.delete().await()
+            AuthResult.Success(user)
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Gagal menghapus akun. Silakan login ulang dan coba lagi.")
+        }
+    }
 
     suspend fun signInWithEmail(email: String, password: String): AuthResult {
         return try {

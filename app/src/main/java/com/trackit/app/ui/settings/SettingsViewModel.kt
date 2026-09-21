@@ -197,4 +197,24 @@ class SettingsViewModel @Inject constructor(
             _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
         }
     }
+
+    fun deleteAccount(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = authRepository.deleteAccount()
+            when (result) {
+                is com.trackit.app.data.repository.AuthResult.Success -> {
+                    syncPreferences.setOnlineMode(false)
+                    syncPreferences.setUserId(null)
+                    preferencesManager.setHasSkippedLogin(false)
+                    syncManager.stopSync()
+                    syncManager.clearLocalData()
+                    _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
+                    onSuccess()
+                }
+                is com.trackit.app.data.repository.AuthResult.Error -> {
+                    onError(result.message)
+                }
+            }
+        }
+    }
 }

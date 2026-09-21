@@ -27,11 +27,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingGuestEntity
 import com.trackit.app.util.ContactUtils
 import com.trackit.app.util.DeviceContact
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -56,36 +53,20 @@ fun WeddingGuestsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var editingGuest by remember { mutableStateOf<WeddingGuestEntity?>(null) }
 
-    val contactPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            contactsLoading = true
+    val pickContactLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickContact()
+    ) { uri ->
+        uri?.let { contactUri ->
             scope.launch {
-                deviceContacts = ContactUtils.getDeviceContacts(context)
+                contactsLoading = true
+                val contact = ContactUtils.getContactFromUri(context, contactUri)
                 contactsLoading = false
-                showContactPicker = true
+                if (contact != null) {
+                    selectedContactsForBatch = listOf(contact)
+                } else {
+                    snackbarHostState.showSnackbar("Gagal membaca detail kontak yang dipilih.")
+                }
             }
-        } else {
-            scope.launch {
-                snackbarHostState.showSnackbar("Izin kontak diperlukan untuk mengimpor. Aktifkan di Pengaturan aplikasi.")
-            }
-        }
-    }
-
-    fun launchContactImport() {
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CONTACTS
-        ) == PackageManager.PERMISSION_GRANTED
-        if (hasPermission) {
-            contactsLoading = true
-            scope.launch {
-                deviceContacts = ContactUtils.getDeviceContacts(context)
-                contactsLoading = false
-                showContactPicker = true
-            }
-        } else {
-            contactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
 
@@ -116,8 +97,8 @@ fun WeddingGuestsScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        IconButton(onClick = { launchContactImport() }) {
-                            Icon(Icons.Default.Contacts, contentDescription = "Impor Kontak")
+                        IconButton(onClick = { pickContactLauncher.launch(null) }) {
+                            Icon(Icons.Default.Contacts, contentDescription = "Pilih Kontak")
                         }
                     }
                     IconButton(onClick = { activeTab = if (activeTab == 0) 1 else 0 }) {

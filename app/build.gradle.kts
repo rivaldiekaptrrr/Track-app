@@ -25,10 +25,10 @@ android {
 
     signingConfigs {
         create("shared") {
-            storeFile = file("trackit-keystore.jks")
-            storePassword = "trackit123"
-            keyAlias = "trackit"
-            keyPassword = "trackit123"
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: project.findProperty("KEYSTORE_PATH")?.toString() ?: "trackit-keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("KEYSTORE_PASSWORD")?.toString() ?: "trackit123"
+            keyAlias = System.getenv("KEY_ALIAS") ?: project.findProperty("KEY_ALIAS")?.toString() ?: "trackit"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: project.findProperty("KEY_PASSWORD")?.toString() ?: "trackit123"
         }
     }
 

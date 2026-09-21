@@ -45,17 +45,23 @@ jobs:
         run: ./gradlew testDebugUnitTest --continue
         continue-on-error: true
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Build Release APK & App Bundle (.aab)
+        run: |
+          ./gradlew assembleRelease
+          ./gradlew bundleRelease
 
-      - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app-trackit-${{ github.ref_name }}.apk
+      - name: Rename Build Artifacts
+        run: |
+          mv app/build/outputs/apk/release/app-release.apk app-trackit-${{ github.ref_name }}.apk
+          mv app/build/outputs/bundle/release/app-release.aab app-trackit-${{ github.ref_name }}.aab
 
-      - name: Upload Android Artifact
+      - name: Upload Android Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: app-trackit-android-${{ github.ref_name }}
-          path: app-trackit-${{ github.ref_name }}.apk
+          path: |
+            app-trackit-${{ github.ref_name }}.apk
+            app-trackit-${{ github.ref_name }}.aab
 
   build-ios:
     name: Build iOS Target (macOS Runner)
@@ -109,6 +115,8 @@ jobs:
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
-          files: app-trackit-${{ github.ref_name }}.apk
+          files: |
+            app-trackit-${{ github.ref_name }}.apk
+            app-trackit-${{ github.ref_name }}.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

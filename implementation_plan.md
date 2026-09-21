@@ -1,221 +1,189 @@
-# Implementation Plan: Compose Multiplatform (CMP) & iOS Support for TrackIt
+# Implementation Plan: Google Play Store Publication & Compliance Roadmap for TrackIt
 
-Migrate the current Android-only TrackIt application (Kotlin + Jetpack Compose) to **Compose Multiplatform (CMP) / Kotlin Multiplatform (KMP)** to target both **Android** and **iOS** from a single codebase, and configure **GitHub Actions** to build both Android (`.apk`/`.aab`) and iOS (`.ipa`) packages simultaneously on `git push`.
+Prepare, remediate, and publish the **TrackIt** application to the **Google Play Store**. This plan details all technical changes, permission cleanups, security hardening, App Bundle (`.aab`) build pipelines, Google Play Policy compliance tasks, and closed testing procedures required for a successful store launch.
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Key Architectural Changes & Library Substitutions Required:**
-> 1. **Dependency Injection**: **Dagger Hilt** is Android-only. We will migrate DI to **Koin** (supported natively on Android and iOS).
-> 2. **Firebase SDK**: Firebase Firestore will be migrated from the Android-only Firebase SDK to a KMP-compatible Firestore solution. The implementation will first evaluate the currently supported KMP Firestore options. If a suitable shared SDK is unavailable or introduces compatibility risks, Firestore access will be isolated behind a common repository interface with platform-specific Android/iOS implementations.
-> 3. **Database**: Migrate the existing Room database to Room KMP. SQLDelight will only be considered if Room KMP proves incompatible with the existing database schema or required functionality.
-> 4. **Network Client**: OkHttp will be replaced with **Ktor Client** (`ktor-client-okhttp` on Android, `ktor-client-darwin` on iOS).
-> 5. **Native Features (Biometrics, PDF Export, File Picker)**: Android `BiometricPrompt` and `ActivityResultContracts` will be refactored into `expect` / `actual` declarations for platform-specific implementations (`LAContext` on iOS).
-> 6. **Chart Library**: **Vico Chart** is Android-only. We will replace or adapt chart rendering to native Compose Canvas / KMP-compatible chart drawing.
-> 7. **GitHub Runner Requirement**: iOS builds require `macos-latest` runner on GitHub Actions. (GitHub provides 2,000 free runner minutes/month for public repos, but macOS consumes 10x multiplier = 200 mins).
+> **Key Policy Compliance & Code Changes Required:**
+> 1. **Permission Remediation**: Remove `MANAGE_EXTERNAL_STORAGE` and `REQUEST_INSTALL_PACKAGES` from `AndroidManifest.xml` to prevent immediate rejection.
+> 2. **Contact Picker Refactoring**: Replace `READ_CONTACTS` permission usage in `WeddingGuestsScreen.kt` with `ActivityResultContracts.PickContact()`, which requires zero permissions.
+> 3. **Account Deletion (Mandatory Play Store Policy)**: Add an in-app "Hapus Akun / Delete Account" feature in `SettingsScreen.kt` and `AuthRepository.kt` that deletes the user's Firebase Auth account and purges their cloud data.
+> 4. **In-App Update Strategy**: Separate GitHub APK auto-updater logic from the Play Store build (or integrate Google Play In-App Update API).
+> 5. **Android App Bundle (.aab)**: Update Gradle build scripts and GitHub Actions CI/CD to generate `.aab` format required by Google Play.
 
 > [!WARNING]
-> **iOS Signing & Apple Developer Account:**
-> - To produce a signed `.ipa` file installable on physical iPhones or App Store, an Apple Developer Account (\$99/year) and provisioning profiles are required.
-> - Without a paid account, GitHub Actions can build an unsigned `.ipa` / Xcode framework archive for simulator & testing.
+> **Personal Developer Account Testing Requirement (New Google Policy):**
+> - For personal developer accounts created after Nov 13, 2023, Google Play requires passing **Closed Testing with at least 20 opted-in testers for 14 continuous days** before Production release access is granted.
 
 ---
 
-## Open Questions
-
-> [!NOTE]
-> 1. **Apple Developer Account**: Do you currently have an Apple Developer Account for iOS code signing in GitHub Actions, or should we set up the CI pipeline for unsigned simulator/testing builds first?
-> 2. **iOS Minimum Version**: Should we target iOS 15.0+ as the minimum supported iOS version?
-> 3. **Charts Preference**: TrackIt features custom pie charts and line charts (`ChartScreen.kt`). Should we build fully custom Compose Multiplatform Canvas charts (which gives 100% UI consistency across platforms) or use a KMP chart library?
-
----
-
-## Proposed Changes
+## Proposed System Architecture
 
 ```
-TrackIt/
-├── composeApp/                     # Shared KMP module
-│   ├── src/
-│   │   ├── commonMain/             # Shared UI (Compose) & Logic (ViewModels, Repositories)
-│   │   ├── androidMain/            # Android-specific implementations (Android Biometric, Context)
-│   │   └── iosMain/                # iOS-specific implementations (LAContext, iOS File Exporter)
-├── iosApp/                         # Xcode project wrapper for iOS
-├── build.gradle.kts                # Root Gradle configuration with Compose Multiplatform plugin
+TrackIt Publishing Pipeline/
+├── app/
+│   ├── build.gradle.kts                # Configured for .aab bundleRelease & Play App Signing
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml         # Cleaned permissions (Removed MANAGE_EXTERNAL_STORAGE & REQUEST_INSTALL_PACKAGES)
+│   │   └── java/com/trackit/app/
+│   │       ├── data/repository/
+│   │       │   └── AuthRepository.kt   # Added deleteAccount() API
+│   │       ├── ui/settings/
+│   │       │   └── SettingsScreen.kt   # Added Account Deletion UI dialog
+│   │       └── updater/
+│   │           └── AppUpdateChecker.kt # Scoped updater for Play Store vs GitHub flavors
 └── .github/workflows/
-    └── multiplatform-build.yml     # Dual-platform GitHub Actions workflow
+    └── multiplatform-build.yml         # Generates both .apk (GitHub) and .aab (Play Store)
 ```
 
 ---
 
-### Phase X: Navigation & Lifecycle Migration
+## Detailed Execution Phases
 
-- Migrate shared navigation to KMP-compatible Navigation.
-- Move ViewModels to commonMain where possible.
-- Remove direct Android Context/Activity dependencies from shared ViewModels.
-- Keep platform-specific functionality behind interfaces.
+### Phase 1: Manifest & Permission Cleanups (Critical Policy Compliance)
 
-### Phase 0: Dependency & Android API Audit
+Audit and remove all non-compliant permissions in `app/src/main/AndroidManifest.xml`.
 
-Audit seluruh dependency dan API Android-specific yang digunakan
-TrackIt sebelum melakukan migrasi.
+#### [MODIFY] [AndroidManifest.xml](file:///c:/Rivaldi/Track-app/app/src/main/AndroidManifest.xml)
+- **Remove**: `<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />`
+  - *Reason*: Violates Google Play Scoped Storage policy for non-file-manager apps.
+- **Remove**: `<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />`
+  - *Reason*: Violates Google Play Device & Network Abuse policy for self-updating APKs.
+- **Refactor Contact Access**: Remove `<uses-permission android:name="android.permission.READ_CONTACTS" />`.
 
-Fokus:
-- Firebase Firestore
-- Hilt
-- Room
-- DataStore
-- OkHttp
-- Vico
-- Navigation
-- BiometricPrompt
-- ActivityResultContracts
-- Android Context / Activity / Intent
-- PDF / CSV export
+#### [MODIFY] [WeddingGuestsScreen.kt](file:///c:/Rivaldi/Track-app/app/src/main/java/com/trackit/app/ui/wedding/guests/WeddingGuestsScreen.kt)
+- Replace permission launcher `contactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)` with native system picker `ActivityResultContracts.PickContact()`.
+- Extract contact name and phone number from Uri without requesting dangerous `READ_CONTACTS` permission.
 
-### Phase 1: Build System & Gradle Configuration
-
-#### [MODIFY] [build.gradle.kts](file:///c:/Rivaldi/Track-app/build.gradle.kts)
-- Use the latest stable Compose Multiplatform version compatible with the selected Kotlin, Gradle, Android Gradle Plugin, and Xcode versions.
-
-#### [MODIFY] [settings.gradle.kts](file:///c:/Rivaldi/Track-app/settings.gradle.kts)
-- Include `:composeApp` and configure JetBrains Compose plugin repositories.
-
-#### [NEW] [composeApp/build.gradle.kts](file:///c:/Rivaldi/Track-app/composeApp/build.gradle.kts)
-- Define targets: `androidTarget()`, `iosX64()`, `iosArm64()`, `iosSimulatorArm64()`.
-- Add dependencies for KMP: Koin, Ktor, Room KMP, DataStore KMP, Compose Multiplatform, Firebase KMP.
+#### [MODIFY] [ContactUtils.kt](file:///c:/Rivaldi/Track-app/app/src/main/java/com/trackit/app/util/ContactUtils.kt)
+- Update helper methods to read contact details directly from Uri returned by `PickContact()`.
 
 ---
 
-### Phase 2: Dependency Injection & Logic Migration (Hilt -> Koin)
+### Phase 2: Mandatory Account Deletion Feature (Policy Compliance)
 
-#### [NEW] [composeApp/src/commonMain/kotlin/com/trackit/app/di/AppModule.kt](file:///c:/Rivaldi/Track-app/composeApp/src/commonMain/kotlin/com/trackit/app/di/AppModule.kt)
-- Define Koin modules for ViewModels, Repositories, UseCases, and Database instances.
+Google Play mandates that any app offering account creation must allow users to delete their account and associated data directly from within the app and via a web request.
 
-#### [DELETE] Hilt annotations across ViewModels and Repositories
-- Remove `@HiltViewModel`, `@Inject`, `@AndroidEntryPoint` across all codebase files.
-- Replace `@Inject constructor(...)` with standard Kotlin constructors.
+#### [MODIFY] [AuthRepository.kt](file:///c:/Rivaldi/Track-app/app/src/main/java/com/trackit/app/data/repository/AuthRepository.kt)
+- Add `suspend fun deleteAccount(): AuthResult` method:
+  1. Re-authenticate user if required by Firebase Auth.
+  2. Call `SyncManager.clearLocalData()` to wipe Room database tables.
+  3. Delete user documents from Firestore via `FirestoreRestClient.delete("users/$userId")`.
+  4. Call `auth.currentUser?.delete()`.
 
----
-
-### Phase 3: Platform Abstractions (`expect` / `actual`)
-
-#### [NEW] [composeApp/src/commonMain/kotlin/com/trackit/app/util/BiometricAuth.kt](file:///c:/Rivaldi/Track-app/composeApp/src/commonMain/kotlin/com/trackit/app/util/BiometricAuth.kt)
-- Declare `expect class BiometricAuthenticator` interface for authenticating users.
-
-#### [NEW] [composeApp/src/androidMain/kotlin/com/trackit/app/util/BiometricAuth.android.kt](file:///c:/Rivaldi/Track-app/composeApp/src/androidMain/kotlin/com/trackit/app/util/BiometricAuth.android.kt)
-- Implement `actual class BiometricAuthenticator` using `androidx.biometric.BiometricPrompt`.
-
-#### [NEW] [composeApp/src/iosMain/kotlin/com/trackit/app/util/BiometricAuth.ios.kt](file:///c:/Rivaldi/Track-app/composeApp/src/iosMain/kotlin/com/trackit/app/util/BiometricAuth.ios.kt)
-- Implement `actual class BiometricAuthenticator` using iOS `LocalAuthentication` (`LAContext`).
-
-#### [NEW] [composeApp/src/commonMain/kotlin/com/trackit/app/util/FileExporter.kt](file:///c:/Rivaldi/Track-app/composeApp/src/commonMain/kotlin/com/trackit/app/util/FileExporter.kt)
-- Declare `expect class FileExporter` for PDF & CSV export capabilities.
+#### [MODIFY] [SettingsScreen.kt](file:///c:/Rivaldi/Track-app/app/src/main/java/com/trackit/app/ui/settings/SettingsScreen.kt)
+- Add "Hapus Akun & Data Saya" option under Security/Account section.
+- Display red confirmation dialog warning: *"Semua data transaksi dan akun Anda akan dihapus secara permanen dari perangkat dan cloud."*
+- Trigger `deleteAccount()` and navigate to Login screen upon success.
 
 ---
 
-### Phase 4: UI Layer Migration to `commonMain`
+### Phase 3: In-App Updater Refactoring (GitHub vs Play Store Build Flavors)
 
-#### [MODIFY] Move all Screens to `commonMain`
-- Move `DashboardScreen.kt`, `TransactionListScreen.kt`, `ChartScreen.kt`, `ProfileScreen.kt`, `WeddingPlannerScreen.kt`, `CategoryManagementScreen.kt` to `composeApp/src/commonMain/kotlin/com/trackit/app/ui/`.
-- Convert custom drawing in `ChartScreen.kt` to pure Compose Canvas for cross-platform compatibility.
+Prevent Google Play rejection due to direct APK downloading while preserving GitHub Releases auto-updater for sideloaded builds.
+
+#### [MODIFY] [app/build.gradle.kts](file:///c:/Rivaldi/Track-app/app/build.gradle.kts)
+- Introduce Gradle Build Flavors:
+  ```kotlin
+  flavorDimensions += "distribution"
+  productFlavors {
+      create("github") {
+          dimension = "distribution"
+          buildConfigField("Boolean", "ENABLE_GITHUB_UPDATER", "true")
+      }
+      create("playstore") {
+          dimension = "distribution"
+          buildConfigField("Boolean", "ENABLE_GITHUB_UPDATER", "false")
+      }
+  }
+  ```
+
+#### [MODIFY] [AppUpdateChecker.kt](file:///c:/Rivaldi/Track-app/app/src/main/java/com/trackit/app/updater/AppUpdateChecker.kt)
+- Check `BuildConfig.ENABLE_GITHUB_UPDATER` before executing update checks. Disable silent update prompts in `playstore` flavor.
 
 ---
 
-### Phase 5: iOS Project Setup (`iosApp`)
+### Phase 4: App Bundle (.aab) Build & Keystore Hardening
 
-#### [NEW] [iosApp/iosApp.xcodeproj](file:///c:/Rivaldi/Track-app/iosApp/iosApp.xcodeproj)
-- Create iOS Xcode application entry point.
+Configure Gradle and CI/CD to produce production-ready `.aab` bundles signed with Play App Signing.
 
-#### [NEW] [iosApp/iosApp/iOSApp.swift](file:///c:/Rivaldi/Track-app/iosApp/iosApp/iOSApp.swift)
-- SwiftUI App entry point calling `MainViewController` from `composeApp`.
+#### [MODIFY] [app/build.gradle.kts](file:///c:/Rivaldi/Track-app/app/build.gradle.kts)
+- Replace hardcoded keystore passwords with Environment Variables / Gradle properties:
+  ```kotlin
+  signingConfigs {
+      create("release") {
+          storeFile = file(System.getenv("KEYSTORE_PATH") ?: "trackit-keystore.jks")
+          storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "trackit123"
+          keyAlias = System.getenv("KEY_ALIAS") ?: "trackit"
+          keyPassword = System.getenv("KEY_PASSWORD") ?: "trackit123"
+      }
+  }
+  ```
 
-#### [NEW] [composeApp/src/iosMain/kotlin/com/trackit/app/MainViewController.kt](file:///c:/Rivaldi/Track-app/composeApp/src/iosMain/kotlin/com/trackit/app/MainViewController.kt)
-- Export `ComposeUIViewController` wrapping `TrackItApp()` UI.
+#### [MODIFY] [.github/workflows/multiplatform-build.yml](file:///c:/Rivaldi/Track-app/.github/workflows/multiplatform-build.yml)
+- Add build step for App Bundle:
+  ```yaml
+  - name: Build Release App Bundle (.aab)
+    run: ./gradlew bundlePlaystoreRelease
+  ```
+- Upload both `.apk` (for GitHub Releases) and `.aab` (for Google Play Console upload) as build artifacts.
 
 ---
 
-### Phase 6: CI/CD Pipeline Update for Dual Platform
+### Phase 5: Privacy Policy, Disclosures & Store Listing Assets
 
-#### [MODIFY] [.github/workflows/android-build.yml](file:///c:/Rivaldi/Track-app/.github/workflows/android-build.yml) -> rename to `multiplatform-build.yml`
-- Restructure into 2 parallel jobs:
-  1. `build-android` (runs on `ubuntu-latest`):
-     - Sets up JDK 17
-     - Runs `./gradlew :composeApp:assembleRelease`
-     - Uploads `.apk` / `.aab` artifact.
-  2. `build-ios` (runs on `macos-latest`):
-     - Sets up JDK 17 & Xcode
-     - Configures CocoaPods / Kotlin framework build
-     - Runs `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode` / `xcodebuild`
-     - Uploads `.ipa` or Xcode archive artifact.
-  3. `release` (runs after build jobs succeed):
-     - Publishes GitHub Release attaching both Android APK and iOS artifact.
+Prepare mandatory legal documents and Play Console graphic assets.
+
+#### [NEW] [docs/PRIVACY_POLICY.md](file:///c:/Rivaldi/Track-app/docs/PRIVACY_POLICY.md)
+- Create comprehensive Privacy Policy covering:
+  - Voice data handling (processed 100% offline via local SpeechRecognizer, no audio recordings sent to servers).
+  - Financial data (stored locally in Room SQLite, synced to private Firebase Firestore).
+  - Biometric data (handled entirely by OS via BiometricPrompt/FaceID, zero biometric data collected).
+  - User rights (account deletion process and contact email).
+
+#### Store Listing Graphic Assets Checklist:
+- [ ] **App Icon**: 512 x 512 px PNG (32-bit, solid background, max 1MB).
+- [ ] **Feature Graphic**: 1024 x 500 px JPG/PNG (Hero banner for Play Store listing).
+- [ ] **Phone Screenshots**: Minimum 4 high-res screenshots (Dashboard, Voice Tracking, Interactive Charts, Wedding Planner).
+- [ ] **Tablet Screenshots**: 7-inch & 10-inch screenshots.
+- [ ] **Short Description**: Max 80 characters.
+- [ ] **Full Description**: Max 4,000 characters.
+
+---
+
+### Phase 6: Closed Testing Roadmap (20 Testers x 14 Days) & Production Launch
+
+Execution roadmap for Google Play Console submission and compliance testing.
+
+```mermaid
+timeline
+    title Google Play Console Launch Timeline
+    Fase 1 : Prepare Store Listing & Privacy Policy : Upload .aab to Play Console
+    Fase 2 : Launch Closed Testing Track : Invite 20 Opt-In Testers
+    Fase 3 : 14-Day Continuous Testing : Monitor Crash Logs & Feedback
+    Fase 4 : Apply for Production Access : Google Review & Public Launch
+```
+
+1. **Step 1**: Register Google Play Developer Account ($25 one-time fee) & create App Entry (`com.trackit.app` or updated unique ID).
+2. **Step 2**: Upload `app-playstore-release.aab` to **Closed Testing Track**.
+3. **Step 3**: Fill out Play Console questionnaires:
+   - **Data Safety Questionnaire**: Declare Audio, Personal Info, Financial Data, Authentication.
+   - **App Content Declarations**: Financial Features, Sensitive Permissions.
+4. **Step 4**: Recur 20 testers for 14 continuous days.
+5. **Step 5**: Request Production Access & publish to Google Play Store!
 
 ---
 
 ## Verification Plan
 
-### Automated Tests
-- `./gradlew :composeApp:desktopTest` / `./gradlew :composeApp:testDebugUnitTest` - Run unit tests for repositories and ViewModels across commonMain.
-- `./gradlew :composeApp:iosX64Test` - Run iOS target unit tests on macOS runner.
+### Automated Verification
+- `./gradlew bundlePlaystoreRelease` — Verify `.aab` builds cleanly without ProGuard/R8 errors.
+- `./gradlew testDebugUnitTest` — Verify unit tests pass.
 
-### Manual Verification
-1. **Android App Execution**: Build & run `./gradlew :composeApp:installDebug` on Android device/emulator. Verify Dashboard, Transactions, Charts, Sync, and Biometric lock work.
-2. **iOS App Execution**: Build & run Xcode `iosApp` on iOS Simulator (iPhone 15 Pro). Verify Compose UI renders natively, navigation works smoothly, and local storage works.
-3. **CI/CD Pipeline Validation**: Push tag `v3.6.0` to GitHub. Verify GitHub Actions runs `build-android` on `ubuntu-latest` and `build-ios` on `macos-latest`, producing both `.apk` and `.ipa` attached to the release.
-
-```mermaid
-flowchart TB
-    A["TrackIt"]
-
-    A --> B["commonMain"]
-    A --> C["androidMain"]
-    A --> D["iosMain"]
-
-    %% Common Layer
-    B --> B1["Compose Multiplatform UI"]
-    B --> B2["ViewModel"]
-    B --> B3["Business Logic / Use Cases"]
-    B --> B4["Repository Interfaces"]
-
-    B1 --> B2
-    B2 --> B3
-    B3 --> B4
-
-    %% Repository Layer
-    B4 --> E["Local Data"]
-    B4 --> F["Cloud Data"]
-
-    %% Local Database
-    E --> G["Room KMP"]
-    G --> G1["Android"]
-    G --> G2["iOS"]
-
-    %% Cloud Database
-    F --> H["Firestore"]
-    H --> H1["Android Implementation"]
-    H --> H2["iOS Implementation"]
-
-    %% Android Platform
-    C --> C1["Android Native APIs"]
-    C1 --> C2["BiometricPrompt"]
-    C1 --> C3["File / Share APIs"]
-
-    %% iOS Platform
-    D --> D1["iOS Native APIs"]
-    D1 --> D2["Face ID / Touch ID"]
-    D1 --> D3["File / Share APIs"]
-
-    %% Styling
-    classDef app fill:#eeeeee,stroke:#333,stroke-width:2px
-    classDef common fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-    classDef platform fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
-    classDef data fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    classDef native fill:#fce4ec,stroke:#ad1457,stroke-width:1px
-
-    class A app
-    class B,B1,B2,B3,B4 common
-    class C,D,C1,D1,C2,C3,D2,D3 native
-    class E,F,G,H,G1,G2,H1,H2 data
-```
+### Manual Policy Verification
+1. **Permission Inspection**: Run `aapt2 dump permissions app/build/outputs/bundle/playstoreRelease/app-playstore-release.aab` and confirm `MANAGE_EXTERNAL_STORAGE` and `REQUEST_INSTALL_PACKAGES` are completely absent.
+2. **Contact Picker**: Test importing wedding guest contacts via `PickContact()` on Android 14 device without granting `READ_CONTACTS` permission.
+3. **Account Deletion Test**: Perform "Hapus Akun" in Settings and verify Firebase Auth user is deleted and Firestore data is cleared.

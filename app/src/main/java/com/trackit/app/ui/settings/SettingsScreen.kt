@@ -47,6 +47,8 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showExportDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var isDeletingAccount by remember { mutableStateOf(false) }
 
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let { 
@@ -157,12 +159,25 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         ) {
                             Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Keluar & Matikan Sinkronisasi")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { showDeleteAccountDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Hapus Akun & Data Permanen")
                         }
                     } else {
                         Button(
@@ -713,6 +728,57 @@ fun SettingsScreen(
             onExportCsv = { title, startDate, endDate, typeFilter ->
                 showExportDialog = false
                 onExportCsv(title, startDate, endDate, typeFilter)
+            }
+        )
+    }
+
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!isDeletingAccount) showDeleteAccountDialog = false },
+            title = { Text("Hapus Akun & Data Permanen", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Apakah Anda yakin ingin menghapus akun dan seluruh data cloud Anda? Tindakan ini TIDAK DAPAT DIBATALKAN dan semua data transaksi cloud Anda akan terhapus secara permanen.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isDeletingAccount = true
+                        viewModel.deleteAccount(
+                            onSuccess = {
+                                isDeletingAccount = false
+                                showDeleteAccountDialog = false
+                                Toast.makeText(context, "Akun dan data Anda berhasil dihapus permanen.", Toast.LENGTH_LONG).show()
+                            },
+                            onError = { error ->
+                                isDeletingAccount = false
+                                showDeleteAccountDialog = false
+                                Toast.makeText(context, "Gagal menghapus akun: $error", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    },
+                    enabled = !isDeletingAccount,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    if (isDeletingAccount) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onError,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Menghapus...")
+                    } else {
+                        Text("Hapus Permanen")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteAccountDialog = false },
+                    enabled = !isDeletingAccount
+                ) {
+                    Text("Batal")
+                }
             }
         )
     }
