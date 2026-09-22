@@ -36,8 +36,19 @@ class AppUpdateChecker @Inject constructor(
                 var downloadUrl = ""
                 val assetsArray = jsonObject.optJSONArray("assets")
                 if (assetsArray != null && assetsArray.length() > 0) {
-                    val firstAsset = assetsArray.getJSONObject(0)
-                    downloadUrl = firstAsset.optString("browser_download_url", "")
+                    for (i in 0 until assetsArray.length()) {
+                        val asset = assetsArray.getJSONObject(i)
+                        val name = asset.optString("name", "")
+                        if (name.endsWith(".apk", ignoreCase = true)) {
+                            downloadUrl = asset.optString("browser_download_url", "")
+                            break
+                        }
+                    }
+                    // Fallback jika tidak ada yang berakhiran .apk
+                    if (downloadUrl.isEmpty()) {
+                        val firstAsset = assetsArray.getJSONObject(0)
+                        downloadUrl = firstAsset.optString("browser_download_url", "")
+                    }
                 }
 
                 if (tagName.isEmpty() || downloadUrl.isEmpty()) {
