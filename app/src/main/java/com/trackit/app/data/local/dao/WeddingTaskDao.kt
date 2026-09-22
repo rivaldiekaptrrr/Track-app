@@ -1,4 +1,4 @@
-﻿package com.trackit.app.data.local.dao
+package com.trackit.app.data.local.dao
 
 import androidx.room.*
 import com.trackit.app.data.local.entity.WeddingTaskEntity
@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.Flow
 interface WeddingTaskDao {
     @Query("SELECT * FROM wedding_tasks WHERE weddingProfileId = :profileId ORDER BY phaseMonth DESC, sortOrder ASC")
     fun getAllByProfile(profileId: String): Flow<List<WeddingTaskEntity>>
+
+    @Query("SELECT * FROM wedding_tasks WHERE weddingProfileId = :profileId")
+    suspend fun getAllByProfileSync(profileId: String): List<WeddingTaskEntity>
 
     @Query("SELECT * FROM wedding_tasks WHERE weddingProfileId = :profileId AND isCompleted = 0 ORDER BY dueDate ASC LIMIT 5")
     fun getUpcomingTasks(profileId: String): Flow<List<WeddingTaskEntity>>

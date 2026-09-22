@@ -31,5 +31,11 @@ sealed class Screen(val route: String) {
     data object WeddingCommittee : Screen("wedding_committee")
     data object WeddingRundown : Screen("wedding_rundown")
     data object WeddingSettings : Screen("wedding_settings")
+
+    // RBAC Screens
+    data object AdminDashboard : Screen("admin_dashboard")
+    data object PendingVerification : Screen("pending_verification")
+    data object ModuleSelection : Screen("module_selection")
 }
+
 

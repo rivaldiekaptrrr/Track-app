@@ -50,6 +50,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import com.trackit.app.data.repository.AuthRepository
+import com.trackit.app.data.repository.AccessLevel
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -67,6 +69,7 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var preferencesManager: com.trackit.app.data.local.PreferencesManager
     @Inject lateinit var syncManager: com.trackit.app.util.SyncManager
     @Inject lateinit var weddingExpenseRepository: WeddingExpenseRepository
+    @Inject lateinit var authRepository: AuthRepository
 
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
@@ -106,6 +109,18 @@ class MainActivity : FragmentActivity() {
         // Schedule periodic workers
         scheduleWorkers()
 
+        // For already-logged-in users: start sync eagerly so DashboardViewModel's
+        // initial isSyncing=true is read before any composable renders.
+        // startSync() is idempotent and safely no-ops if not in online mode.
+        if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null) {
+            lifecycleScope.launch {
+                val level = preferencesManager.accessLevel.first()
+                if (level != AccessLevel.NONE && level != AccessLevel.ADMIN) {
+                    syncManager.startSync()
+                }
+            }
+        }
+
         // Schedule daily reminder if enabled
         lifecycleScope.launch {
             val isEnabled = preferencesManager.isDailyReminderEnabled.first()
@@ -115,21 +130,26 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        var showRestoreDialog by mutableStateOf(false)
         lifecycleScope.launch {
+            val accessLevel = preferencesManager.accessLevel.first()
             val activeProfileId = preferencesManager.activeProfileId.first()
             val activeProfile = profileRepository.getProfileById(activeProfileId)
-            if (activeProfile?.mode == "EXPENSE") {
-                val transactions = transactionRepository.getAllTransactions(activeProfileId).first()
-                if (transactions.isEmpty() && BackupManager.getAutoBackupFile() != null) {
-                    showRestoreDialog = true
-                    isSafeToAutoBackup = false
-                } else {
-                    isSafeToAutoBackup = true
+            val allProfiles = profileRepository.getAllProfiles().first()
+
+            // Auto-correct active profile if it violates license
+            if (accessLevel == AccessLevel.WEDDING && activeProfile?.mode == "EXPENSE") {
+                val weddingProfile = allProfiles.firstOrNull { it.mode == "WEDDING" }
+                if (weddingProfile != null) {
+                    preferencesManager.setActiveProfileId(weddingProfile.id)
                 }
-            } else {
-                isSafeToAutoBackup = true
+            } else if (accessLevel == AccessLevel.EXPENSE && activeProfile?.mode == "WEDDING") {
+                val expenseProfile = allProfiles.firstOrNull { it.mode == "EXPENSE" }
+                if (expenseProfile != null) {
+                    preferencesManager.setActiveProfileId(expenseProfile.id)
+                }
             }
+
+            isSafeToAutoBackup = true
         }
 
         setContent {
@@ -192,18 +212,54 @@ class MainActivity : FragmentActivity() {
                         val startVoice = intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)
                         val navController = rememberNavController()
                         
-                        val isUserLoggedIn = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null
-                        val startDest = when {
-                            !isUserLoggedIn && hasSkippedLogin == false -> {
-                                if (hasSeenWelcome == false) Screen.Welcome.route else Screen.Login.route
+                        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                        val isUserLoggedIn = currentUser != null
+                        val cachedAccessLevel by preferencesManager.accessLevel.collectAsState(initial = "")
+                        val hasSeenWelcomeFinal = hasSeenWelcome ?: false
+
+                        // Automatically fetch and sync latest access level for logged in user on launch
+                        LaunchedEffect(currentUser?.uid) {
+                            if (currentUser != null) {
+                                val level = authRepository.fetchOrCreateUserDoc(currentUser)
+                                preferencesManager.setAccessLevel(level)
+                                // Start background sync for non-admin users on every app open.
+                                // syncManager.startSync() is idempotent (no-ops if already running).
+                                if (level != AccessLevel.NONE && level != AccessLevel.ADMIN) {
+                                    syncManager.startSync()
+                                }
                             }
-                            startVoice -> Screen.AddTransaction.createRoute(startVoice = true)
+                        }
+
+                        // Wait for accessLevel DataStore to emit at least one value (unless admin email)
+                        val isAdminEmail = currentUser?.email.equals(com.trackit.app.data.repository.ADMIN_EMAIL, ignoreCase = true)
+                        val effectiveAccessLevel = if (isAdminEmail) AccessLevel.ADMIN else cachedAccessLevel
+
+                        if (isUserLoggedIn && !isAdminEmail && cachedAccessLevel.isEmpty()) return@Surface
+
+                        val isExpenseAccess = effectiveAccessLevel in listOf(
+                            AccessLevel.EXPENSE,
+                            AccessLevel.BOTH,
+                            AccessLevel.ADMIN
+                        )
+
+                        val startDest = when {
+                            !isUserLoggedIn -> {
+                                if (hasSeenWelcomeFinal == false) Screen.Welcome.route else Screen.Login.route
+                            }
+                            effectiveAccessLevel == AccessLevel.ADMIN -> Screen.AdminDashboard.route
+                            effectiveAccessLevel == AccessLevel.NONE -> Screen.PendingVerification.route
+                            startVoice && isExpenseAccess -> Screen.AddTransaction.createRoute(startVoice = true)
+                            effectiveAccessLevel == AccessLevel.EXPENSE -> Screen.Dashboard.route
+                            effectiveAccessLevel == AccessLevel.WEDDING -> Screen.Dashboard.route
+                            effectiveAccessLevel == AccessLevel.BOTH -> Screen.ModuleSelection.route
                             else -> Screen.Dashboard.route
                         }
                         
                         TrackItNavHost(
                             navController = navController,
                             startDestination = startDest,
+                            authRepository = authRepository,
+                            preferencesManager = preferencesManager,
                             onExportPdf = { title, startDate, endDate, typeFilter ->
                                 exportPdf(title, startDate, endDate, typeFilter)
                             },
@@ -217,53 +273,6 @@ class MainActivity : FragmentActivity() {
                                 exportWeddingCsv(profileId, profileName)
                             }
                         )
-
-                        if (showRestoreDialog) {
-                            AlertDialog(
-                                onDismissRequest = { showRestoreDialog = false },
-                                title = { Text("Cadangan Lokal Ditemukan") },
-                                text = { Text("Kami menemukan file cadangan transaksi lama Anda di folder Documents. Apakah Anda ingin memulihkannya?") },
-                                confirmButton = {
-                                    Button(onClick = {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-                                            isGoingToSystemSettings = true
-                                            BackupManager.isRestoring = true
-                                            lifecycleScope.launch {
-                                                preferencesManager.setPendingRestore(true)
-                                            }
-                                            try {
-                                                val intent = android.content.Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                                                intent.data = Uri.parse("package:$packageName")
-                                                startActivity(intent)
-                                            } catch (e: Exception) {
-                                                val intent = android.content.Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                                                startActivity(intent)
-                                            }
-                                        } else {
-                                            lifecycleScope.launch {
-                                                preferencesManager.setBypassBiometricOnce(true)
-                                            }
-                                            BackupManager.isRestoring = true
-                                            BackupManager.restoreFromAutoBackup(this@MainActivity)
-                                            showRestoreDialog = false
-                                            
-                                            val pm = packageManager
-                                            val restartIntent = pm.getLaunchIntentForPackage(packageName)
-                                            val mainIntent = android.content.Intent.makeRestartActivityTask(restartIntent!!.component)
-                                            startActivity(mainIntent)
-                                            Runtime.getRuntime().exit(0)
-                                        }
-                                    }) {
-                                        Text("Ya, Pulihkan")
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { showRestoreDialog = false }) {
-                                        Text("Abaikan")
-                                    }
-                                }
-                            )
-                        }
                     } else {
                         BiometricLockScreen(
                             onAuthenticate = {
@@ -322,9 +331,13 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        // Start cloud sync listener if online mode is enabled
+        // Start cloud sync listener if online mode is enabled and user has valid license
         lifecycleScope.launch {
-            syncManager.startSync()
+            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            val accessLevel = preferencesManager.accessLevel.first()
+            if (user != null && accessLevel != AccessLevel.NONE && accessLevel.isNotEmpty()) {
+                syncManager.startSync()
+            }
         }
 
         val biometricPrompt = BiometricPrompt(this, executor, callback)
@@ -343,34 +356,7 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun seedCategories() {
-        lifecycleScope.launch {
-            val profileDao = database.profileDao()
-            val categoryDao = database.categoryDao()
-            
-            // Ensure at least one profile exists
-            if (profileDao.getCount() == 0) {
-                val profileId = profileDao.insert(
-                    com.trackit.app.data.local.entity.ProfileEntity(
-                        name = "Pribadi",
-                        iconName = "person",
-                        colorHex = "#1565C0"
-                    )
-                )
-                // Set it as active
-                preferencesManager.setActiveProfileId(profileId)
-                // Seed default categories for this profile
-                val defaultCategories = TrackItDatabase.getDefaultCategories().map { it.copy(profileId = profileId) }
-                categoryDao.insertAll(defaultCategories)
-                // Seed default budget
-                database.budgetSettingDao().insert(
-                    com.trackit.app.data.local.entity.BudgetSettingEntity(profileId = profileId, monthlyBudget = 0.0)
-                )
-            } else if (categoryDao.getCount() == 0) {
-                // Legacy: profile exists but no categories - seed for profile 1
-                val defaultCategories = TrackItDatabase.getDefaultCategories()
-                categoryDao.insertAll(defaultCategories)
-            }
-        }
+        // No hardcoded default profile - profiles start at 0 until created by user
     }
 
     private fun scheduleWorkers() {

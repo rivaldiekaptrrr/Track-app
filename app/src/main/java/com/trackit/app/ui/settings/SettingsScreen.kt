@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.ThemeMode
+import com.trackit.app.data.repository.AccessLevel
 import com.trackit.app.util.BackupManager
 import android.net.Uri
 
@@ -42,6 +43,7 @@ fun SettingsScreen(
     onNavigateToCustomKeywords: () -> Unit,
     onNavigateToCategoryBudget: () -> Unit,
     onNavigateToLogin: () -> Unit = {},
+    onNavigateToModuleSelection: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -92,7 +94,15 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // 0. Header Profile & Cloud Sync Card (Top Priority)
+            // 0. Akun & Sinkronisasi
+            Text(
+                text = "Akun & Lisensi",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -148,6 +158,50 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = when (uiState.accessLevel) {
+                                    AccessLevel.ADMIN -> MaterialTheme.colorScheme.tertiaryContainer
+                                    AccessLevel.BOTH -> MaterialTheme.colorScheme.primaryContainer
+                                    AccessLevel.EXPENSE -> MaterialTheme.colorScheme.secondaryContainer
+                                    AccessLevel.WEDDING -> MaterialTheme.colorScheme.errorContainer
+                                    else -> MaterialTheme.colorScheme.surfaceVariant
+                                }
+                            ) {
+                                Text(
+                                    text = when (uiState.accessLevel) {
+                                        AccessLevel.ADMIN -> "Super Admin 👑"
+                                        AccessLevel.BOTH -> "Lisensi: BOTH (Expense + Wedding) ⭐"
+                                        AccessLevel.EXPENSE -> "Lisensi: EXPENSE"
+                                        AccessLevel.WEDDING -> "Lisensi: WEDDING"
+                                        else -> "Belum Terverifikasi"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = when (uiState.accessLevel) {
+                                        AccessLevel.ADMIN -> MaterialTheme.colorScheme.onTertiaryContainer
+                                        AccessLevel.BOTH -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        AccessLevel.EXPENSE -> MaterialTheme.colorScheme.onSecondaryContainer
+                                        AccessLevel.WEDDING -> MaterialTheme.colorScheme.onErrorContainer
+                                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (uiState.accessLevel == AccessLevel.BOTH) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FilledTonalButton(
+                            onClick = onNavigateToModuleSelection,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Apps, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Beralih Modul (Pilih Aplikasi)")
                         }
                     }
 
@@ -155,7 +209,10 @@ fun SettingsScreen(
 
                     if (uiState.isOnlineMode && uiState.currentUserEmail != null) {
                         OutlinedButton(
-                            onClick = { viewModel.signOut() },
+                            onClick = {
+                                viewModel.signOut()
+                                onNavigateToLogin()
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -164,7 +221,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Keluar & Matikan Sinkronisasi")
+                            Text("Sign Out")
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedButton(
@@ -177,7 +234,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Hapus Akun & Data Permanen")
+                            Text("Delete Account")
                         }
                     } else {
                         Button(
@@ -747,7 +804,8 @@ fun SettingsScreen(
                             onSuccess = {
                                 isDeletingAccount = false
                                 showDeleteAccountDialog = false
-                                Toast.makeText(context, "Akun dan data Anda berhasil dihapus permanen.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Akun dan data Anda berhasil dihapus.", Toast.LENGTH_LONG).show()
+                                onNavigateToLogin()
                             },
                             onError = { error ->
                                 isDeletingAccount = false

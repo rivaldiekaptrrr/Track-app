@@ -1,16 +1,16 @@
-# Graph Report - Track-app  (2026-09-02)
+# Graph Report - Track-app  (2026-09-21)
 
 ## Corpus Check
-- 4563 files · ~3,392,226 words
+- 4596 files · ~3,406,441 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 56124 nodes · 62615 edges · 4338 communities (4255 shown, 83 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 337 edges (avg confidence: 0.66)
+- 56355 nodes · 62924 edges · 4370 communities (4279 shown, 91 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 342 edges (avg confidence: 0.67)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `20ee3433`
+- Built from commit: `ed9718e3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,11 +18,11 @@
 - TransactionEntity
 - Counter
 - kotlin-skill/SKILL.md
-- MainActivity.kt
-- SyncManager
+- WeddingNavHost
+- CategoryBudgetEntity
 - CategoryEntity
 - API Reference: GDPR DSAR Workflow Automation
-- performing-network-traffic-analysis-with-zeek/scripts/agent.py
+- AuthRepository
 - ProfileEntity
 - TransactionViewModel
 - implementing-canary-tokens-for-network-intrusion/scripts/agent.py
@@ -43,7 +43,7 @@
 - assets/scripts/validate_data.py
 - src/ui-ux-pro-max/scripts/validate_data.py
 - skills/ui-ux-pro-max/scripts/validate_data.py
-- TrackItDatabase
+- WeddingEventEntity
 - gray
 - gray
 - BM25
@@ -52,11 +52,11 @@
 - skills/ui-ux-pro-max/scripts/tests/test_design_system_mode.py
 - WeddingGuestEntity
 - Lampiran A: Draf Konten Preset Adat (Starting Point untuk Sprint 3–4)
-- WeddingExpenseEntity
+- SyncManager.kt
 - WeddingTaskEntity
 - Tailwind CSS Utility Reference
 - Tailwind CSS Utility Reference
-- Color.kt
+- ChartViewModel
 - Test-Driven Development Workflow
 - WeddingDocumentEntity
 - Coding Standards & Best Practices
@@ -95,7 +95,7 @@
 - search_stack
 - Form & Input Components
 - Tailwind CSS Responsive Design
-- CategoryBudgetViewModel
+- TrackItDatabase
 - Form & Input Components
 - Tailwind CSS Responsive Design
 - devDependencies
@@ -110,7 +110,7 @@
 - Logo Usage Rules
 - Component Specifications
 - shadcn/ui Accessibility Patterns
-- WeddingCommitteeEntity
+- SyncManager
 - WeddingVendorEntity
 - 🚀 CI/CD & In-App Update — Panduan Lengkap TrackIt
 - architect.md
@@ -146,7 +146,7 @@
 - States and Variants
 - UI Styling Skill
 - RansomwarePrecursorEngine
-- 🎤 TrackIt — Smart Voice Expense Tracker
+- 🎤 TrackIt — Cross-Platform Smart Voice Expense Tracker (Android & iOS)
 - Workflow
 - skills/ui-ux-pro-max/scripts/design_system.py
 - assets/scripts/design_system.py
@@ -339,13 +339,13 @@
 - /skill-create - Local Skill Generation
 - Primitive Tokens
 - .claude/skills/design-system/scripts/validate-tokens.cjs
-- button
+- input
 - Key Controls by Series
 - .check_shadcn_config
 - .generate_config_string
 - Primitive Tokens
 - assets/skills/design-system/scripts/validate-tokens.cjs
-- card
+- input
 - agentskills-skill.schema.json
 - .check_shadcn_config
 - .generate_config_string
@@ -425,7 +425,7 @@
 - Component Tokens
 - assets/skills/design-system/scripts/generate-tokens.cjs
 - button
-- duration
+- primitive
 - Slide Strategies
 - ._base_config
 - src/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py
@@ -1744,7 +1744,7 @@
 - Building SOC Metrics and KPI Tracking
 - Building SOC Playbook for Ransomware
 - Building Threat Intelligence Feed Integration
-- WeddingRundownPresets
+- MainActivity.kt
 - Building Threat Intelligence Platform
 - Building Vulnerability Scanning Workflow
 - Key Functions
@@ -2199,7 +2199,7 @@
 - Exception Request Form
 - Key Functions
 - Collecting Open-Source Intelligence
-- VoiceWidgetProvider.kt
+- TransparentVoiceActivity
 - Key Functions
 - Conducting Pass-the-Ticket Attack
 - Microsegmentation Implementation Plan Template
@@ -2599,7 +2599,7 @@
 - API Reference — Hunting for Persistence via WMI Subscriptions
 - Hunting for Suspicious Scheduled Tasks
 - Hunting for T1098 Account Manipulation
-- implementing-application-whitelisting-with-applocker/scripts/process.py
+- Detailed Execution Phases
 - implementing-aws-macie-for-data-classification/scripts/process.py
 - API Reference: Implementing Azure Defender for Cloud
 - Primary Standards
@@ -2691,7 +2691,7 @@
 - SSLTLSAssessmentAgent
 - Performing SSL/TLS Security Assessment
 - MISP / PyMISP API Reference
-- 3. ⚙️ Konfigurasi SDK & Tools
+- button
 - API Reference: Vulnerability Scanning with Nessus Agent
 - Industry Standards
 - main
@@ -3332,6 +3332,7 @@
 - run_zero_trust_assessment
 - Sliver C2 Command Reference
 - MISP / PyMISP API Reference
+- ContentView.swift
 - API Reference: Access Review and Certification
 - Active Directory Penetration Test — Report Template
 - Standards and References - Alert Triage with Elastic SIEM
@@ -4206,6 +4207,7 @@
 - testing-for-system-prompt-leakage/scripts/agent.py
 - Standards and Framework Mapping — Triaging Windows with KAPE
 - Standards and Framework Mapping
+- Panduan Pengembang (Developer Guide): RBAC & Panel Super Admin
 - loop-me/SKILL.md
 - improve-skill.md
 - Standards Mapping — Abusing Shadow Credentials for Privilege Escalation
@@ -4326,18 +4328,40 @@
 - .export_report
 - block-dangerous-git.sh
 - implement-spec/SKILL.md
+- PyMISP
+- Kebijakan Privasi (Privacy Policy) - TrackIt
+- implementing-api-abuse-detection-with-rate-limiting/scripts/agent.py
+- implementing-threat-modeling-with-mitre-attack/scripts/agent.py
+- collecting-threat-intelligence-with-misp/scripts/agent.py
+- 📱 Laporan Audit Kesiapan Google Play Store — TrackIt
+- performing-threat-intelligence-sharing-with-misp/scripts/agent.py
+- 2. Rincian Jenis Data yang Dideklarasikan
+- operationalizing-misp-threat-feeds/scripts/agent.py
+- FileExporter
+- FileExporter
+- MainScreen
+- validate-agentskills.py
+- FileExporter
+- Google Play Store Listing Text Content
+- BiometricAuthenticator
+- BiometricAuthenticator
+- Play Store Listing Assets Directory
+- Subfolder: Feature Graphic (Banner Promosi)
+- Subfolder: App Icon
+- Subfolder: Phone Screenshots
+- Subfolder: Tablet Screenshots (Opsional)
 
 ## God Nodes (most connected - your core abstractions)
-1. `SyncManager` - 73 edges
+1. `SyncManager` - 74 edges
 2. `TailwindConfigGenerator` - 60 edges
 3. `TailwindConfigGenerator` - 56 edges
 4. `CategoryEntity` - 56 edges
-5. `TransactionEntity` - 45 edges
+5. `TransactionEntity` - 49 edges
 6. `search()` - 43 edges
 7. `search()` - 43 edges
 8. `search()` - 43 edges
 9. `DesignSystemGenerator` - 42 edges
-10. `TrackItDatabase` - 40 edges
+10. `TransactionRepository` - 41 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `import_targets_from_csv()` --calls--> `User`  [INFERRED]
@@ -4354,47 +4378,47 @@
 ## Import Cycles
 - None detected.
 
-## Communities (4338 total, 83 thin omitted)
+## Communities (4370 total, 91 thin omitted)
 
 ### Community 0 - "TransactionEntity"
-Cohesion: 0.04
-Nodes (22): CategorySpending, Flow, TransactionDao, TransactionEntity, Flow, TransactionRepository, BudgetCheckWorker, CoroutineWorker (+14 more)
+Cohesion: 0.05
+Nodes (19): CategorySpending, Flow, TransactionDao, TransactionEntity, Flow, TransactionRepository, DailyReminderWorker, CoroutineWorker (+11 more)
 
 ### Community 1 - "Counter"
-Cohesion: 0.04
-Nodes (61): analyze_attribute_types(), analyze_organizations(), analyze_temporal_trends(), analyze_threat_levels(), compute_ioc_stats(), connect_misp(), extract_tags(), fetch_events() (+53 more)
+Cohesion: 0.05
+Nodes (54): analyze_attribute_types(), analyze_organizations(), analyze_temporal_trends(), analyze_threat_levels(), compute_ioc_stats(), connect_misp(), extract_tags(), fetch_events() (+46 more)
 
 ### Community 2 - "kotlin-skill/SKILL.md"
 Cohesion: 0.06
 Nodes (30): 10. Security, 11. Firebase Rules / backend security, 12. Performance, 13. Image handling, 14. Offline-first / koneksi buruk, 15. Logging, 16. Crash monitoring, 17. Testing (+22 more)
 
-### Community 3 - "MainActivity.kt"
-Cohesion: 0.05
-Nodes (29): android, Bundle, com, MainActivity, BiometricPrompt, BiometricLockScreen(), UpdateDialog(), ExportReportDialog() (+21 more)
+### Community 3 - "WeddingNavHost"
+Cohesion: 0.08
+Nodes (26): NavHostController, WeddingMenuGrid(), WeddingNavHost(), ExportReportDialog(), Color, ImageVector, SettingsRowItem(), SettingsScreen() (+18 more)
 
-### Community 4 - "SyncManager"
-Cohesion: 0.05
-Nodes (13): BudgetSettingDao, Flow, CategoryBudgetDao, Flow, BudgetSettingEntity, CategoryBudgetEntity, BudgetRepository, Flow (+5 more)
+### Community 4 - "CategoryBudgetEntity"
+Cohesion: 0.07
+Nodes (13): CategoryBudgetDao, Flow, CategoryBudgetEntity, CategoryBudgetRepository, Flow, CategoryBudgetCard(), CategoryBudgetScreen(), CategoryBudgetItem (+5 more)
 
 ### Community 5 - "CategoryEntity"
-Cohesion: 0.05
-Nodes (25): CategoryDao, Flow, CategoryEntity, CategoryRepository, Flow, CategoryFormDialog(), CategoryManagementViewModel, CustomKeywordScreen() (+17 more)
+Cohesion: 0.08
+Nodes (14): CategoryDao, Flow, CategoryEntity, CategoryRepository, Flow, CategoryFormDialog(), CategoryManagementViewModel, CustomKeywordScreen() (+6 more)
 
 ### Community 6 - "API Reference: GDPR DSAR Workflow Automation"
 Cohesion: 0.04
 Nodes (48): API Reference: GDPR DSAR Workflow Automation, `apply_extension(dsar_id, reason)`, `apply_redactions(mapped_data, approved_exemptions)`, Article 15 Categories Mapped, Built-in PII Patterns, CLI Arguments, CLI Usage, `consolidate_results(*result_sets)` (+40 more)
 
-### Community 7 - "performing-network-traffic-analysis-with-zeek/scripts/agent.py"
-Cohesion: 0.24
-Nodes (13): analyze_conn_log(), analyze_dns_log(), analyze_http_log(), analyze_notice_log(), main(), parse_zeek_log(), Run Zeek on a PCAP file to generate logs., Parse a Zeek TSV log file into structured records. (+5 more)
+### Community 7 - "AuthRepository"
+Cohesion: 0.05
+Nodes (39): AccessLevel, AuthRepository, AuthResult, Error, Success, UserInfo, AccessBadge(), AdminDashboardScreen() (+31 more)
 
 ### Community 8 - "ProfileEntity"
-Cohesion: 0.06
-Nodes (22): Flow, ProfileDao, Flow, WeddingProfileDao, ProfileEntity, WeddingProfileEntity, Flow, ProfileRepository (+14 more)
+Cohesion: 0.07
+Nodes (20): Flow, ProfileDao, ProfileEntity, Flow, ProfileRepository, AnimatedNavItem(), BottomNavDestination, Color (+12 more)
 
 ### Community 9 - "TransactionViewModel"
-Cohesion: 0.07
-Nodes (7): com, StateFlow, ViewModel, TransactionFormState, TransactionViewModel, CategoryBudgetNotifier, NumberUtils
+Cohesion: 0.08
+Nodes (6): com, StateFlow, ViewModel, TransactionFormState, TransactionViewModel, CategoryBudgetNotifier
 
 ### Community 10 - "implementing-canary-tokens-for-network-intrusion/scripts/agent.py"
 Cohesion: 0.06
@@ -4413,8 +4437,8 @@ Cohesion: 0.05
 Nodes (43): 1.1 Purpose, 1.2 Engagement Type, 1.3 Key Stakeholders, 1. Engagement Overview, 2.1 In-Scope Assets, 2.2 Out-of-Scope, 2.3 Restrictions, 2. Scope Definition (+35 more)
 
 ### Community 14 - "PreferencesManager"
-Cohesion: 0.03
-Nodes (30): Flow, PreferencesManager, ThemeMode, DARK, LIGHT, SYSTEM, AuthRepository, AuthResult (+22 more)
+Cohesion: 0.04
+Nodes (16): Flow, PreferencesManager, ThemeMode, DARK, LIGHT, SYSTEM, StateFlow, ViewModel (+8 more)
 
 ### Community 15 - "FirestoreMapper"
 Cohesion: 0.14
@@ -4460,9 +4484,9 @@ Nodes (45): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons
 Cohesion: 0.08
 Nodes (45): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons, TestCurrentReactGuidance, TestSemanticColors, _catalog_date(), _check_app_interface_contract(), _check_catalog_contract() (+37 more)
 
-### Community 32 - "TrackItDatabase"
-Cohesion: 0.04
-Nodes (23): Flow, WeddingEventDao, WeddingRundownItemDao, WeddingEventEntity, WeddingRundownItemEntity, com, TrackItDatabase, Flow (+15 more)
+### Community 32 - "WeddingEventEntity"
+Cohesion: 0.06
+Nodes (20): Flow, WeddingEventDao, WeddingRundownItemDao, WeddingEventEntity, WeddingRundownItemEntity, Flow, WeddingEventRepository, WeddingRundownRepository (+12 more)
 
 ### Community 33 - "gray"
 Cohesion: 0.08
@@ -4490,18 +4514,18 @@ Nodes (17): _contrast_ratio(), _derive_dark_palette(), _filter_anti_patterns_for
 
 ### Community 39 - "WeddingGuestEntity"
 Cohesion: 0.05
-Nodes (32): Flow, WeddingGuestDao, WeddingGuestEntity, Flow, WeddingGuestRepository, VoiceTileService, ContactPickerDialog(), ContactPickerItem() (+24 more)
+Nodes (33): Flow, WeddingGuestDao, WeddingGuestEntity, Flow, WeddingGuestRepository, VoiceTileService, ContactPickerDialog(), ContactPickerItem() (+25 more)
 
 ### Community 40 - "Lampiran A: Draf Konten Preset Adat (Starting Point untuk Sprint 3–4)"
 Cohesion: 0.04
 Nodes (47): 0. Riwayat Revisi, 1.1 Definisi Prioritas, 1.2 Success Metrics / KPI (Q4 2026 – Q1 2027), 1.3 Out of Scope (Rilis Q4 2026), 1. Executive Summary & Visi Produk, 2.1 Target User, 2.2 Pain Points Utama di Indonesia, 2.3 Risks & Assumptions (+39 more)
 
-### Community 41 - "WeddingExpenseEntity"
-Cohesion: 0.05
-Nodes (22): Flow, WeddingExpenseDao, Flow, WeddingPaymentTermDao, WeddingExpenseEntity, WeddingPaymentTermEntity, Flow, WeddingExpenseRepository (+14 more)
+### Community 41 - "SyncManager.kt"
+Cohesion: 0.04
+Nodes (32): Flow, WeddingExpenseDao, Flow, WeddingPaymentTermDao, WeddingExpenseEntity, WeddingPaymentTermEntity, Flow, WeddingExpenseRepository (+24 more)
 
 ### Community 42 - "WeddingTaskEntity"
-Cohesion: 0.07
+Cohesion: 0.08
 Nodes (15): Flow, WeddingTaskDao, WeddingTaskEntity, Flow, WeddingTaskRepository, WeddingTaskPresets, AddTaskDialog(), EditTaskDialog() (+7 more)
 
 ### Community 43 - "Tailwind CSS Utility Reference"
@@ -4512,9 +4536,9 @@ Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Bor
 Cohesion: 0.05
 Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Border Radius, Border Style, Border Width, Borders (+35 more)
 
-### Community 45 - "Color.kt"
-Cohesion: 0.04
-Nodes (61): AnnotatedString, LoginScreen(), OnboardingPage, WelcomeScreen(), CategoryBudgetCard(), CategoryBudgetScreen(), CategoryBreakdownItem(), ChartScreen() (+53 more)
+### Community 45 - "ChartViewModel"
+Cohesion: 0.05
+Nodes (29): CategoryBreakdownItem(), ChartScreen(), androidx, Modifier, LineChart(), PieChart(), PieChartTab(), SummaryStatItem() (+21 more)
 
 ### Community 46 - "Test-Driven Development Workflow"
 Cohesion: 0.05
@@ -4668,9 +4692,9 @@ Nodes (32): Accordion, Alert, Alert Dialog, Avatar, Badge, Button, Card, Checkbo
 Cohesion: 0.06
 Nodes (32): 1. Mobile-First Design, 2. Consistent Breakpoint Usage, 3. Test at Breakpoint Boundaries, 4. Use Container for Content Width, 5. Progressive Enhancement, 6. Avoid Too Many Breakpoints, Best Practices, Breakpoint System (+24 more)
 
-### Community 84 - "CategoryBudgetViewModel"
-Cohesion: 0.18
-Nodes (5): CategoryBudgetItem, CategoryBudgetUiState, CategoryBudgetViewModel, StateFlow, ViewModel
+### Community 84 - "TrackItDatabase"
+Cohesion: 0.06
+Nodes (16): BudgetSettingDao, Flow, Flow, WeddingProfileDao, BudgetSettingEntity, WeddingProfileEntity, com, TrackItDatabase (+8 more)
 
 ### Community 85 - "Form & Input Components"
 Cohesion: 0.06
@@ -4728,13 +4752,13 @@ Nodes (28): Alert, Anatomy, Anatomy, Anatomy, Anatomy, Anatomy, Badge, Button (+
 Cohesion: 0.07
 Nodes (28): Accordion, Alert, ARIA Labels, Checkbox and Radio, Color Contrast, Command Palette Navigation, Component-Specific Patterns, Dialog/Modal Navigation (+20 more)
 
-### Community 99 - "WeddingCommitteeEntity"
-Cohesion: 0.10
-Nodes (12): Flow, WeddingCommitteeDao, WeddingCommitteeEntity, Flow, WeddingCommitteeRepository, AddMemberDialog(), CommitteeMemberItem(), WeddingCommitteeScreen() (+4 more)
+### Community 99 - "SyncManager"
+Cohesion: 0.05
+Nodes (13): Flow, WeddingCommitteeDao, WeddingCommitteeEntity, Flow, WeddingCommitteeRepository, AddMemberDialog(), CommitteeMemberItem(), WeddingCommitteeScreen() (+5 more)
 
 ### Community 100 - "WeddingVendorEntity"
-Cohesion: 0.11
-Nodes (9): Flow, WeddingVendorDao, WeddingVendorEntity, Flow, WeddingVendorRepository, StateFlow, ViewModel, WeddingVendorUiState (+1 more)
+Cohesion: 0.10
+Nodes (13): Flow, WeddingVendorDao, WeddingVendorEntity, Flow, WeddingVendorRepository, AddVendorDialog(), EditVendorDialog(), VendorItem() (+5 more)
 
 ### Community 101 - "🚀 CI/CD & In-App Update — Panduan Lengkap TrackIt"
 Cohesion: 0.07
@@ -4758,7 +4782,7 @@ Nodes (26): API Design Patterns, Authentication & Authorization, Backend Develop
 
 ### Community 106 - "radius"
 Cohesion: 0.10
-Nodes (27): $type, $value, lg, xl, $type, $value, $type, $value (+19 more)
+Nodes (28): $type, $value, lg, sm, $type, $value, $type, $value (+20 more)
 
 ### Community 107 - "search"
 Cohesion: 0.08
@@ -4872,9 +4896,9 @@ Nodes (24): Accessibility Patterns, Alternative: Tailwind-Only Setup, Best Pract
 Cohesion: 0.07
 Nodes (19): AdminShareDetector, BeaconDetector, CredentialHarvestDetector, main(), PrecursorAlert, RansomwarePrecursorEngine, Detect beaconing patterns in collected connections., Detects internal reconnaissance scanning. (+11 more)
 
-### Community 135 - "🎤 TrackIt — Smart Voice Expense Tracker"
-Cohesion: 0.08
-Nodes (24): Alur 1: Menambah Transaksi via Suara (Ajaib 🪄), Alur 2: Fitur Self-Learning (Belajar Otomatis), Alur 3: Multi-Transaction (Batch Voice Input via Widget), Alur 4: Pembaruan Mandiri (In-App Update), 🔄 Alur Pengguna, 🏗 Arsitektur Sistem, 🚀 Cara Menjalankan, 📋 Daftar Isi (+16 more)
+### Community 135 - "🎤 TrackIt — Cross-Platform Smart Voice Expense Tracker (Android & iOS)"
+Cohesion: 0.11
+Nodes (17): 🏗 Arsitektur Sistem Multiplatform, 🚀 Cara Menjalankan (Android & iOS), ⚙️ CI/CD & Rilis Otomatis, 🔴 Core Financial Management, 📋 Daftar Isi, 📱 Dukungan Platform, ✨ Fitur Utama, 🔐 Konfigurasi & Perizinan (+9 more)
 
 ### Community 136 - "Workflow"
 Cohesion: 0.08
@@ -4945,8 +4969,8 @@ Cohesion: 0.09
 Nodes (22): 192 条行业特定推理规则, Catalog provenance 与刷新流程, Star 历史, [UI UX Pro Max](https://uupm.cc), v2.0 新特性, 兼容的智能体, 前置要求, 功能特性 (+14 more)
 
 ### Community 154 - "Screen"
-Cohesion: 0.08
-Nodes (21): AddTransaction, CategoryBudget, Chart, CustomKeywords, Dashboard, EditTransaction, Login, ProfileManagement (+13 more)
+Cohesion: 0.07
+Nodes (24): AddTransaction, AdminDashboard, CategoryBudget, Chart, CustomKeywords, Dashboard, EditTransaction, Login (+16 more)
 
 ### Community 155 - "Frontend Slides"
 Cohesion: 0.10
@@ -4969,8 +4993,8 @@ Cohesion: 0.15
 Nodes (19): _e(), generate_chart_slide(), generate_cta_slide(), generate_deck(), generate_metrics_slide(), generate_problem_slide(), generate_solution_slide(), generate_testimonial_slide() (+11 more)
 
 ### Community 160 - "fontSize"
-Cohesion: 0.10
-Nodes (21): $type, $value, $type, $value, $type, $value, $type, $value (+13 more)
+Cohesion: 0.11
+Nodes (20): $type, $value, $type, $value, $type, $value, $type, $value (+12 more)
 
 ### Community 161 - "shadcn/ui Theming & Customization"
 Cohesion: 0.10
@@ -5297,8 +5321,8 @@ Cohesion: 0.13
 Nodes (14): AIDA (Attention-Interest-Desire-Action), Before-After-Bridge, Contrast Patterns, Copywriting Formulas, Core Formulas, Cost of Inaction, FAB (Features-Advantages-Benefits), Formula-to-Slide Mapping (+6 more)
 
 ### Community 245 - "AppUpdateCheckerTest"
-Cohesion: 0.22
-Nodes (4): AppUpdateChecker, AppUpdateCheckerTest, OkHttpClient, Call
+Cohesion: 0.11
+Nodes (13): UpdateDialog(), AppUpdateChecker, AppUpdateDownloader, Done, Downloading, DownloadState, Failed, Idle (+5 more)
 
 ### Community 246 - "Copywriting Formulas"
 Cohesion: 0.13
@@ -5441,8 +5465,8 @@ Cohesion: 0.14
 Nodes (13): Animation Tokens, Base Layer, Button Example, Component Classes, CSS Variables Setup, Dark Mode Toggle, HSL Format Benefits, shadcn/ui Alignment (+5 more)
 
 ### Community 281 - "radius"
-Cohesion: 0.10
-Nodes (28): $type, $value, lg, sm, $type, $value, $type, $value (+20 more)
+Cohesion: 0.11
+Nodes (27): $type, $value, lg, sm, $type, $value, $type, $value (+19 more)
 
 ### Community 282 - "Layout Patterns"
 Cohesion: 0.14
@@ -5453,8 +5477,8 @@ Cohesion: 0.22
 Nodes (8): CodeSnippet(), CodeSnippetProps, ExpandableSection(), ExpandableSectionProps, MetadataBadgesProps, StyleCardProps, StylePreviewProps, StyleData
 
 ### Community 284 - "Langkah-Langkah"
-Cohesion: 0.14
-Nodes (13): 1. Push Project ke GitHub (jika belum), 2. Buat Workflow File, 3. Push Workflow ke GitHub, 4. Monitor Build, 5. Download APK, Cara Kerja, Gratis?, Jika Build Gagal (+5 more)
+Cohesion: 0.22
+Nodes (8): 1. Push Proyek ke GitHub (jika belum), 2. Workflow File Multiplatform, 3. Cara Rilis Versi Baru (Android + iOS), 4. Monitor & Unduh Hasil Build, Kuota GitHub Actions Runner, Langkah-Langkah, Prerequisites, Tutorial GitHub Actions untuk Dual-Platform Build (Android & iOS)
 
 ### Community 285 - "Brand Voice"
 Cohesion: 0.15
@@ -5628,9 +5652,9 @@ Nodes (11): Border Radius, Color Scales, Gray Scale, Motion / Duration, Primary 
 Cohesion: 0.24
 Nodes (11): extensions, formatReport(), fs, getFiles(), main(), parseArgs(), path, patterns (+3 more)
 
-### Community 328 - "button"
-Cohesion: 0.06
-Nodes (45): $type, $value, $type, $value, bg, fg, font-size, hover-bg (+37 more)
+### Community 328 - "input"
+Cohesion: 0.10
+Nodes (27): $type, $value, $type, $value, bg, radius, bg, border (+19 more)
 
 ### Community 329 - "Key Controls by Series"
 Cohesion: 0.05
@@ -5652,9 +5676,9 @@ Nodes (11): Border Radius, Color Scales, Gray Scale, Motion / Duration, Primary 
 Cohesion: 0.24
 Nodes (11): extensions, formatReport(), fs, getFiles(), main(), parseArgs(), path, patterns (+3 more)
 
-### Community 334 - "card"
-Cohesion: 0.18
-Nodes (13): $type, $value, border, padding, shadow, border, component, card (+5 more)
+### Community 334 - "input"
+Cohesion: 0.10
+Nodes (27): $type, $value, $type, $value, bg, radius, bg, border (+19 more)
 
 ### Community 335 - "agentskills-skill.schema.json"
 Cohesion: 0.05
@@ -5969,12 +5993,12 @@ Cohesion: 0.36
 Nodes (9): flattenTokens(), fs, generateCSS(), generateTailwind(), main(), parseArgs(), path, resolveReference() (+1 more)
 
 ### Community 413 - "button"
-Cohesion: 0.08
-Nodes (32): $type, $value, bg, fg, font-size, hover-bg, padding-x, padding-y (+24 more)
+Cohesion: 0.12
+Nodes (18): fg, font-size, hover-bg, padding-x, padding-y, button, $type, $value (+10 more)
 
-### Community 414 - "duration"
-Cohesion: 0.20
-Nodes (10): fast, normal, slow, $type, $value, $type, $value, duration (+2 more)
+### Community 414 - "primitive"
+Cohesion: 0.18
+Nodes (11): fast, normal, slow, $type, $value, $type, $value, primitive (+3 more)
 
 ### Community 415 - "Slide Strategies"
 Cohesion: 0.20
@@ -5989,8 +6013,8 @@ Cohesion: 0.22
 Nodes (3): read_rows(), TestTextLayoutDataContracts, TestTextLayoutRetrieval
 
 ### Community 418 - "🚀 Panduan Setup & Menjalankan TrackIt"
-Cohesion: 0.20
-Nodes (10): 2. 💻 Instalasi Android Studio, 4. 📂 Membuka Proyek, 9. 🔧 Troubleshooting, ✅ Checklist Kesiapan, 📋 Daftar Isi, Langkah-langkah:, Langkah-langkah:, Masalah Umum & Solusinya: (+2 more)
+Cohesion: 0.15
+Nodes (13): 2. 💻 Instalasi Android Studio, 3. ⚙️ Konfigurasi SDK & Tools, 4. 📂 Membuka Proyek, 9. 🔧 Troubleshooting, ✅ Checklist Kesiapan, 📋 Daftar Isi, Langkah-langkah:, Langkah-langkah: (+5 more)
 
 ### Community 419 - "🎨 TrackIt: UI/UX Onboarding & Feature Discovery Strategy"
 Cohesion: 0.20
@@ -6561,8 +6585,8 @@ Cohesion: 0.40
 Nodes (4): How to report, Inputs you need, Operating principle: assess the live experience first, The 7-phase review
 
 ### Community 564 - "⚡ TrackIt — Quick Start"
-Cohesion: 0.40
-Nodes (3): Build APK (Opsional), Kalau Ada Masalah?, ⚡ TrackIt — Quick Start
+Cohesion: 0.25
+Nodes (6): 3 Langkah Menjalankan di iOS, Build APK (Opsional), Kalau Ada Masalah?, Opsi C: Menggunakan Xcode / iOS Simulator (macOS), ⚡ TrackIt — Quick Start, Yang Harus Disiapkan
 
 ### Community 565 - "1. 📦 Prasyarat yang Harus Disiapkan"
 Cohesion: 0.40
@@ -7049,8 +7073,8 @@ Cohesion: 0.08
 Nodes (23): Automatic Escalation (no analyst decision needed), Building SOC Escalation Matrix, Communication Templates, Context-Driven Escalation Triggers, Escalation Decision Matrix, Escalation Matrix Implementation, Management Escalation, Overview (+15 more)
 
 ### Community 724 - "MISPCollector"
-Cohesion: 0.04
-Nodes (51): main(), Configure default OSINT feeds in MISP., Collect statistics from all platform components., Manage Threat Intelligence Platform operations., Check health of all platform components., TIPManager, collect_iocs_by_type(), export_stix2() (+43 more)
+Cohesion: 0.09
+Nodes (13): main(), MISPCollector, Collect IOCs from recent events., Collect events matching specific tags., Filter IOCs against MISP warninglists to remove known-good indicators., Export events as STIX 2.1 bundles., Export IOCs to CSV file., Export network IOCs as Suricata rules. (+5 more)
 
 ### Community 725 - "RedTeamEngagementTracker"
 Cohesion: 0.12
@@ -11104,9 +11128,9 @@ Nodes (14): Building SOC Playbook for Ransomware, Common Scenarios, Key Concepts
 Cohesion: 0.13
 Nodes (14): Building Threat Intelligence Feed Integration, Common Scenarios, Key Concepts, Output Format, Prerequisites, Step 1: Identify and Catalog Intelligence Sources, Step 2: Ingest STIX/TAXII Feeds, Step 3: Ingest Open-Source Feeds (+6 more)
 
-### Community 1739 - "WeddingRundownPresets"
-Cohesion: 0.49
-Nodes (3): RundownItem, RundownPreset, WeddingRundownPresets
+### Community 1739 - "MainActivity.kt"
+Cohesion: 0.09
+Nodes (12): android, BiometricPrompt, Bundle, com, MainActivity, BiometricPrompt, BiometricLockScreen(), TrackItTheme() (+4 more)
 
 ### Community 1740 - "Building Threat Intelligence Platform"
 Cohesion: 0.13
@@ -12924,9 +12948,9 @@ Nodes (12): API Reference: Vulnerability Scanning Workflow Agent, CLI Usage, `cr
 Cohesion: 0.15
 Nodes (12): Collecting Open-Source Intelligence, Common Pitfalls, Key Concepts, Prerequisites, Step 1: Define Collection Requirements, Step 2: Passive DNS and WHOIS Investigation, Step 3: Shodan Infrastructure Mapping, Step 4: Maltego Graph Analysis (+4 more)
 
-### Community 2194 - "VoiceWidgetProvider.kt"
-Cohesion: 0.46
-Nodes (5): Context, VoiceWidgetProvider, AppWidgetManager, AppWidgetProvider, IntArray
+### Community 2194 - "TransparentVoiceActivity"
+Cohesion: 0.06
+Nodes (26): AnnotatedString, AddEditTransactionScreen(), UtteranceProgressListener, CategoryChip(), UtteranceProgressListener, ThousandSeparatorVisualTransformation, OffsetMapping, CategoryChip() (+18 more)
 
 ### Community 2195 - "Key Functions"
 Cohesion: 0.15
@@ -14524,9 +14548,9 @@ Nodes (10): Common Scenarios, Detection Queries, Hunting for Suspicious Schedule
 Cohesion: 0.18
 Nodes (10): Expected Output, Hunting for T1098 Account Manipulation, Overview, Prerequisites, Step 1: Parse Account Modification Events, Step 2: Detect Privileged Group Changes, Step 3: Identify Shadow Admin Indicators, Step 4: Correlate with Attack Timeline (+2 more)
 
-### Community 2594 - "implementing-application-whitelisting-with-applocker/scripts/process.py"
-Cohesion: 0.18
-Nodes (10): analyze_blocked_applications(), export_analysis_report(), export_blocked_apps_csv(), generate_rule_recommendations(), parse_applocker_evtx_export(), Generate AppLocker rule recommendations based on audit analysis., Export analysis and recommendations to JSON report., Parse AppLocker events exported from Event Viewer as CSV. Export: Event Viewer… (+2 more)
+### Community 2594 - "Detailed Execution Phases"
+Cohesion: 0.08
+Nodes (24): Automated Verification, Detailed Execution Phases, Implementation Plan: Google Play Store Publication & Compliance Roadmap for TrackIt, Manual Policy Verification, [MODIFY] [AndroidManifest.xml](file:///c:/Rivaldi/Track-app/app/src/main/AndroidManifest.xml), [MODIFY] [app/build.gradle.kts](file:///c:/Rivaldi/Track-app/app/build.gradle.kts), [MODIFY] [app/build.gradle.kts](file:///c:/Rivaldi/Track-app/app/build.gradle.kts), [MODIFY] [AppUpdateChecker.kt](file:///c:/Rivaldi/Track-app/app/src/main/java/com/trackit/app/updater/AppUpdateChecker.kt) (+16 more)
 
 ### Community 2595 - "implementing-aws-macie-for-data-classification/scripts/process.py"
 Cohesion: 0.18
@@ -14892,9 +14916,9 @@ Nodes (10): Expected Output, Overview, Performing SSL/TLS Security Assessment, P
 Cohesion: 0.18
 Nodes (10): CLI Usage, Connection Setup, Core PyMISP Methods, Creating Events, Distribution Levels, Installation, MISP Attribute Types, MISP / PyMISP API Reference (+2 more)
 
-### Community 2686 - "3. ⚙️ Konfigurasi SDK & Tools"
-Cohesion: 0.67
-Nodes (3): 3. ⚙️ Konfigurasi SDK & Tools, Melalui SDK Manager:, Verifikasi via Terminal (opsional):
+### Community 2686 - "button"
+Cohesion: 0.12
+Nodes (18): fg, font-size, hover-bg, padding-x, padding-y, button, $type, $value (+10 more)
 
 ### Community 2687 - "API Reference: Vulnerability Scanning with Nessus Agent"
 Cohesion: 0.18
@@ -17443,6 +17467,10 @@ Nodes (7): Armory (extensions / aliases), Implant generation, Listeners (C2 jobs
 ### Community 3327 - "MISP / PyMISP API Reference"
 Cohesion: 0.25
 Nodes (7): Downstream deployment, Feed management, MISP / PyMISP API Reference, PyMISP client, REST restSearch return formats, Searching attributes/events, Warninglists
+
+### Community 3328 - "ContentView.swift"
+Cohesion: 0.14
+Nodes (14): App, ComposeApp, ComposeView, ContentView, .body, Context, iOSApp, .body (+6 more)
 
 ### Community 3329 - "API Reference: Access Review and Certification"
 Cohesion: 0.25
@@ -20936,6 +20964,10 @@ Nodes (4): MITRE ATT&CK, NIST Cybersecurity Framework 2.0, Standards and Framewo
 Cohesion: 0.40
 Nodes (4): MITRE ATT&CK, NIST Cybersecurity Framework 2.0, Standards and Framework Mapping, Supporting Standards and References
 
+### Community 4204 - "Panduan Pengembang (Developer Guide): RBAC & Panel Super Admin"
+Cohesion: 0.11
+Nodes (17): 1. Konsep Utama & Model Akses, 2. Cara Kerja & Pembuatan Akun Super Admin, 3. SOP Penggunaan Panel Admin (Cara Membuka Akses Pembeli), 4. Lapisan Perlindungan Akses Komprehensif (Comprehensive Protection Layers), 5. Panduan Pengujian (Testing & QA Scenarios), 5 Tingkat Akses (`AccessLevel`):, 6. Konfigurasi Aturan Keamanan Firestore (Security Rules), 7. Cara Mengubah atau Menambah Email Admin Baru (+9 more)
+
 ### Community 4205 - "loop-me/SKILL.md"
 Cohesion: 0.40
 Nodes (4): Definition of done, The loop lens, The workspace, Vocabulary
@@ -21268,10 +21300,66 @@ Nodes (3): File format, What is a fragment, Writing rhythm
 Cohesion: 0.67
 Nodes (3): MITRE ATT&CK v19.1 — 805/817 skills mapped, 🆕 MITRE Fight Fraud Framework (F3) — 94 fraud-relevant skills, Six frameworks, one skill library
 
+### Community 4340 - "PyMISP"
+Cohesion: 0.15
+Nodes (9): main(), Configure default OSINT feeds in MISP., Collect statistics from all platform components., Manage Threat Intelligence Platform operations., Check health of all platform components., TIPManager, connect_misp(), Initialize PyMISP connection. (+1 more)
+
+### Community 4341 - "Kebijakan Privasi (Privacy Policy) - TrackIt"
+Cohesion: 0.13
+Nodes (14): 1. Pendahuluan, 2. Informasi yang Kami Kumpulkan & Cara Penggunaannya, 3. Pembagian Data Kepada Pihak Ketiga, 4. Keamanan Data, 5. Hak Pengguna & Penghapusan Akun (Account Deletion), 6. Privasi Anak-Anak, 7. Perubahan Kebijakan Privasi, 8. Hubungi Kami (+6 more)
+
+### Community 4342 - "implementing-api-abuse-detection-with-rate-limiting/scripts/agent.py"
+Cohesion: 0.21
+Nodes (13): detect_api_scraping(), detect_brute_force(), detect_credential_stuffing(), detect_rate_limit_bypass(), generate_rate_limit_config(), load_access_logs(), main(), Load API access logs from JSON lines. (+5 more)
+
+### Community 4343 - "implementing-threat-modeling-with-mitre-attack/scripts/agent.py"
+Cohesion: 0.21
+Nodes (13): assess_detection_coverage(), build_threat_profile(), generate_navigator_layer(), get_group_techniques(), main(), prioritize_defenses(), Prioritize defensive investments based on threat model., Run full threat modeling exercise for an industry. (+5 more)
+
+### Community 4344 - "collecting-threat-intelligence-with-misp/scripts/agent.py"
+Cohesion: 0.15
+Nodes (12): collect_iocs_by_type(), export_stix2(), extract_attributes(), init_misp(), list_feeds(), List configured MISP feeds., Export MISP event as STIX 2.1 bundle., Initialize PyMISP client. (+4 more)
+
+### Community 4345 - "📱 Laporan Audit Kesiapan Google Play Store — TrackIt"
+Cohesion: 0.15
+Nodes (12): 🚨 1. Temuan Kritis (Critical Blockers — Pasti Ditolak Google Play), ⚠️ 2. Temuan Keamanan & Kebijakan Data (High Priority), 📋 3. Persyaratan Akun & Registrasi Google Play Console, 🎨 4. Checklist Aset Toko (Store Listing Assets), 🛠 5. Action Plan Bertahap Menuju Play Store, A. Izin Kontak (`READ_CONTACTS`), B. Izin Mikrofon (`RECORD_AUDIO`), C. Keystore & Password Hardcoded (+4 more)
+
+### Community 4346 - "performing-threat-intelligence-sharing-with-misp/scripts/agent.py"
+Cohesion: 0.27
+Nodes (10): analyze(), create_event_from_data(), generate_report(), load_data(), main(), Validate MISP sharing and feed configuration., Create a MISP event with attributes and tags., Validate event data quality for sharing readiness. (+2 more)
+
+### Community 4347 - "2. Rincian Jenis Data yang Dideklarasikan"
+Cohesion: 0.20
+Nodes (9): 1. Overview Pertanyaan & Jawaban, 2. Rincian Jenis Data yang Dideklarasikan, 3. Deklarasi Izin & Kebijakan Khusus (App Content Declarations), A. Financial Info (Informasi Keuangan), B. Personal Info (Informasi Pribadi), C. Contacts (Kontak), D. Audio Files / Voice (Suara), E. Photos / Files (Foto & Dokumen) (+1 more)
+
+### Community 4348 - "operationalizing-misp-threat-feeds/scripts/agent.py"
+Cohesion: 0.54
+Nodes (7): connect(), export_suricata(), main(), Path, search_iocs(), write_sigma(), write_wazuh_cdb()
+
+### Community 4349 - "FileExporter"
+Cohesion: 0.43
+Nodes (3): FileExporter, ByteArray, NSURL
+
+### Community 4351 - "MainScreen"
+Cohesion: 0.40
+Nodes (3): MainScreen(), TrackItTheme(), MainViewController()
+
+### Community 4352 - "validate-agentskills.py"
+Cohesion: 0.60
+Nodes (4): main(), Minimal YAML: top-level keys (col 0) + scalar values for name/description., top_level_keys_and_scalars(), validate()
+
+### Community 4354 - "Google Play Store Listing Text Content"
+Cohesion: 0.40
+Nodes (4): 1. App Details, 2. Full Description (Deskripsi Lengkap - Max 4,000 Karakter), 3. Keywords & Categorization, Google Play Store Listing Text Content
+
+### Community 4357 - "Play Store Listing Assets Directory"
+Cohesion: 0.50
+Nodes (3): Play Store Listing Assets Directory, 🎨 Spesifikasi Gambar yang Dibutuhkan Google Play Console, 📁 Struktur Direktori Assets
+
 ## Knowledge Gaps
-- **26090 isolated node(s):** `ACLRule`, `ACLGroup`, `LicenseIssue`, `ExploitationStatus`, `TechnicalImpact` (+26085 more)
+- **26158 isolated node(s):** `ACLRule`, `ACLGroup`, `LicenseIssue`, `ExploitationStatus`, `TechnicalImpact` (+26153 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **83 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **91 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -21285,8 +21373,8 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 4 inferred relationships involving `TailwindConfigGenerator` (e.g. with `TestGeneratedConfigIsValidJs` and `TestTailwindConfigGenerator`) actually correct?**
   _`TailwindConfigGenerator` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `ACLRule`, `ACLGroup`, `LicenseIssue` to the rest of the system?**
-  _26090 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _26158 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `TransactionEntity` be split into smaller, more focused modules?**
-  _Cohesion score 0.04240766073871409 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.045324153757888695 - nodes in this community are weakly interconnected._
 - **Should `Counter` be split into smaller, more focused modules?**
-  _Cohesion score 0.042644757433489826 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._

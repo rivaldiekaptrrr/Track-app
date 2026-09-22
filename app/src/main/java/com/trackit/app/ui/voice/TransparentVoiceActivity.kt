@@ -146,6 +146,25 @@ class TransparentVoiceActivity : ComponentActivity() {
         }
         
         lifecycleScope.launch {
+            val accessLevel = preferencesManager.accessLevel.first()
+            val isExpenseAllowed = accessLevel in listOf(
+                com.trackit.app.data.repository.AccessLevel.EXPENSE,
+                com.trackit.app.data.repository.AccessLevel.BOTH,
+                com.trackit.app.data.repository.AccessLevel.ADMIN
+            )
+
+            if (!isExpenseAllowed) {
+                runOnUiThread {
+                    Toast.makeText(
+                        this@TransparentVoiceActivity,
+                        "Fitur Catat Suara Keuangan hanya tersedia untuk paket Expense / Both.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finishActivityCleanly()
+                }
+                return@launch
+            }
+
             val activeId = preferencesManager.activeProfileId.first()
             val activeProfile = profileRepository.getProfileById(activeId)
             if (activeProfile?.mode == "WEDDING") {

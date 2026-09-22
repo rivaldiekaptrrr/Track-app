@@ -31,6 +31,7 @@ import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.data.local.entity.ProfileEntity
 import com.trackit.app.data.local.entity.TransactionEntity
 import com.trackit.app.data.local.entity.WeddingProfileEntity
+import com.trackit.app.data.repository.AccessLevel
 import com.trackit.app.data.repository.CategoryRepository
 import com.trackit.app.data.repository.ProfileRepository
 import com.trackit.app.data.repository.TransactionRepository
@@ -41,6 +42,7 @@ import com.trackit.app.data.wedding.WeddingDocumentPresets
 import com.trackit.app.data.wedding.WeddingTaskPresets
 import com.trackit.app.util.CategoryIconMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,6 +52,7 @@ import javax.inject.Inject
 data class ProfileManagementUiState(
     val profiles: List<ProfileEntity> = emptyList(),
     val activeProfileId: Long = 1L,
+    val accessLevel: String = AccessLevel.NONE,
     val isLoading: Boolean = true
 )
 
@@ -71,11 +74,13 @@ class ProfileManagementViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 profileRepository.getAllProfiles(),
-                preferencesManager.activeProfileId
-            ) { profiles, activeId ->
+                preferencesManager.activeProfileId,
+                preferencesManager.accessLevel
+            ) { profiles, activeId, accessLevel ->
                 ProfileManagementUiState(
                     profiles = profiles,
                     activeProfileId = activeId,
+                    accessLevel = accessLevel,
                     isLoading = false
                 )
             }.collect { state ->
@@ -106,6 +111,8 @@ class ProfileManagementViewModel @Inject constructor(
                         culturalPresetBride = weddingProfile.culturalPresetBride
                     )
                     weddingTaskRepository.insertAll(tasks)
+                    // 5. Jadikan profil wedding yang baru dibuat sebagai profil aktif
+                    preferencesManager.setActiveProfileId(newProfileId)
                 } else {
                     val newId = profileRepository.insert(profile)
                     // Seed default categories untuk expense profile
@@ -113,6 +120,8 @@ class ProfileManagementViewModel @Inject constructor(
                         .getDefaultCategories()
                         .map { it.copy(profileId = newId) }
                     categoryRepository.insertAll(defaults)
+                    // Jadikan profil expense yang baru dibuat sebagai profil aktif
+                    preferencesManager.setActiveProfileId(newId)
                 }
             } else {
                 profileRepository.update(profile)
@@ -167,6 +176,35 @@ fun ProfileManagementScreen(
     var selectedProfile by remember { mutableStateOf<ProfileEntity?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf<ProfileEntity?>(null) }
+    var lockedAlertMessage by remember { mutableStateOf<String?>(null) }
+    var autoOpenedDialog by remember { mutableStateOf(false) }
+
+    // Wait until loading is done, then give Firestore sync a moment to populate
+    // local DB before deciding whether to auto-open the create-profile dialog.
+    // Without the delay, the check runs while Room is still empty (sync in flight)
+    // and incorrectly triggers the dialog for users who already have profiles.
+    LaunchedEffect(uiState.isLoading, uiState.accessLevel) {
+        if (!uiState.isLoading && !autoOpenedDialog) {
+            // Grace period: allow Firestore sync to land before deciding
+            delay(1500L)
+            val hasAllowedProfile = when (uiState.accessLevel) {
+                AccessLevel.WEDDING -> uiState.profiles.any { it.mode == "WEDDING" }
+                AccessLevel.EXPENSE -> uiState.profiles.any { it.mode != "WEDDING" }
+                else -> true
+            }
+            if (!hasAllowedProfile) {
+                autoOpenedDialog = true
+                val defaultMode = if (uiState.accessLevel == AccessLevel.WEDDING) "WEDDING" else "EXPENSE"
+                selectedProfile = ProfileEntity(
+                    name = "",
+                    iconName = if (defaultMode == "WEDDING") "favorite" else "person",
+                    colorHex = if (defaultMode == "WEDDING") "#C62828" else "#1565C0",
+                    mode = defaultMode
+                )
+                showDialog = true
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
@@ -186,7 +224,13 @@ fun ProfileManagementScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    selectedProfile = ProfileEntity(name = "", iconName = "person", colorHex = "#1565C0")
+                    val defaultMode = if (uiState.accessLevel == AccessLevel.WEDDING) "WEDDING" else "EXPENSE"
+                    selectedProfile = ProfileEntity(
+                        name = "",
+                        iconName = if (defaultMode == "WEDDING") "favorite" else "person",
+                        colorHex = if (defaultMode == "WEDDING") "#C62828" else "#1565C0",
+                        mode = defaultMode
+                    )
                     showDialog = true
                 },
                 icon = { Icon(Icons.Default.PersonAdd, contentDescription = null) },
@@ -219,8 +263,16 @@ fun ProfileManagementScreen(
 
             items(uiState.profiles) { profile ->
                 val isActive = profile.id == uiState.activeProfileId
+                val isAllowed = when (uiState.accessLevel) {
+                    AccessLevel.BOTH, AccessLevel.ADMIN -> true
+                    AccessLevel.EXPENSE -> profile.mode == "EXPENSE"
+                    AccessLevel.WEDDING -> profile.mode == "WEDDING"
+                    else -> false
+                }
+
                 val containerColor by animateColorAsState(
                     targetValue = if (isActive) MaterialTheme.colorScheme.primaryContainer
+                                  else if (!isAllowed) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                   else MaterialTheme.colorScheme.surface,
                     animationSpec = tween(300),
                     label = "profile_card_color"
@@ -232,7 +284,13 @@ fun ProfileManagementScreen(
                     colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { viewModel.switchProfile(profile.id) }
+                        .clickable {
+                            if (isAllowed) {
+                                viewModel.switchProfile(profile.id)
+                            } else {
+                                lockedAlertMessage = "Profil ini berkategori ${if (profile.mode == "EXPENSE") "Pengelola Keuangan" else "Wedding Planner"}. Lisensi akun Anda saat ini (${uiState.accessLevel}) tidak mencakup modul ini. Silakan hubungi Admin untuk upgrade lisensi."
+                            }
+                        }
                 ) {
                     Row(
                         modifier = Modifier
@@ -245,11 +303,11 @@ fun ProfileManagementScreen(
                             modifier = Modifier
                                 .size(56.dp)
                                 .clip(CircleShape)
-                                .background(CategoryIconMapper.parseColor(profile.colorHex)),
+                                .background(if (isAllowed) CategoryIconMapper.parseColor(profile.colorHex) else Color.Gray),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = CategoryIconMapper.getIcon(profile.iconName),
+                                imageVector = if (!isAllowed) Icons.Default.Lock else CategoryIconMapper.getIcon(profile.iconName),
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(32.dp)
@@ -257,12 +315,28 @@ fun ProfileManagementScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = profile.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = profile.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (!isAllowed) {
+                                    Spacer(Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                                    ) {
+                                        Text(
+                                            "Terkunci 🔒",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
                             if (isActive) {
                                 Spacer(Modifier.height(4.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -275,15 +349,24 @@ fun ProfileManagementScreen(
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
+                            } else if (!isAllowed) {
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    "Perlu paket ${if (profile.mode == "EXPENSE") "Expense" else "Wedding"}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
                         // Edit button
-                        IconButton(onClick = {
-                            selectedProfile = profile
-                            showDialog = true
-                        }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                        if (isAllowed) {
+                            IconButton(onClick = {
+                                selectedProfile = profile
+                                showDialog = true
+                            }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                            }
                         }
 
                         // Delete button (only show if more than 1 profile)
@@ -302,10 +385,15 @@ fun ProfileManagementScreen(
     if (showDialog && selectedProfile != null) {
         ProfileFormDialog(
             profile = selectedProfile!!,
+            accessLevel = uiState.accessLevel,
             onDismiss = { showDialog = false },
             onSave = { updated, weddingProfile ->
+                val shouldNavigateBack = autoOpenedDialog || uiState.profiles.isEmpty() || uiState.profiles.none { it.mode == updated.mode }
                 viewModel.saveProfile(updated, weddingProfile)
                 showDialog = false
+                if (shouldNavigateBack) {
+                    onNavigateBack()
+                }
             }
         )
     }
@@ -332,6 +420,21 @@ fun ProfileManagementScreen(
             }
         )
     }
+
+    // Locked Alert Dialog
+    lockedAlertMessage?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { lockedAlertMessage = null },
+            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+            title = { Text("Fitur Terkunci", fontWeight = FontWeight.Bold) },
+            text = { Text(msg) },
+            confirmButton = {
+                Button(onClick = { lockedAlertMessage = null }) {
+                    Text("Mengerti")
+                }
+            }
+        )
+    }
 }
 
 // ─── Profile Form Dialog ──────────────────────────────────────────────────────
@@ -340,14 +443,22 @@ fun ProfileManagementScreen(
 @Composable
 fun ProfileFormDialog(
     profile: ProfileEntity,
+    accessLevel: String = AccessLevel.BOTH,
     onDismiss: () -> Unit,
     onSave: (ProfileEntity, WeddingProfileEntity?) -> Unit
 ) {
+    val defaultMode = if (profile.id == 0L) {
+        if (accessLevel == AccessLevel.WEDDING) "WEDDING" else "EXPENSE"
+    } else {
+        profile.mode
+    }
+
     var name by remember { mutableStateOf(profile.name) }
     var selectedIcon by remember { mutableStateOf(profile.iconName) }
     var selectedColor by remember { mutableStateOf(profile.colorHex) }
-    var selectedMode by remember { mutableStateOf(profile.mode) } // "EXPENSE" or "WEDDING"
+    var selectedMode by remember { mutableStateOf(defaultMode) } // "EXPENSE" or "WEDDING"
     var submitted by remember { mutableStateOf(false) }
+    var modeLockWarning by remember { mutableStateOf<String?>(null) }
     
     // Wedding onboarding fields
     var groomName by remember { mutableStateOf("") }
@@ -364,6 +475,9 @@ fun ProfileFormDialog(
     
     val religions = listOf("ISLAM", "KRISTEN", "KATOLIK", "HINDU", "BUDDHA", "KONGHUCU")
     val cultures = listOf("MODERN", "JAWA", "SUNDA", "BATAK", "MINANG", "BUGIS", "BALI", "TIONGHOA")
+
+    val isExpenseAllowed = accessLevel in listOf(AccessLevel.EXPENSE, AccessLevel.BOTH, AccessLevel.ADMIN)
+    val isWeddingAllowed = accessLevel in listOf(AccessLevel.WEDDING, AccessLevel.BOTH, AccessLevel.ADMIN)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -393,13 +507,29 @@ fun ProfileFormDialog(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(if (isExpense) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                .clickable { selectedMode = "EXPENSE" }
+                                .clickable {
+                                    if (isExpenseAllowed) {
+                                        selectedMode = "EXPENSE"
+                                    } else {
+                                        modeLockWarning = "Paket akun Anda saat ini ($accessLevel) tidak mencakup modul Pengelola Keuangan. Hubungi Admin untuk upgrade lisensi."
+                                    }
+                                }
                                 .padding(vertical = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Icon(Icons.Default.AccountBalanceWallet, null, Modifier.size(18.dp), tint = if (isExpense) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("Expense", color = if (isExpense) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                                Icon(
+                                    imageVector = if (!isExpenseAllowed) Icons.Default.Lock else Icons.Default.AccountBalanceWallet,
+                                    contentDescription = null,
+                                    Modifier.size(18.dp),
+                                    tint = if (isExpense) MaterialTheme.colorScheme.onPrimary else if (!isExpenseAllowed) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    "Expense",
+                                    color = if (isExpense) MaterialTheme.colorScheme.onPrimary else if (!isExpenseAllowed) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                         
@@ -408,18 +538,47 @@ fun ProfileFormDialog(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(if (isWedding) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                .clickable { 
-                                    selectedMode = "WEDDING"
-                                    selectedIcon = "favorite"
-                                    selectedColor = "#C62828"
+                                .clickable {
+                                    if (isWeddingAllowed) {
+                                        selectedMode = "WEDDING"
+                                        selectedIcon = "favorite"
+                                        selectedColor = "#C62828"
+                                    } else {
+                                        modeLockWarning = "Paket akun Anda saat ini ($accessLevel) tidak mencakup modul Wedding Planner. Hubungi Admin untuk upgrade lisensi."
+                                    }
                                 }
                                 .padding(vertical = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Icon(Icons.Default.Favorite, null, Modifier.size(18.dp), tint = if (isWedding) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("Wedding", color = if (isWedding) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                                Icon(
+                                    imageVector = if (!isWeddingAllowed) Icons.Default.Lock else Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    Modifier.size(18.dp),
+                                    tint = if (isWedding) MaterialTheme.colorScheme.onPrimary else if (!isWeddingAllowed) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    "Wedding",
+                                    color = if (isWedding) MaterialTheme.colorScheme.onPrimary else if (!isWeddingAllowed) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
+                        }
+                    }
+
+                    modeLockWarning?.let { warning ->
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = warning,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(8.dp)
+                            )
                         }
                     }
                 }

@@ -36,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.trackit.app.data.local.entity.ProfileEntity
+import com.trackit.app.data.repository.AccessLevel
 import com.trackit.app.util.CategoryIconMapper
 
 data class BottomNavDestination(
@@ -61,6 +62,7 @@ fun TrackItBottomNavBar(
     onMicLongClick: () -> Unit,
     allProfiles: List<ProfileEntity> = emptyList(),
     activeProfile: ProfileEntity? = null,
+    accessLevel: String = AccessLevel.BOTH,
     onSwitchProfile: (Long) -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
@@ -100,16 +102,27 @@ fun TrackItBottomNavBar(
                     )
                     allProfiles.forEach { profile ->
                         val isActive = profile.id == activeProfile?.id
+                        val isAllowed = when (accessLevel) {
+                            AccessLevel.BOTH, AccessLevel.ADMIN -> true
+                            AccessLevel.EXPENSE -> profile.mode == "EXPENSE"
+                            AccessLevel.WEDDING -> profile.mode == "WEDDING"
+                            else -> false
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (isActive) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
+                                    if (isActive) MaterialTheme.colorScheme.surfaceVariant
+                                    else if (!isAllowed) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                    else Color.Transparent
                                 )
                                 .clickable {
-                                    if (!isActive) onSwitchProfile(profile.id)
-                                    showProfileSwitcher = false
+                                    if (isAllowed) {
+                                        if (!isActive) onSwitchProfile(profile.id)
+                                        showProfileSwitcher = false
+                                    }
                                 }
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -118,28 +131,43 @@ fun TrackItBottomNavBar(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(CategoryIconMapper.parseColor(profile.colorHex)),
+                                    .background(if (isAllowed) CategoryIconMapper.parseColor(profile.colorHex) else Color.Gray),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = CategoryIconMapper.getIcon(profile.iconName),
+                                    imageVector = if (!isAllowed) Icons.Default.Lock else CategoryIconMapper.getIcon(profile.iconName),
                                     contentDescription = null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    profile.name,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        profile.name,
+                                        color = if (isAllowed) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    if (!isAllowed) {
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            "🔒",
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
                                 if (isActive) {
                                     Text(
                                         "Aktif sekarang",
                                         color = activeTextBlue,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                } else if (!isAllowed) {
+                                    Text(
+                                        "Terkunci (Paket ${if (profile.mode == "EXPENSE") "Expense" else "Wedding"})",
+                                        color = MaterialTheme.colorScheme.error,
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }

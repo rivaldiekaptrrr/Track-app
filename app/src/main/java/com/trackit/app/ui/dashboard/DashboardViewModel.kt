@@ -56,7 +56,7 @@ class DashboardViewModel @Inject constructor(
     private val _selectedMonth = MutableStateFlow(System.currentTimeMillis())
     val selectedMonth: StateFlow<Long> = _selectedMonth.asStateFlow()
 
-    private val _uiState = MutableStateFlow(DashboardUiState())
+    private val _uiState = MutableStateFlow(DashboardUiState(isSyncing = syncManager.isSyncing.value))
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
@@ -148,7 +148,13 @@ class DashboardViewModel @Inject constructor(
                     )
                 }
             }.collect { state ->
-                _uiState.value = state.copy(isExpenseOnlyMode = _uiState.value.isExpenseOnlyMode)
+                // Preserve isSyncing and isExpenseOnlyMode from current state,
+                // since they are updated by separate coroutines and must not be
+                // overwritten when loadDashboardData emits a new Room snapshot.
+                _uiState.value = state.copy(
+                    isSyncing = _uiState.value.isSyncing,
+                    isExpenseOnlyMode = _uiState.value.isExpenseOnlyMode
+                )
             }
         }
     }

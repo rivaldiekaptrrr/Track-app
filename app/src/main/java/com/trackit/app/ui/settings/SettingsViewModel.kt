@@ -28,7 +28,8 @@ data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val isBiometricEnabled: Boolean = false,
     val isOnlineMode: Boolean = false,
-    val currentUserEmail: String? = null
+    val currentUserEmail: String? = null,
+    val accessLevel: String = com.trackit.app.data.repository.AccessLevel.NONE
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -52,6 +53,15 @@ class SettingsViewModel @Inject constructor(
         loadThemeMode()
         loadBiometricPreference()
         loadCloudSyncState()
+        loadAccessLevel()
+    }
+
+    private fun loadAccessLevel() {
+        viewModelScope.launch {
+            preferencesManager.accessLevel.collect { level ->
+                _uiState.update { it.copy(accessLevel = level) }
+            }
+        }
     }
 
     private fun loadTtsPreference() {

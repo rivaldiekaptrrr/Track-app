@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,12 +30,14 @@ class PreferencesManager @Inject constructor(
         val PENDING_RESTORE = booleanPreferencesKey("pending_restore")
         val BYPASS_BIOMETRIC_ONCE = booleanPreferencesKey("bypass_biometric_once")
         val DAILY_REMINDER_ENABLED = booleanPreferencesKey("daily_reminder_enabled")
-        val DAILY_REMINDER_TIME = androidx.datastore.preferences.core.stringPreferencesKey("daily_reminder_time")
+        val DAILY_REMINDER_TIME = stringPreferencesKey("daily_reminder_time")
         val EXPENSE_ONLY_MODE = booleanPreferencesKey("expense_only_mode")
         val THEME_MODE = intPreferencesKey("theme_mode")
         val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         val HAS_SKIPPED_LOGIN = booleanPreferencesKey("has_skipped_login")
         val HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
+        /** Cached access level from Firestore (NONE/EXPENSE/WEDDING/BOTH/ADMIN) */
+        val ACCESS_LEVEL = stringPreferencesKey("access_level")
     }
 
     val isTtsEnabled: Flow<Boolean> = context.dataStore.data
@@ -156,6 +159,17 @@ class PreferencesManager @Inject constructor(
     suspend fun setThemeMode(mode: ThemeMode) {
         context.dataStore.edit { preferences ->
             preferences[THEME_MODE] = mode.ordinal
+        }
+    }
+
+    val accessLevel: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[ACCESS_LEVEL] ?: "NONE"
+        }
+
+    suspend fun setAccessLevel(level: String) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCESS_LEVEL] = level
         }
     }
 }

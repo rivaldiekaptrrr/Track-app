@@ -33,8 +33,8 @@ class WeddingTaskRepository @Inject constructor(
         syncManager.deleteWeddingTask(task)
     }
     suspend fun deleteAllByProfile(profileId: String) {
-        // Warning: This only deletes locally. In a real sync setup, we'd need to fetch and delete each from cloud or use a batched cloud delete.
-        // For MVP, we'll just delete locally.
+        val tasks = dao.getAllByProfileSync(profileId)
+        tasks.forEach { syncManager.deleteWeddingTask(it) }
         dao.deleteAllByProfile(profileId)
     }
 }

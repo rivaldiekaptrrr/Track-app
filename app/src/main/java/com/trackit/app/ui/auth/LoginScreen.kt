@@ -51,7 +51,7 @@ import com.trackit.app.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (String) -> Unit,
     onSkip: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -72,7 +72,10 @@ fun LoginScreen(
     }
 
     LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) onLoginSuccess()
+        if (uiState.isSuccess) {
+            val level = uiState.accessLevel ?: com.trackit.app.data.repository.AccessLevel.NONE
+            onLoginSuccess(level)
+        }
     }
 
     val context = LocalContext.current
@@ -395,27 +398,6 @@ fun LoginScreen(
                         )
                     }
 
-                    // Skip / Offline Mode Button
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.skipLogin()
-                            onSkip()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Text(
-                            "Lewati, gunakan mode Offline",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }

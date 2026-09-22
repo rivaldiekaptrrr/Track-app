@@ -149,8 +149,15 @@ class FirestoreRestClient @Inject constructor(
                 val body = response.body?.string() ?: ""
 
                 if (!response.isSuccessful) {
-                    Log.e("FirestoreREST", "LIST Error ${response.code}: ${body.take(150)}")
-                    break
+                    val errorSnippet = body.take(200)
+                    Log.e("FirestoreREST", "LIST Error ${response.code}: $errorSnippet")
+                    if (response.code == 403) {
+                        throw IllegalStateException("Akses ditolak (HTTP 403). Pastikan Firebase Firestore Security Rules telah diatur untuk mengizinkan email admin.")
+                    } else if (response.code == 401) {
+                        throw IllegalStateException("Sesi login berakhir (HTTP 401). Silakan login ulang.")
+                    } else {
+                        throw IllegalStateException("Gagal memuat data dari Firestore (HTTP ${response.code})")
+                    }
                 }
 
                 val json = JSONObject(body)
@@ -166,8 +173,86 @@ class FirestoreRestClient @Inject constructor(
 
         } catch (e: Exception) {
             Log.e("FirestoreREST", "LIST Exception: ${e.message}")
+            throw e
         }
 
         return@withContext allDocs
     }
+
+    /**
+     * Reads a single Firestore document using HTTP GET.
+     * Returns the raw JSONObject of the document, or null if not found.
+     *
+     * @param path Document path e.g. "users/{uid}"
+     */
+    suspend fun getDocument(path: String): JSONObject? = withContext(Dispatchers.IO) {
+        val idToken = getIdToken()
+        if (idToken == null) {
+            Log.e("FirestoreREST", "GET Aborted: No ID Token")
+            return@withContext null
+        }
+
+        val url = "$baseUrl/$path"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("Authorization", "Bearer $idToken")
+            .build()
+
+        return@withContext try {
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                JSONObject(body)
+            } else {
+                if (response.code != 404) {
+                    Log.e("FirestoreREST", "GET Error ${response.code}: ${body.take(150)}")
+                }
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("FirestoreREST", "GET Exception: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Patches specific fields in a Firestore document using HTTP PATCH with updateMask.
+     * Only the fields listed in [fieldMask] will be updated.
+     *
+     * @param path Document path e.g. "users/{uid}"
+     * @param firestoreJson Firestore-formatted JSON body
+     * @param fieldMask List of field names to update (updateMask)
+     * @return True if successful, false otherwise.
+     */
+    suspend fun patch(path: String, firestoreJson: String, fieldMask: List<String>): Boolean = withContext(Dispatchers.IO) {
+        val idToken = getIdToken()
+        if (idToken == null) {
+            Log.e("FirestoreREST", "PATCH Aborted: No ID Token")
+            return@withContext false
+        }
+
+        val maskParam = fieldMask.joinToString("&") { "updateMask.fieldPaths=$it" }
+        val url = "$baseUrl/$path?$maskParam"
+        val request = Request.Builder()
+            .url(url)
+            .patch(firestoreJson.toRequestBody(jsonMediaType))
+            .addHeader("Authorization", "Bearer $idToken")
+            .build()
+
+        return@withContext try {
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                true
+            } else {
+                val body = response.body?.string() ?: ""
+                Log.e("FirestoreREST", "PATCH Error ${response.code}: ${body.take(150)}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("FirestoreREST", "PATCH Exception: ${e.message}")
+            false
+        }
+    }
 }
+

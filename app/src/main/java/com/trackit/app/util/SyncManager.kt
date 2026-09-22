@@ -34,6 +34,7 @@ import com.trackit.app.data.local.entity.WeddingRundownItemEntity
 import com.trackit.app.data.local.entity.WeddingSeserahanEntity
 import com.trackit.app.data.local.entity.WeddingTaskEntity
 import com.trackit.app.data.local.entity.WeddingVendorEntity
+import com.trackit.app.data.repository.AccessLevel
 import com.trackit.app.data.repository.AuthRepository
 import com.trackit.app.util.FirestoreMapper.toCategoryBudgetEntity
 import com.trackit.app.util.FirestoreMapper.toCategoryEntity
@@ -117,7 +118,7 @@ class SyncManager @Inject constructor(
     }
 
     /**
-     * Clears all local Room database tables and seeds fresh default profile & categories.
+     * Clears all local Room database tables on logout.
      * Prevents user data leak when switching/logging out accounts.
      */
     suspend fun clearLocalData() {
@@ -125,22 +126,9 @@ class SyncManager @Inject constructor(
             try {
                 Log.d(TAG, "Clearing local database tables on logout...")
                 database.clearAllTables()
-                
-                // Re-seed default profile and categories
-                val profileId = profileDao.insert(
-                    ProfileEntity(
-                        name = "Pribadi",
-                        iconName = "person",
-                        colorHex = "#1565C0"
-                    )
-                )
-                preferencesManager.setActiveProfileId(profileId)
-                val defaultCategories = TrackItDatabase.getDefaultCategories().map { it.copy(profileId = profileId) }
-                categoryDao.insertAll(defaultCategories)
-                budgetSettingDao.insert(
-                    BudgetSettingEntity(profileId = profileId, monthlyBudget = 0.0)
-                )
-                Log.d(TAG, "Local database reset & seeded with defaults successfully.")
+                preferencesManager.setActiveProfileId(0L)
+                preferencesManager.setAccessLevel(AccessLevel.NONE)
+                Log.d(TAG, "Local database reset successfully.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error clearing local data on logout: ${e.message}", e)
             }
@@ -151,15 +139,29 @@ class SyncManager @Inject constructor(
      * Called when app starts or online mode is enabled.
      * Pulls ALL data from Firestore via REST and merges into local Room DB.
      * Covers Transactions and all Wedding entities.
+     *
+     * IMPORTANT: _isSyncing is set to true SYNCHRONOUSLY before the coroutine launches
+     * so that any observer (e.g. the nav smart router) immediately sees isSyncing=true
+     * and waits — preventing premature "no profiles" redirects before Firestore data lands.
      */
     fun startSync() {
         if (syncJob?.isActive == true) return
 
+        // Set syncing flag synchronously before the coroutine starts.
+        // This prevents the race window where isSyncing=false while the coroutine
+        // is scheduled but hasn't run yet.
+        _isSyncing.value = true
+
         syncJob = syncScope.launch {
             try {
-                _isSyncing.value = true
-                if (!syncPreferences.isOnlineMode.first()) return@launch
-                val userId = authRepository.currentUser?.uid ?: return@launch
+                if (!syncPreferences.isOnlineMode.first()) {
+                    _isSyncing.value = false
+                    return@launch
+                }
+                val userId = authRepository.currentUser?.uid ?: run {
+                    _isSyncing.value = false
+                    return@launch
+                }
 
                 Log.d(TAG, "Starting full parallel pull sync for user ${userId.take(5)}...")
                 val startTime = System.currentTimeMillis()

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.ThemeMode
+import com.trackit.app.data.repository.AccessLevel
 import com.trackit.app.ui.settings.ThemeModeOption
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +37,7 @@ fun WeddingSettingsScreen(
     onExportWeddingPdf: (profileId: String, profileName: String) -> Unit = { _, _ -> },
     onExportWeddingCsv: (profileId: String, profileName: String) -> Unit = { _, _ -> },
     onNavigateToLogin: () -> Unit = {},
+    onNavigateToModuleSelection: () -> Unit = {},
     weddingProfileId: String = "",
     viewModel: WeddingSettingsViewModel = hiltViewModel()
 ) {
@@ -43,6 +45,8 @@ fun WeddingSettingsScreen(
     val context = LocalContext.current
     var showExportDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var isDeletingAccount by remember { mutableStateOf(false) }
 
     LaunchedEffect(weddingProfileId) {
         if (weddingProfileId.isNotBlank()) viewModel.loadForProfile(weddingProfileId)
@@ -127,6 +131,50 @@ fun WeddingSettingsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = when (uiState.accessLevel) {
+                                    AccessLevel.ADMIN -> MaterialTheme.colorScheme.tertiaryContainer
+                                    AccessLevel.BOTH -> MaterialTheme.colorScheme.primaryContainer
+                                    AccessLevel.EXPENSE -> MaterialTheme.colorScheme.secondaryContainer
+                                    AccessLevel.WEDDING -> MaterialTheme.colorScheme.errorContainer
+                                    else -> MaterialTheme.colorScheme.surfaceVariant
+                                }
+                            ) {
+                                Text(
+                                    text = when (uiState.accessLevel) {
+                                        AccessLevel.ADMIN -> "Super Admin 👑"
+                                        AccessLevel.BOTH -> "Lisensi: BOTH (Expense + Wedding) ⭐"
+                                        AccessLevel.EXPENSE -> "Lisensi: EXPENSE"
+                                        AccessLevel.WEDDING -> "Lisensi: WEDDING"
+                                        else -> "Belum Terverifikasi"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = when (uiState.accessLevel) {
+                                        AccessLevel.ADMIN -> MaterialTheme.colorScheme.onTertiaryContainer
+                                        AccessLevel.BOTH -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        AccessLevel.EXPENSE -> MaterialTheme.colorScheme.onSecondaryContainer
+                                        AccessLevel.WEDDING -> MaterialTheme.colorScheme.onErrorContainer
+                                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (uiState.accessLevel == AccessLevel.BOTH) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FilledTonalButton(
+                            onClick = onNavigateToModuleSelection,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Apps, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Beralih Modul (Pilih Aplikasi)")
                         }
                     }
 
@@ -134,16 +182,32 @@ fun WeddingSettingsScreen(
 
                     if (uiState.isOnlineMode && uiState.currentUserEmail != null) {
                         OutlinedButton(
-                            onClick = { viewModel.signOut() },
+                            onClick = {
+                                viewModel.signOut()
+                                onNavigateToLogin()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sign Out")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { showDeleteAccountDialog = true },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Keluar & Matikan Akses Pasangan")
+                            Text("Delete Account")
                         }
                     } else {
                         Button(
@@ -154,7 +218,7 @@ fun WeddingSettingsScreen(
                         ) {
                             Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Masuk / Buat Akun Pasangan")
+                            Text("Masuk / Buat Akun Cloud")
                         }
                     }
                 }
@@ -687,6 +751,58 @@ fun WeddingSettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showExportDialog = false }) { Text("Batal") }
+            }
+        )
+    }
+
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!isDeletingAccount) showDeleteAccountDialog = false },
+            title = { Text("Hapus Akun & Data Permanen", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Apakah Anda yakin ingin menghapus akun dan seluruh data cloud Anda? Tindakan ini TIDAK DAPAT DIBATALKAN dan semua data cloud Anda akan terhapus secara permanen.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isDeletingAccount = true
+                        viewModel.deleteAccount(
+                            onSuccess = {
+                                isDeletingAccount = false
+                                showDeleteAccountDialog = false
+                                Toast.makeText(context, "Akun dan data Anda berhasil dihapus.", Toast.LENGTH_LONG).show()
+                                onNavigateToLogin()
+                            },
+                            onError = { error ->
+                                isDeletingAccount = false
+                                showDeleteAccountDialog = false
+                                Toast.makeText(context, "Gagal menghapus akun: $error", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    },
+                    enabled = !isDeletingAccount,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    if (isDeletingAccount) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onError,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Menghapus...")
+                    } else {
+                        Text("Hapus Permanen")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteAccountDialog = false },
+                    enabled = !isDeletingAccount
+                ) {
+                    Text("Batal")
+                }
             }
         )
     }

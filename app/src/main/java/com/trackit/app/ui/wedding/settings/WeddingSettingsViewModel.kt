@@ -28,7 +28,8 @@ data class WeddingSettingsUiState(
     val weddingDate: Long = 0,
     val isOnlineMode: Boolean = false,
     val currentUserEmail: String? = null,
-    val profileName: String = ""
+    val profileName: String = "",
+    val accessLevel: String = com.trackit.app.data.repository.AccessLevel.NONE
 )
 
 @HiltViewModel
@@ -61,6 +62,11 @@ class WeddingSettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(isBiometricEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            preferencesManager.accessLevel.collect { level ->
+                _uiState.update { it.copy(accessLevel = level) }
+            }
+        }
         loadCloudSyncState()
     }
 
@@ -86,6 +92,26 @@ class WeddingSettingsViewModel @Inject constructor(
             syncManager.stopSync()
             syncManager.clearLocalData()
             _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
+        }
+    }
+
+    fun deleteAccount(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = authRepository.deleteAccount()
+            when (result) {
+                is com.trackit.app.data.repository.AuthResult.Success -> {
+                    syncPreferences.setOnlineMode(false)
+                    syncPreferences.setUserId(null)
+                    preferencesManager.setHasSkippedLogin(false)
+                    syncManager.stopSync()
+                    syncManager.clearLocalData()
+                    _uiState.update { it.copy(isOnlineMode = false, currentUserEmail = null) }
+                    onSuccess()
+                }
+                is com.trackit.app.data.repository.AuthResult.Error -> {
+                    onError(result.message)
+                }
+            }
         }
     }
 
