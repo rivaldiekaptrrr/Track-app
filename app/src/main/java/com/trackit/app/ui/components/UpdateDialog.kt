@@ -86,18 +86,24 @@ fun UpdateDialog(
                 }
                 is DownloadState.Done -> {
                     Button(onClick = {
-                        // Check if we can install packages
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            if (!context.packageManager.canRequestPackageInstalls()) {
-                                // Request permission
-                                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                                    data = Uri.parse("package:${context.packageName}")
+                        try {
+                            // Check if we can install packages (Android 8.0+)
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                if (!context.packageManager.canRequestPackageInstalls()) {
+                                    // Request permission to install unknown apps
+                                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                                        data = Uri.parse("package:${context.packageName}")
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    context.startActivity(intent)
+                                    return@Button
                                 }
-                                context.startActivity(intent)
-                                return@Button
                             }
+                            onInstall(downloadState.apkFile)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            onInstall(downloadState.apkFile)
                         }
-                        onInstall(downloadState.apkFile)
                     }) {
                         Text("Pasang")
                     }
