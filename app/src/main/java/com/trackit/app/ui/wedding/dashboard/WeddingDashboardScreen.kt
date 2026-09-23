@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -104,14 +105,20 @@ fun WeddingDashboardScreen(
                                 text = currentDate,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
+
+                            Spacer(Modifier.width(8.dp))
 
                             // Dynamic Profile Pill (Names + Icon + Dropdown)
                             val activeProf = uiState.activeProfile
                             val names = "${profile?.groomName ?: ""} & ${profile?.brideName ?: ""}".trim().removePrefix("&").removeSuffix("&").trim()
                             Row(
                                 modifier = Modifier
+                                    .weight(1f, fill = false)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
                                     .combinedClickable(
@@ -121,15 +128,18 @@ fun WeddingDashboardScreen(
                                             showProfileSwitcher = true 
                                         }
                                     )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
                                     text = if (names.isEmpty()) "Profil" else names,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                                 Icon(
                                     imageVector = CategoryIconMapper.getIcon(activeProf?.iconName ?: "favorite"),
@@ -223,7 +233,7 @@ fun WeddingDashboardScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -235,27 +245,33 @@ fun WeddingDashboardScreen(
                                 text = "Ringkasan Anggaran",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Spacer(Modifier.height(6.dp))
                             
                             Text(
                                 text = CurrencyUtils.formatRupiah(totalPaid),
-                                style = MaterialTheme.typography.headlineMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "dari ${CurrencyUtils.formatRupiah(totalBudgetCap)}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Spacer(Modifier.height(8.dp))
                             
                             LinearProgressIndicator(
                                 progress = { progress },
                                 modifier = Modifier
-                                    .width(120.dp)
+                                    .fillMaxWidth(0.7f)
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
                                 color = MaterialTheme.colorScheme.primary,
@@ -265,18 +281,23 @@ fun WeddingDashboardScreen(
                             
                             Row(
                                 verticalAlignment = Alignment.Bottom,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
                                     text = CurrencyUtils.formatRupiah((totalBudgetCap - totalPaid).coerceAtLeast(0.0)),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                                 Text(
                                     text = "Sisa Anggaran",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
                                     modifier = Modifier.padding(bottom = 2.dp)
                                 )
                             }
@@ -285,11 +306,11 @@ fun WeddingDashboardScreen(
                         // Right Side (Radial/Circular Progress)
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier.padding(start = 16.dp)
+                            modifier = Modifier.padding(start = 12.dp)
                         ) {
                             CircularProgressIndicator(
                                 progress = { progress },
-                                modifier = Modifier.size(72.dp),
+                                modifier = Modifier.size(64.dp),
                                 color = MaterialTheme.colorScheme.primary,
                                 strokeWidth = 5.dp,
                                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
@@ -358,7 +379,10 @@ fun WeddingDashboardScreen(
                     }
                     // Right Column (Budget Summary)
                     ElevatedCard(
-                        modifier = Modifier.weight(1f).height(192.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 192.dp)
+                            .wrapContentHeight(),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
@@ -534,13 +558,18 @@ fun WeddingDashboardScreen(
                                         text = budget.categoryName,
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
+                                    Spacer(Modifier.width(8.dp))
                                     Text(
                                         text = "${(budget.progress * 100).roundToInt()}%",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1
                                     )
                                 }
                                 Spacer(Modifier.height(4.dp))
@@ -548,7 +577,9 @@ fun WeddingDashboardScreen(
                                 Text(
                                     text = "${CurrencyUtils.formatRupiah(budget.totalPaid)} / ${CurrencyUtils.formatRupiah(budget.totalEstimated)}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(6.dp))
                                 
@@ -672,25 +703,31 @@ private fun BentoActionCard(
 ) {
     ElevatedCard(
         onClick = onClick,
-        modifier = modifier.height(100.dp),
+        modifier = modifier
+            .defaultMinSize(minHeight = 90.dp)
+            .wrapContentHeight(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = bgColor),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, null, tint = contentColor, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.height(8.dp))
+            Icon(icon, null, tint = contentColor, modifier = Modifier.size(26.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = contentColor,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
-                lineHeight = 14.sp
+                lineHeight = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -710,25 +747,37 @@ private fun BentoProgressCard(
     )
     ElevatedCard(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(88.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 88.dp)
+            .wrapContentHeight(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp).fillMaxSize(),
+            modifier = Modifier.padding(14.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.Center
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(4.dp))
                 Text(
                     "${(animatedProgress * 100).roundToInt()}%",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = color
+                    color = color,
+                    maxLines = 1
                 )
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier
@@ -752,30 +801,36 @@ private fun BentoStatCard(
 ) {
     ElevatedCard(
         onClick = onClick,
-        modifier = modifier.height(100.dp),
+        modifier = modifier
+            .defaultMinSize(minHeight = 96.dp)
+            .wrapContentHeight(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp).fillMaxSize(),
+            modifier = Modifier.padding(14.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.Center
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+                Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = value,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

@@ -40,6 +40,15 @@ class TransactionRepository @Inject constructor(
     fun getSpendingByCategoryAndType(startOfMonth: Long, endOfMonth: Long, type: String, profileId: Long): Flow<List<CategorySpending>> =
         transactionDao.getSpendingByCategoryAndType(startOfMonth, endOfMonth, type, profileId)
 
+    fun getTransactionsByCategoryAndMonth(
+        categoryId: String?,
+        startOfMonth: Long,
+        endOfMonth: Long,
+        type: String,
+        profileId: Long
+    ): Flow<List<TransactionEntity>> =
+        transactionDao.getTransactionsByCategoryAndMonth(categoryId, startOfMonth, endOfMonth, type, profileId)
+
     suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long, profileId: Long): List<TransactionEntity> =
         transactionDao.getTransactionsByDateRange(startDate, endDate, profileId)
 

@@ -17,8 +17,17 @@ sealed class Screen(val route: String) {
     data object Chart : Screen("chart")
     data object Settings : Screen("settings")
     data object CustomKeywords : Screen("custom_keywords")
-    data object ProfileManagement : Screen("profile_management")
+    data object ProfileManagement : Screen("profile_management?initialMode={initialMode}") {
+        fun createRoute(initialMode: String? = null): String {
+            return if (initialMode != null) "profile_management?initialMode=$initialMode" else "profile_management"
+        }
+    }
     data object CategoryBudget : Screen("category_budget")
+    data object CategoryDetail : Screen("category_detail/{categoryId}?month={month}&type={type}") {
+        fun createRoute(categoryId: String, month: Long, type: String = "EXPENSE"): String {
+            return "category_detail/$categoryId?month=$month&type=$type"
+        }
+    }
 
     // Wedding Planner Screens
     data object WeddingDashboard : Screen("wedding_dashboard")

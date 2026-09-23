@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -170,6 +171,8 @@ private val profileIcons = listOf(
 @Composable
 fun ProfileManagementScreen(
     onNavigateBack: () -> Unit,
+    initialMode: String? = null,
+    onProfileCreated: (() -> Unit)? = null,
     viewModel: ProfileManagementViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -183,18 +186,26 @@ fun ProfileManagementScreen(
     // local DB before deciding whether to auto-open the create-profile dialog.
     // Without the delay, the check runs while Room is still empty (sync in flight)
     // and incorrectly triggers the dialog for users who already have profiles.
-    LaunchedEffect(uiState.isLoading, uiState.accessLevel) {
+    LaunchedEffect(uiState.isLoading, uiState.accessLevel, initialMode) {
         if (!uiState.isLoading && !autoOpenedDialog) {
             // Grace period: allow Firestore sync to land before deciding
             delay(1500L)
-            val hasAllowedProfile = when (uiState.accessLevel) {
-                AccessLevel.WEDDING -> uiState.profiles.any { it.mode == "WEDDING" }
-                AccessLevel.EXPENSE -> uiState.profiles.any { it.mode != "WEDDING" }
+            val hasAllowedProfile = when {
+                initialMode == "WEDDING" -> uiState.profiles.any { it.mode == "WEDDING" }
+                initialMode == "EXPENSE" -> uiState.profiles.any { it.mode != "WEDDING" }
+                uiState.accessLevel == AccessLevel.WEDDING -> uiState.profiles.any { it.mode == "WEDDING" }
+                uiState.accessLevel == AccessLevel.EXPENSE -> uiState.profiles.any { it.mode != "WEDDING" }
+                uiState.accessLevel == AccessLevel.BOTH -> uiState.profiles.isNotEmpty()
                 else -> true
             }
             if (!hasAllowedProfile) {
                 autoOpenedDialog = true
-                val defaultMode = if (uiState.accessLevel == AccessLevel.WEDDING) "WEDDING" else "EXPENSE"
+                val defaultMode = when {
+                    initialMode == "WEDDING" -> "WEDDING"
+                    initialMode == "EXPENSE" -> "EXPENSE"
+                    uiState.accessLevel == AccessLevel.WEDDING -> "WEDDING"
+                    else -> "EXPENSE"
+                }
                 selectedProfile = ProfileEntity(
                     name = "",
                     iconName = if (defaultMode == "WEDDING") "favorite" else "person",
@@ -224,7 +235,12 @@ fun ProfileManagementScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    val defaultMode = if (uiState.accessLevel == AccessLevel.WEDDING) "WEDDING" else "EXPENSE"
+                    val defaultMode = when {
+                        initialMode == "WEDDING" -> "WEDDING"
+                        initialMode == "EXPENSE" -> "EXPENSE"
+                        uiState.accessLevel == AccessLevel.WEDDING -> "WEDDING"
+                        else -> "EXPENSE"
+                    }
                     selectedProfile = ProfileEntity(
                         name = "",
                         iconName = if (defaultMode == "WEDDING") "favorite" else "person",
@@ -295,13 +311,13 @@ fun ProfileManagementScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
+                            .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Profile Icon Circle
                         Box(
                             modifier = Modifier
-                                .size(56.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(if (isAllowed) CategoryIconMapper.parseColor(profile.colorHex) else Color.Gray),
                             contentAlignment = Alignment.Center
@@ -310,17 +326,23 @@ fun ProfileManagementScreen(
                                 imageVector = if (!isAllowed) Icons.Default.Lock else CategoryIconMapper.getIcon(profile.iconName),
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 Text(
                                     text = profile.name,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                                 if (!isAllowed) {
                                     Spacer(Modifier.width(6.dp))
@@ -332,7 +354,8 @@ fun ProfileManagementScreen(
                                             "Terkunci 🔒",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.error,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                            maxLines = 1
                                         )
                                     }
                                 }
@@ -346,7 +369,9 @@ fun ProfileManagementScreen(
                                         "Aktif Sekarang",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             } else if (!isAllowed) {
@@ -354,25 +379,33 @@ fun ProfileManagementScreen(
                                 Text(
                                     "Perlu paket ${if (profile.mode == "EXPENSE") "Expense" else "Wedding"}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
 
                         // Edit button
                         if (isAllowed) {
-                            IconButton(onClick = {
-                                selectedProfile = profile
-                                showDialog = true
-                            }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                            IconButton(
+                                onClick = {
+                                    selectedProfile = profile
+                                    showDialog = true
+                                },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                             }
                         }
 
                         // Delete button (only show if more than 1 profile)
                         if (uiState.profiles.size > 1) {
-                            IconButton(onClick = { showDeleteConfirm = profile }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
+                            IconButton(
+                                onClick = { showDeleteConfirm = profile },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -388,11 +421,15 @@ fun ProfileManagementScreen(
             accessLevel = uiState.accessLevel,
             onDismiss = { showDialog = false },
             onSave = { updated, weddingProfile ->
-                val shouldNavigateBack = autoOpenedDialog || uiState.profiles.isEmpty() || uiState.profiles.none { it.mode == updated.mode }
+                val shouldTriggerCreated = autoOpenedDialog || uiState.profiles.isEmpty() || uiState.profiles.none { it.mode == updated.mode }
                 viewModel.saveProfile(updated, weddingProfile)
                 showDialog = false
-                if (shouldNavigateBack) {
-                    onNavigateBack()
+                if (shouldTriggerCreated) {
+                    if (onProfileCreated != null) {
+                        onProfileCreated()
+                    } else {
+                        onNavigateBack()
+                    }
                 }
             }
         )
@@ -447,10 +484,12 @@ fun ProfileFormDialog(
     onDismiss: () -> Unit,
     onSave: (ProfileEntity, WeddingProfileEntity?) -> Unit
 ) {
-    val defaultMode = if (profile.id == 0L) {
-        if (accessLevel == AccessLevel.WEDDING) "WEDDING" else "EXPENSE"
-    } else {
+    val defaultMode = if (profile.mode.isNotBlank()) {
         profile.mode
+    } else if (accessLevel == AccessLevel.WEDDING) {
+        "WEDDING"
+    } else {
+        "EXPENSE"
     }
 
     var name by remember { mutableStateOf(profile.name) }
@@ -510,6 +549,10 @@ fun ProfileFormDialog(
                                 .clickable {
                                     if (isExpenseAllowed) {
                                         selectedMode = "EXPENSE"
+                                        if (selectedIcon == "favorite") {
+                                            selectedIcon = "person"
+                                            selectedColor = "#1565C0"
+                                        }
                                     } else {
                                         modeLockWarning = "Paket akun Anda saat ini ($accessLevel) tidak mencakup modul Pengelola Keuangan. Hubungi Admin untuk upgrade lisensi."
                                     }

@@ -51,7 +51,7 @@ val bottomNavDestinations = listOf(
     BottomNavDestination(Screen.Dashboard.route, "Beranda", Icons.Filled.Home, Icons.Outlined.Home),
     BottomNavDestination(Screen.Chart.route, "Statistik", Icons.Filled.PieChart, Icons.Outlined.PieChart),
     BottomNavDestination(Screen.Settings.route, "Pengaturan", Icons.Filled.Settings, Icons.Outlined.Settings),
-    BottomNavDestination(Screen.ProfileManagement.route, "Profil", Icons.Filled.Person, Icons.Outlined.Person)
+    BottomNavDestination(Screen.ProfileManagement.createRoute(), "Profil", Icons.Filled.Person, Icons.Outlined.Person)
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -73,7 +73,9 @@ fun TrackItBottomNavBar(
     // Helper to robustly match routes including parameterized ones
     fun isRouteActive(route: String): Boolean {
         val current = currentRoute ?: return false
-        return current == route || current.startsWith("${route}?")
+        val baseRoute = route.substringBefore("?").substringBefore("/")
+        val currentBase = current.substringBefore("?").substringBefore("/")
+        return currentBase == baseRoute
     }
 
     // Derive badge condition from profile data (budget warning)
@@ -192,7 +194,7 @@ fun TrackItBottomNavBar(
                     TextButton(
                         onClick = {
                             showProfileSwitcher = false
-                            navController.navigate(Screen.ProfileManagement.route) {
+                            navController.navigate(Screen.ProfileManagement.createRoute()) {
                                 popUpTo(Screen.Dashboard.route) { saveState = true }
                                 launchSingleTop = true
                             }
@@ -252,7 +254,7 @@ fun TrackItBottomNavBar(
             }
 
             // Center space for Mic FAB
-            Spacer(modifier = Modifier.width(72.dp))
+            Spacer(modifier = Modifier.width(60.dp))
 
             // Right: Pengaturan, Profil
             Row(
@@ -280,8 +282,8 @@ fun TrackItBottomNavBar(
                 }
 
                 // Profil — with long press to switch
-                val profileDest = bottomNavDestinations.last()
-                val isProfileActive = currentRoute == profileDest.route
+                val profileDest = bottomNavDestinations[3]
+                val isProfileActive = isRouteActive(profileDest.route)
                 val profileColor by animateColorAsState(
                     targetValue = if (isProfileActive) activeTextBlue else inactiveGray,
                     animationSpec = tween(300),
@@ -298,7 +300,7 @@ fun TrackItBottomNavBar(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
                                 onClick = {
-                                    if (currentRoute != profileDest.route) {
+                                    if (!isProfileActive) {
                                         navController.navigate(profileDest.route) {
                                             popUpTo(Screen.Dashboard.route) { saveState = true }
                                             launchSingleTop = true
@@ -311,11 +313,11 @@ fun TrackItBottomNavBar(
                                     showProfileSwitcher = true
                                 }
                             )
-                            .padding(8.dp)
+                            .padding(horizontal = 4.dp, vertical = 4.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(26.dp)
+                                .size(24.dp)
                                 .clip(CircleShape)
                                 .background(
                                     if (isProfileActive)
@@ -329,16 +331,18 @@ fun TrackItBottomNavBar(
                                 imageVector = CategoryIconMapper.getIcon(activeProfile.iconName),
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = activeProfile.name.take(8),
+                            text = activeProfile.name,
                             color = profileColor,
-                            fontSize = 11.sp,
+                            fontSize = 10.5.sp,
                             style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            softWrap = false
                         )
                     }
                 } else {
@@ -437,7 +441,7 @@ fun AnimatedNavItem(
                     isPressed = false
                 }
             )
-            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .padding(horizontal = 4.dp, vertical = 4.dp)
     ) {
         // Icon with badge overlay
         Box(contentAlignment = Alignment.TopEnd) {
@@ -446,7 +450,7 @@ fun AnimatedNavItem(
                 contentDescription = label,
                 tint = currentColor,
                 modifier = Modifier
-                    .size(26.dp)
+                    .size(24.dp)
                     .graphicsLayer {
                         scaleX = scale
                         scaleY = scale
@@ -468,8 +472,11 @@ fun AnimatedNavItem(
         Text(
             text = label,
             color = currentColor,
-            fontSize = 11.sp,
-            style = MaterialTheme.typography.labelSmall
+            fontSize = 10.5.sp,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            softWrap = false
         )
 
         Spacer(modifier = Modifier.height(2.dp))

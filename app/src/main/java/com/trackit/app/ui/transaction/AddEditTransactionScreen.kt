@@ -768,12 +768,12 @@ private fun CategoryChip(
                 ) else Modifier
             )
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(36.dp)
                 .clip(CircleShape)
                 .background(CategoryIconMapper.parseColor(category.colorHex).copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
@@ -782,14 +782,15 @@ private fun CategoryChip(
                 imageVector = CategoryIconMapper.getIcon(category.iconName),
                 contentDescription = category.name,
                 tint = CategoryIconMapper.parseColor(category.colorHex),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = category.name,
             style = MaterialTheme.typography.labelSmall,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

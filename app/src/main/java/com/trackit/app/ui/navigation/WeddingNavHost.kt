@@ -32,9 +32,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.trackit.app.ui.settings.SettingsScreen
 import com.trackit.app.ui.wedding.budget.WeddingBudgetScreen
 import com.trackit.app.ui.wedding.dashboard.WeddingDashboardScreen
@@ -130,7 +132,7 @@ fun WeddingNavHost(
                     onNavigateToCommittee = { navController.navigate(Screen.WeddingCommittee.route) },
                     onNavigateToRundown = { navController.navigate(Screen.WeddingRundown.route) },
                     onNavigateToSettings = { navController.navigate(Screen.WeddingSettings.route) },
-                    onNavigateToProfile = { navController.navigate(Screen.ProfileManagement.route) }
+                    onNavigateToProfile = { navController.navigate(Screen.ProfileManagement.createRoute()) }
                 )
             }
             composable(Screen.WeddingTasks.route) {
@@ -204,9 +206,21 @@ fun WeddingNavHost(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-            composable(Screen.ProfileManagement.route) {
+            composable(
+                route = Screen.ProfileManagement.route,
+                arguments = listOf(
+                    navArgument("initialMode") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { backStackEntry ->
+                val initialMode = backStackEntry.arguments?.getString("initialMode")
                 com.trackit.app.ui.profile.ProfileManagementScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    initialMode = initialMode,
+                    onNavigateBack = { navController.popBackStack() },
+                    onProfileCreated = { onNavigateToMainProfile() }
                 )
             }
         }

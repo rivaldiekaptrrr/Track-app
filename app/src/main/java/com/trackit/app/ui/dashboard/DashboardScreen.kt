@@ -373,23 +373,27 @@ private fun SummarySection(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text(
                             text = if (isExpenseOnlyMode) "PENGELUARAN BULAN INI" else "TOTAL SALDO",
                             style = if (isExpenseOnlyMode) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
                             color = onCardColor.copy(alpha = 0.7f),
                             letterSpacing = 1.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = if (isBalanceVisible) {
                                 if (isExpenseOnlyMode) CurrencyUtils.formatRupiah(totalSpent)
                                 else CurrencyUtils.formatRupiah(saldoAktif)
                             } else "Rp •••••••••",
-                            style = if (isExpenseOnlyMode) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
+                            style = if (isExpenseOnlyMode) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isExpenseOnlyMode) expenseColor else onCardColor
+                            color = if (isExpenseOnlyMode) expenseColor else onCardColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     

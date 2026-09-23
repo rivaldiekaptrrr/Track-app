@@ -104,7 +104,9 @@ class PreferencesManager @Inject constructor(
     
     suspend fun setActiveProfileId(profileId: Long) {
         context.dataStore.edit { preferences ->
-            preferences[ACTIVE_PROFILE_ID] = profileId
+            if (preferences[ACTIVE_PROFILE_ID] != profileId) {
+                preferences[ACTIVE_PROFILE_ID] = profileId
+            }
         }
     }
     
@@ -169,7 +171,9 @@ class PreferencesManager @Inject constructor(
 
     suspend fun setAccessLevel(level: String) {
         context.dataStore.edit { preferences ->
-            preferences[ACCESS_LEVEL] = level
+            if (preferences[ACCESS_LEVEL] != level) {
+                preferences[ACCESS_LEVEL] = level
+            }
         }
     }
 }

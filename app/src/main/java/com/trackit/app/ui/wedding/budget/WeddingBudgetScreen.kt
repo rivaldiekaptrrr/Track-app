@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -208,13 +209,18 @@ fun WeddingBudgetScreen(
                                                 text = budget.categoryName,
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f, fill = false)
                                             )
+                                            Spacer(Modifier.width(8.dp))
                                             Text(
                                                 text = "${(budget.progress * 100).roundToInt()}%",
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1
                                             )
                                         }
                                         Spacer(Modifier.height(4.dp))
@@ -222,7 +228,9 @@ fun WeddingBudgetScreen(
                                         Text(
                                             text = "${CurrencyUtils.formatRupiah(budget.totalPaid)} / ${CurrencyUtils.formatRupiah(budget.totalEstimated)}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                         Spacer(Modifier.height(6.dp))
                                         
@@ -438,7 +446,7 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -451,14 +459,18 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
                     Text(
                         text = "Total Budget",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = CurrencyUtils.formatRupiah(uiState.totalBudgetCap),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
                 
@@ -466,14 +478,18 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
                     Text(
                         text = "Total Terpakai",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = CurrencyUtils.formatRupiah(uiState.totalPaid),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -481,13 +497,13 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
             // Right Column: Radial Chart Progress
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 12.dp)
             ) {
                 CircularProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(68.dp),
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 6.dp,
+                    strokeWidth = 5.dp,
                     trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 )
                 Text(
@@ -535,23 +551,28 @@ private fun ExpenseItem(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1.2f)) {
                 Text(
                     text = expense.title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(4.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     val sourceLabel = FUND_SOURCES.find { it.first == expense.paidBySource }?.second ?: expense.paidBySource
                     Text(
-                        text = "Sumber dana: $sourceLabel",
+                        text = "Sumber: $sourceLabel",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     
                     Surface(
@@ -567,7 +588,7 @@ private fun ExpenseItem(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = statusColor,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             maxLines = 1
                         )
                     }
@@ -576,19 +597,25 @@ private fun ExpenseItem(
             
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier
+                    .weight(0.8f)
+                    .padding(start = 8.dp)
             ) {
                 Text(
                     text = CurrencyUtils.formatRupiah(expense.totalEstimated),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = "Terbayar: ${CurrencyUtils.formatRupiah(expense.totalPaid)}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

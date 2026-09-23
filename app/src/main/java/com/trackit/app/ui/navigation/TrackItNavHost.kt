@@ -24,6 +24,7 @@ import com.trackit.app.ui.auth.ModuleSelectionScreen
 import com.trackit.app.ui.auth.PendingVerificationScreen
 import com.trackit.app.ui.budget.CategoryBudgetScreen
 import com.trackit.app.ui.chart.ChartScreen
+import com.trackit.app.ui.chart.category_detail.CategoryDetailScreen
 import com.trackit.app.ui.dashboard.DashboardScreen
 import com.trackit.app.ui.dashboard.DashboardViewModel
 import com.trackit.app.ui.profile.ProfileManagementScreen
@@ -63,30 +64,32 @@ fun TrackItNavHost(
     //   - both false      → data is settled; act on what's actually there
     val isSyncing = dashboardUiState.isSyncing
     val isLoading = dashboardUiState.isLoading
-    LaunchedEffect(accessLevel, dashboardUiState.allProfiles, dashboardUiState.activeProfile, isSyncing, isLoading, currentRoute) {
+    LaunchedEffect(accessLevel, isSyncing, isLoading, currentRoute, dashboardUiState.activeProfile?.id, dashboardUiState.allProfiles.size) {
         val safeRoutes = setOf(
             Screen.ProfileManagement.route,
             Screen.Login.route,
             Screen.PendingVerification.route,
-            Screen.Welcome.route
+            Screen.Welcome.route,
+            Screen.ModuleSelection.route
         )
         // Only act when data has fully settled
         val dataReady = !isLoading && !isSyncing
+        val currentBaseRoute = currentRoute?.substringBefore("?")?.substringBefore("/")
+        val isCurrentRouteSafe = safeRoutes.any { safe ->
+            currentRoute == safe || currentBaseRoute == safe.substringBefore("?").substringBefore("/")
+        }
         if (accessLevel == AccessLevel.WEDDING) {
             val currentActive = dashboardUiState.activeProfile
             val allProfiles = dashboardUiState.allProfiles
             if (currentActive == null || currentActive.mode != "WEDDING") {
                 val weddingProfile = allProfiles.find { it.mode == "WEDDING" }
                 when {
-                    weddingProfile != null -> {
-                        // A wedding profile exists — auto-select it immediately
+                    weddingProfile != null && currentActive?.id != weddingProfile.id -> {
                         dashboardViewModel.switchProfile(weddingProfile.id)
                     }
-                    dataReady && currentRoute !in safeRoutes -> {
-                        // Data settled, no wedding profile found → user must create one
-                        navController.navigate(Screen.ProfileManagement.route)
+                    dataReady && !isCurrentRouteSafe && weddingProfile == null -> {
+                        navController.navigate(Screen.ProfileManagement.createRoute("WEDDING"))
                     }
-                    // Still loading or syncing → wait
                 }
             }
         } else if (accessLevel == AccessLevel.EXPENSE) {
@@ -95,21 +98,22 @@ fun TrackItNavHost(
             if (currentActive == null || currentActive.mode == "WEDDING") {
                 val expenseProfile = allProfiles.find { it.mode != "WEDDING" }
                 when {
-                    expenseProfile != null -> {
+                    expenseProfile != null && currentActive?.id != expenseProfile.id -> {
                         dashboardViewModel.switchProfile(expenseProfile.id)
                     }
-                    dataReady && currentRoute !in safeRoutes -> {
-                        navController.navigate(Screen.ProfileManagement.route)
+                    dataReady && !isCurrentRouteSafe && expenseProfile == null -> {
+                        navController.navigate(Screen.ProfileManagement.createRoute("EXPENSE"))
                     }
-                    // Still loading or syncing → wait
                 }
             }
         } else if (accessLevel == AccessLevel.BOTH || accessLevel == AccessLevel.ADMIN) {
             val currentActive = dashboardUiState.activeProfile
             val allProfiles = dashboardUiState.allProfiles
             if (currentActive == null && allProfiles.isNotEmpty()) {
-                // Auto-select first profile if none is active
-                dashboardViewModel.switchProfile(allProfiles.first().id)
+                val firstProfile = allProfiles.first()
+                if (currentActive?.id != firstProfile.id) {
+                    dashboardViewModel.switchProfile(firstProfile.id)
+                }
             }
         }
     }
@@ -131,7 +135,7 @@ fun TrackItNavHost(
             navController = weddingNavController,
             weddingProfileId = activeProfile.weddingProfileId,
             onNavigateToMainProfile = {
-                navController.navigate(Screen.ProfileManagement.route)
+                navController.navigate(Screen.ProfileManagement.createRoute())
             },
             onExportPdf = onExportPdf,
             onExportCsv = onExportCsv,
@@ -151,21 +155,25 @@ fun TrackItNavHost(
 
     // === EXPENSE TRACKER (default) ===
 
-    val hideNavBarRoutes = listOf(
-        Screen.AddTransaction.route,
-        "add_transaction?startVoice={startVoice}",
-        Screen.EditTransaction.route,
-        "edit_transaction/{transactionId}",
+    val hideNavBarRoutes = setOf(
+        Screen.AddTransaction.route.substringBefore("?"),
+        Screen.EditTransaction.route.substringBefore("/"),
         Screen.CustomKeywords.route,
-        Screen.ProfileManagement.route,
+        Screen.ProfileManagement.route.substringBefore("?"),
         Screen.CategoryBudget.route,
+        Screen.CategoryDetail.route.substringBefore("?").substringBefore("/"),
         Screen.Login.route,
         Screen.Welcome.route,
         Screen.PendingVerification.route,
         Screen.ModuleSelection.route,
         Screen.AdminDashboard.route
     )
-    val shouldShowNavBar = hideNavBarRoutes.none { currentRoute?.startsWith(it.substringBefore("{")) == true }
+    val currentBase = currentRoute?.substringBefore("?")?.substringBefore("/")
+    val shouldShowNavBar = currentBase != null && currentBase !in hideNavBarRoutes
+
+    LaunchedEffect(currentRoute, startDestination, accessLevel, dashboardUiState.activeProfile) {
+        android.util.Log.d("TrackItNav", "TrackItNavHost State -> currentRoute=$currentRoute, startDest=$startDestination, accessLevel=$accessLevel, activeProfile=${dashboardUiState.activeProfile?.name}(${dashboardUiState.activeProfile?.mode}), showNavBar=$shouldShowNavBar")
+    }
 
     Scaffold(
         bottomBar = {
@@ -200,7 +208,7 @@ fun TrackItNavHost(
                         navController.navigate(Screen.EditTransaction.createRoute(id))
                     },
                     onNavigateToProfiles = {
-                        navController.navigate(Screen.ProfileManagement.route)
+                        navController.navigate(Screen.ProfileManagement.createRoute())
                     },
                     onAddTransactionWithVoice = {
                         navController.navigate(Screen.AddTransaction.createRoute(startVoice = true))
@@ -237,7 +245,32 @@ fun TrackItNavHost(
 
             composable(Screen.Chart.route) {
                 ChartScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCategoryDetail = { categoryId, month, type ->
+                        navController.navigate(Screen.CategoryDetail.createRoute(categoryId, month, type))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.CategoryDetail.route,
+                arguments = listOf(
+                    navArgument("categoryId") { type = NavType.StringType },
+                    navArgument("month") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                    navArgument("type") {
+                        type = NavType.StringType
+                        defaultValue = "EXPENSE"
+                    }
+                )
+            ) {
+                CategoryDetailScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onEditTransaction = { transactionId ->
+                        navController.navigate(Screen.EditTransaction.createRoute(transactionId))
+                    }
                 )
             }
 
@@ -271,13 +304,30 @@ fun TrackItNavHost(
                 )
             }
 
-            composable(Screen.ProfileManagement.route) {
+            composable(
+                route = Screen.ProfileManagement.route,
+                arguments = listOf(
+                    navArgument("initialMode") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { backStackEntry ->
+                val initialMode = backStackEntry.arguments?.getString("initialMode")
                 ProfileManagementScreen(
+                    initialMode = initialMode,
                     onNavigateBack = {
                         if (!navController.popBackStack()) {
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.ProfileManagement.route) { inclusive = true }
                             }
+                        }
+                    },
+                    onProfileCreated = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.ModuleSelection.route) { inclusive = true }
+                            popUpTo(Screen.ProfileManagement.route) { inclusive = true }
                         }
                     }
                 )
@@ -359,9 +409,11 @@ fun TrackItNavHost(
                         val expenseProfile = dashboardUiState.allProfiles.firstOrNull { it.mode != "WEDDING" }
                         if (expenseProfile != null) {
                             dashboardViewModel.switchProfile(expenseProfile.id)
-                        }
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.ModuleSelection.route) { inclusive = true }
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.ModuleSelection.route) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Screen.ProfileManagement.createRoute("EXPENSE"))
                         }
                     },
                     onSelectWedding = {
@@ -369,9 +421,11 @@ fun TrackItNavHost(
                         val weddingProfile = dashboardUiState.allProfiles.firstOrNull { it.mode == "WEDDING" }
                         if (weddingProfile != null) {
                             dashboardViewModel.switchProfile(weddingProfile.id)
-                        }
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.ModuleSelection.route) { inclusive = true }
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.ModuleSelection.route) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Screen.ProfileManagement.createRoute("WEDDING"))
                         }
                     },
                     onLogout = {

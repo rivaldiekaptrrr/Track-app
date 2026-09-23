@@ -187,14 +187,8 @@ class MainActivity : FragmentActivity() {
                     isBiometricAvailable = remember { checkBiometricAvailability() }
                     
                     val bypassBiometric by preferencesManager.bypassBiometricOnce.collectAsState(initial = false)
-                    val isBiometricEnabled by preferencesManager.isBiometricEnabled.collectAsState(initial = null)
-                    val hasSkippedLogin by preferencesManager.hasSkippedLogin.collectAsState(initial = null)
-                    val hasSeenWelcome by preferencesManager.hasSeenWelcome.collectAsState(initial = null)
-
-                    if (isBiometricEnabled == null || hasSkippedLogin == null || hasSeenWelcome == null) {
-                        // Wait for preferences to load from DataStore
-                        return@Surface
-                    }
+                    val isBiometricEnabled by preferencesManager.isBiometricEnabled.collectAsState(initial = false)
+                    val hasSeenWelcome by preferencesManager.hasSeenWelcome.collectAsState(initial = false)
 
                     LaunchedEffect(bypassBiometric) {
                         if (bypassBiometric) {
@@ -203,38 +197,56 @@ class MainActivity : FragmentActivity() {
                         }
                     }
 
-                    if (!isBiometricAvailable || isBiometricEnabled == false) {
-                        // Skip biometric if not available or disabled by user
-                        isAuthenticated = true
-                    }
+                    val requiresBiometric = isBiometricAvailable && isBiometricEnabled && !bypassBiometric && !isAuthenticated
 
-                    if (isAuthenticated) {
+                    if (!requiresBiometric) {
                         val startVoice = intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)
                         val navController = rememberNavController()
-                        
+
                         val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
                         val isUserLoggedIn = currentUser != null
-                        val cachedAccessLevel by preferencesManager.accessLevel.collectAsState(initial = "")
-                        val hasSeenWelcomeFinal = hasSeenWelcome ?: false
+                        val hasSeenWelcomeFinal = hasSeenWelcome
+                        val isAdminEmail = currentUser?.email.equals(com.trackit.app.data.repository.ADMIN_EMAIL, ignoreCase = true)
 
-                        // Automatically fetch and sync latest access level for logged in user on launch
+                        // For non-logged-in users, skip Firestore fetch entirely
+                        // For logged-in users, we fetch latest access level
+                        var fetchedAccessLevel by remember { mutableStateOf<String?>(if (!isUserLoggedIn) "" else null) }
+
+                        // Fetch latest access level from Firestore on launch (for logged-in users)
                         LaunchedEffect(currentUser?.uid) {
                             if (currentUser != null) {
-                                val level = authRepository.fetchOrCreateUserDoc(currentUser)
+                                val level = if (isAdminEmail) {
+                                    AccessLevel.ADMIN
+                                } else {
+                                    try {
+                                        authRepository.fetchOrCreateUserDoc(currentUser)
+                                    } catch (e: Exception) {
+                                        // Network error: fall back to locally cached value
+                                        android.util.Log.w("MainActivity", "fetchOrCreateUserDoc failed, using cache: ${e.message}")
+                                        preferencesManager.accessLevel.first()
+                                    }
+                                }
                                 preferencesManager.setAccessLevel(level)
-                                // Start background sync for non-admin users on every app open.
-                                // syncManager.startSync() is idempotent (no-ops if already running).
+                                // Start background sync for non-admin content users
                                 if (level != AccessLevel.NONE && level != AccessLevel.ADMIN) {
                                     syncManager.startSync()
                                 }
+                                fetchedAccessLevel = level
                             }
                         }
 
-                        // Wait for accessLevel DataStore to emit at least one value (unless admin email)
-                        val isAdminEmail = currentUser?.email.equals(com.trackit.app.data.repository.ADMIN_EMAIL, ignoreCase = true)
-                        val effectiveAccessLevel = if (isAdminEmail) AccessLevel.ADMIN else cachedAccessLevel
+                        // Show loading spinner while we wait for Firestore response for logged-in user
+                        if (isUserLoggedIn && fetchedAccessLevel == null) {
+                            androidx.compose.foundation.layout.Box(
+                                modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                                contentAlignment = androidx.compose.ui.Alignment.Center
+                            ) {
+                                androidx.compose.material3.CircularProgressIndicator()
+                            }
+                            return@Surface
+                        }
 
-                        if (isUserLoggedIn && !isAdminEmail && cachedAccessLevel.isEmpty()) return@Surface
+                        val effectiveAccessLevel = if (isAdminEmail) AccessLevel.ADMIN else (fetchedAccessLevel ?: "")
 
                         val isExpenseAccess = effectiveAccessLevel in listOf(
                             AccessLevel.EXPENSE,
@@ -244,7 +256,7 @@ class MainActivity : FragmentActivity() {
 
                         val startDest = when {
                             !isUserLoggedIn -> {
-                                if (hasSeenWelcomeFinal == false) Screen.Welcome.route else Screen.Login.route
+                                if (!hasSeenWelcomeFinal) Screen.Welcome.route else Screen.Login.route
                             }
                             effectiveAccessLevel == AccessLevel.ADMIN -> Screen.AdminDashboard.route
                             effectiveAccessLevel == AccessLevel.NONE -> Screen.PendingVerification.route
@@ -254,7 +266,9 @@ class MainActivity : FragmentActivity() {
                             effectiveAccessLevel == AccessLevel.BOTH -> Screen.ModuleSelection.route
                             else -> Screen.Dashboard.route
                         }
-                        
+
+                        android.util.Log.d("MainActivity", "startDest=$startDest effectiveLevel=$effectiveAccessLevel isLoggedIn=$isUserLoggedIn")
+
                         TrackItNavHost(
                             navController = navController,
                             startDestination = startDest,

@@ -18,6 +18,9 @@ class CategoryRepository @Inject constructor(
     suspend fun getById(id: String): CategoryEntity? =
         categoryDao.getById(id)
 
+    fun getCategoryByIdFlow(id: String): Flow<CategoryEntity?> =
+        categoryDao.getByIdFlow(id)
+
     suspend fun getCategoryByIdSync(id: String): CategoryEntity? =
         categoryDao.getById(id)
 

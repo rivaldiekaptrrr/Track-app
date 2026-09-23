@@ -2,6 +2,7 @@ package com.trackit.app.ui.chart
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,6 +47,7 @@ private val MONTH_LABELS = listOf("Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul
 @Composable
 fun ChartScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToCategoryDetail: (categoryId: String, month: Long, type: String) -> Unit = { _, _, _ -> },
     viewModel: ChartViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -76,7 +78,7 @@ fun ChartScreen(
             }
         }
         when (selectedTab) {
-            0 -> PieChartTab(uiState, selectedMonth, haptic, viewModel)
+            0 -> PieChartTab(uiState, selectedMonth, haptic, viewModel, onNavigateToCategoryDetail)
             1 -> TrendTab(uiState, selectedYear, searchQuery, haptic, viewModel)
         }
     }
@@ -88,7 +90,8 @@ private fun PieChartTab(
     uiState: ChartUiState,
     selectedMonth: Long,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    viewModel: ChartViewModel
+    viewModel: ChartViewModel,
+    onNavigateToCategoryDetail: (categoryId: String, month: Long, type: String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         if (!uiState.isExpenseOnlyMode) {
@@ -127,7 +130,18 @@ private fun PieChartTab(
                     }
                 }
                 item { Text("Detail per Kategori", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
-                items(uiState.spendingByCategory) { data -> CategoryBreakdownItem(data) }
+                items(uiState.spendingByCategory) { data ->
+                    CategoryBreakdownItem(
+                        data = data,
+                        onClick = {
+                            onNavigateToCategoryDetail(
+                                data.category?.id ?: "uncategorized",
+                                selectedMonth,
+                                uiState.selectedTransactionType
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -192,7 +206,17 @@ private fun TrendTab(
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth()) {
                             MONTH_LABELS.forEach { label ->
-                                Text(text = label, modifier = Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp)
+                                Text(
+                                    text = label,
+                                    modifier = Modifier.weight(1f),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 8.5.sp,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    letterSpacing = (-0.5).sp
+                                )
                             }
                         }
                     }
@@ -221,9 +245,9 @@ private fun TrendTab(
 @Composable
 private fun SummaryStatItem(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 
@@ -243,22 +267,81 @@ private fun PieChart(data: List<CategoryChartData>, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun CategoryBreakdownItem(data: CategoryChartData) {
-    Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(if (data.category != null) CategoryIconMapper.parseColor(data.category.colorHex).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
-                Icon(imageVector = CategoryIconMapper.getIcon(data.category?.iconName ?: ""), contentDescription = null, tint = if (data.category != null) CategoryIconMapper.parseColor(data.category.colorHex) else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+private fun CategoryBreakdownItem(
+    data: CategoryChartData,
+    onClick: () -> Unit = {}
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (data.category != null) CategoryIconMapper.parseColor(data.category.colorHex).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = CategoryIconMapper.getIcon(data.category?.iconName ?: ""),
+                    contentDescription = null,
+                    tint = if (data.category != null) CategoryIconMapper.parseColor(data.category.colorHex) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = data.category?.name ?: "Lainnya", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+                Text(
+                    text = data.category?.name ?: "Lainnya",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(4.dp))
-                LinearProgressIndicator(progress = { data.percentage / 100f }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)), color = if (data.category != null) CategoryIconMapper.parseColor(data.category.colorHex) else MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.surfaceVariant)
+                LinearProgressIndicator(
+                    progress = { data.percentage / 100f },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (data.category != null) CategoryIconMapper.parseColor(data.category.colorHex) else MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(text = CurrencyUtils.formatRupiah(data.amount), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                Text(text = "${String.format("%.1f", data.percentage)}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = CurrencyUtils.formatRupiah(data.amount),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "${String.format("%.1f", data.percentage)}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
@@ -341,8 +424,8 @@ private fun LineChart(data: List<MonthlyTrendData>, modifier: Modifier = Modifie
                 val dotXPx = idx * stepXPx
                 val dotYPx = paddingTopPx + chartAreaHeightPx - (item.amount / effectiveMaxVal * chartAreaHeightPx).toFloat()
 
-                val tooltipWidthDp = 120.dp
-                val tooltipHeightDp = 52.dp
+                val tooltipWidthDp = 136.dp
+                val tooltipHeightDp = 56.dp
 
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val totalWidthPx = constraints.maxWidth.toFloat()
@@ -365,21 +448,24 @@ private fun LineChart(data: List<MonthlyTrendData>, modifier: Modifier = Modifie
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 6.dp),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = MONTH_LABELS.getOrElse(item.monthIndex) { "Bln ${item.monthIndex + 1}" },
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f),
+                                maxLines = 1
                             )
                             Text(
                                 text = CurrencyUtils.formatRupiah(item.amount),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.inverseOnSurface,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     }

@@ -294,36 +294,42 @@ private fun CategoryBudgetCard(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Action buttons
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         if (hasBudget) {
                             OutlinedButton(
                                 onClick = { showDeleteConfirm = true },
                                 modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = MaterialTheme.colorScheme.error
                                 )
                             ) {
-                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Hapus")
+                                Text("Hapus", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                             }
                         }
                         OutlinedButton(
                             onClick = onCancelEditing,
                             modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Batal")
+                            Text("Batal", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                         }
                         Button(
                             onClick = onSave,
                             modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Simpan")
+                            Text("Simpan", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }

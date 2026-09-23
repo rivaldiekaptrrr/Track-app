@@ -25,6 +25,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun getById(id: String): CategoryEntity?
 
+    @Query("SELECT * FROM categories WHERE id = :id")
+    fun getByIdFlow(id: String): Flow<CategoryEntity?>
+
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun getCount(): Int
 

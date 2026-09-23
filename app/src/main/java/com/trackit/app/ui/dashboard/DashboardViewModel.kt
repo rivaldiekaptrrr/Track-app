@@ -84,7 +84,7 @@ class DashboardViewModel @Inject constructor(
     private fun loadDashboardData() {
         viewModelScope.launch {
             combine(
-                preferencesManager.activeProfileId,
+                preferencesManager.activeProfileId.distinctUntilChanged(),
                 _selectedMonth
             ) { profileId, monthMillis -> Pair(profileId, monthMillis) }
             .flatMapLatest { (profileId, monthMillis) ->
@@ -104,7 +104,7 @@ class DashboardViewModel @Inject constructor(
                 val allTimeStream = combine(
                     transactionRepository.getAllTimeIncome(profileId),
                     transactionRepository.getAllTimeExpense(profileId),
-                    syncPreferences.lastSyncTime
+                    syncPreferences.lastSyncTime.distinctUntilChanged()
                 ) { income, expense, syncTime -> Triple(income, expense, syncTime) }
 
                 combine(monthlyStream, allTimeStream) { params, allTimeData ->

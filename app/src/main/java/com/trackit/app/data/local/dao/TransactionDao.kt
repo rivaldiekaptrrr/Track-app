@@ -138,6 +138,25 @@ interface TransactionDao {
         ORDER BY date DESC, createdAt DESC
     """)
     fun searchTransactions(query: String, startDate: Long, endDate: Long, type: String, profileId: Long): Flow<List<TransactionEntity>>
+
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE profileId = :profileId 
+        AND date >= :startOfMonth AND date < :endOfMonth 
+        AND type = :type
+        AND (
+            (:categoryId IS NULL AND (categoryId IS NULL OR categoryId = '' OR categoryId = 'uncategorized'))
+            OR categoryId = :categoryId
+        )
+        ORDER BY date DESC, createdAt DESC
+    """)
+    fun getTransactionsByCategoryAndMonth(
+        categoryId: String?,
+        startOfMonth: Long,
+        endOfMonth: Long,
+        type: String,
+        profileId: Long
+    ): Flow<List<TransactionEntity>>
 }
 
 data class CategorySpending(
