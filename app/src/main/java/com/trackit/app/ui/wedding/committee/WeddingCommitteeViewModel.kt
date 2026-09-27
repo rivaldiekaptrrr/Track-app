@@ -72,6 +72,25 @@ class WeddingCommitteeViewModel @Inject constructor(
         viewModelScope.launch { repo.update(member.copy(uniformStatus = status)) }
     }
 
+    fun updateMember(
+        member: WeddingCommitteeEntity,
+        name: String, role: String, side: String, phone: String?,
+        uniformDesc: String?, fabricMeters: Double
+    ) {
+        viewModelScope.launch {
+            repo.update(
+                member.copy(
+                    memberName = name,
+                    role = role,
+                    side = side,
+                    phoneNumber = phone?.ifBlank { null },
+                    uniformDescription = uniformDesc?.ifBlank { null },
+                    fabricMeters = fabricMeters
+                )
+            )
+        }
+    }
+
     fun deleteMember(member: WeddingCommitteeEntity) {
         viewModelScope.launch { repo.delete(member) }
     }

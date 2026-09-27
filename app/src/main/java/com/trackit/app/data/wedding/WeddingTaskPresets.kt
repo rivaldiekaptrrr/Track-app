@@ -13,10 +13,18 @@ object WeddingTaskPresets {
     fun getPreset(
         weddingProfileId: String,
         culturalPresetGroom: String? = null,
-        culturalPresetBride: String? = null
+        culturalPresetBride: String? = null,
+        weddingDate: Long = 0L
     ): List<WeddingTaskEntity> {
         val tasks = mutableListOf<WeddingTaskEntity>()
         var order = 0
+
+        fun calculateDueDate(phaseMonth: Int): Long? {
+            if (weddingDate <= 0L) return null
+            val cal = java.util.Calendar.getInstance().apply { timeInMillis = weddingDate }
+            cal.add(java.util.Calendar.MONTH, -phaseMonth)
+            return cal.timeInMillis
+        }
 
         fun task(phase: Int, title: String, desc: String? = null, pic: String = "BOTH") =
             WeddingTaskEntity(
@@ -26,6 +34,8 @@ object WeddingTaskPresets {
                 title = title,
                 description = desc,
                 pic = pic,
+                dueDate = calculateDueDate(phase),
+                completedDate = null,
                 sortOrder = order++
             )
 

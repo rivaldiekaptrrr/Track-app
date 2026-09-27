@@ -27,8 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingExpenseEntity
+import com.trackit.app.data.local.entity.WeddingPaymentTermEntity
 import com.trackit.app.util.CurrencyUtils
 import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
+import com.trackit.app.ui.wedding.common.WeddingScreenGuideDialog
+import com.trackit.app.ui.wedding.common.WeddingGuideFeature
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.rememberDatePickerState
@@ -46,7 +49,12 @@ fun WeddingBudgetScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddExpenseDialog by remember { mutableStateOf(false) }
-    var expandedExpenseId by remember { mutableStateOf<String?>(null) }
+    var showGuideDialog by remember { mutableStateOf(false) }
+    var selectedExpenseForDetail by remember { mutableStateOf<WeddingExpenseEntity?>(null) }
+    var showPayDialogForExpense by remember { mutableStateOf<WeddingExpenseEntity?>(null) }
+    var showEditDialogForExpense by remember { mutableStateOf<WeddingExpenseEntity?>(null) }
+    var showDeleteConfirmForExpense by remember { mutableStateOf<WeddingExpenseEntity?>(null) }
+
     val expandedCategories = remember { mutableStateMapOf<String, Boolean>() }
     var showAddCustomCategoryDialog by remember { mutableStateOf(false) }
     var preselectedCategory by remember { mutableStateOf<String?>(null) }
@@ -62,8 +70,11 @@ fun WeddingBudgetScreen(
                 title = { Text("Anggaran Pernikahan", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
                 actions = {
+                    IconButton(onClick = { showGuideDialog = true }) {
+                        Icon(Icons.Default.Info, contentDescription = "Panduan Fitur")
+                    }
                     IconButton(onClick = { showAddExpenseDialog = true }) {
-                        Icon(Icons.Default.Add, null)
+                        Icon(Icons.Default.Add, contentDescription = "Tambah Pos Pengeluaran")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -262,7 +273,7 @@ fun WeddingBudgetScreen(
                                         )
                                     } else {
                                         Column(
-                                            modifier = Modifier.padding(bottom = 8.dp)
+                                            modifier = Modifier.padding(bottom = 4.dp)
                                         ) {
                                             categoryExpenses.forEachIndexed { index, expense ->
                                                 if (index > 0) {
@@ -273,17 +284,9 @@ fun WeddingBudgetScreen(
                                                 }
                                                 ExpenseItem(
                                                     expense = expense,
-                                                    onAddPayment = { termName, amount, dueDate ->
-                                                        viewModel.addPayment(expense, termName, amount, dueDate)
-                                                    },
-                                                    onEdit = { category, title, estimated, source, notes ->
-                                                        viewModel.editExpense(expense, category, title, estimated, source, notes)
-                                                    },
-                                                    onDelete = { viewModel.deleteExpense(expense) },
-                                                    availableCategories = uiState.availableCategories,
-                                                    availableSources = uiState.availableSources,
-                                                    onRequestAddCustomCategory = {
-                                                        showAddCustomCategoryDialog = true
+                                                    terms = uiState.termsByExpenseId[expense.expenseId] ?: emptyList(),
+                                                    onClick = {
+                                                        selectedExpenseForDetail = expense
                                                     }
                                                 )
                                             }
@@ -315,6 +318,21 @@ fun WeddingBudgetScreen(
                 }
             }
         }
+    }
+
+    if (showGuideDialog) {
+        WeddingScreenGuideDialog(
+            title = "Anggaran Pernikahan",
+            screenPurpose = "Mengendalikan seluruh pos pengeluaran pernikahan, memantau alokasi per kategori, sumber dana bersama/pribadi, serta jadwal termin pembayaran.",
+            features = listOf(
+                WeddingGuideFeature("Kategori Anggaran", "Pos biaya dikelompokkan ke Venue, Katering, MUA, Busana, Dokumentasi, Dekorasi, dan kategori kustom."),
+                WeddingGuideFeature("Alokasi Sumber Dana", "Pisahkan pengeluaran dari Dana Bersama, Dana Pengantin Pria (CPP), atau Pengantin Wanita (CPW)."),
+                WeddingGuideFeature("Termin Pembayaran (DP & Lunas)", "Catat tanggal pembayaran berkala, sisa tagihan, dan bukti pelunasan per item."),
+                WeddingGuideFeature("Status Keuangan Real-Time", "Pantau total budget vs realisasi bayar agar tidak terjadi over-budget.")
+            ),
+            proTip = "Sisakan 5% - 10% dari total anggaran sebagai dana darurat tak terduga (contingency fund) menjelang hari H.",
+            onDismiss = { showGuideDialog = false }
+        )
     }
 
     if (showAddExpenseDialog) {
@@ -427,6 +445,80 @@ fun WeddingBudgetScreen(
             }
         )
     }
+
+    selectedExpenseForDetail?.let { expense ->
+        val currentExpense = uiState.expenses.find { it.expenseId == expense.expenseId } ?: expense
+        val terms = uiState.termsByExpenseId[currentExpense.expenseId] ?: emptyList()
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+        ModalBottomSheet(
+            onDismissRequest = { selectedExpenseForDetail = null },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        ) {
+            ExpenseDetailContent(
+                expense = currentExpense,
+                terms = terms,
+                availableCategories = uiState.availableCategories,
+                availableSources = uiState.availableSources,
+                onAddPayment = {
+                    showPayDialogForExpense = currentExpense
+                },
+                onDeleteTerm = { term ->
+                    viewModel.deletePaymentTerm(term, currentExpense)
+                },
+                onEdit = {
+                    showEditDialogForExpense = currentExpense
+                },
+                onDelete = {
+                    showDeleteConfirmForExpense = currentExpense
+                }
+            )
+        }
+    }
+
+    if (showPayDialogForExpense != null) {
+        val exp = showPayDialogForExpense!!
+        AddPaymentDialog(
+            onDismiss = { showPayDialogForExpense = null },
+            onAdd = { termName, amount, dueDate ->
+                viewModel.addPayment(exp, termName, amount, dueDate)
+                showPayDialogForExpense = null
+            }
+        )
+    }
+
+    if (showEditDialogForExpense != null) {
+        val exp = showEditDialogForExpense!!
+        EditExpenseDialog(
+            expense = exp,
+            availableCategories = uiState.availableCategories,
+            availableSources = uiState.availableSources,
+            onDismiss = { showEditDialogForExpense = null },
+            onSave = { category, title, estimated, source, notes ->
+                viewModel.editExpense(exp, category, title, estimated, source, notes)
+                showEditDialogForExpense = null
+            },
+            onRequestAddCustomCategory = {
+                showAddCustomCategoryDialog = true
+            }
+        )
+    }
+
+    if (showDeleteConfirmForExpense != null) {
+        val exp = showDeleteConfirmForExpense!!
+        DeleteConfirmDialog(
+            title = "Hapus Pengeluaran?",
+            message = "Apakah Anda yakin ingin menghapus '${exp.title}'? Tindakan ini tidak dapat dibatalkan.",
+            onDismiss = { showDeleteConfirmForExpense = null },
+            onConfirm = {
+                viewModel.deleteExpense(exp)
+                showDeleteConfirmForExpense = null
+                selectedExpenseForDetail = null
+            }
+        )
+    }
 }
 
 @Composable
@@ -521,12 +613,8 @@ private fun BudgetSummaryCard(uiState: WeddingBudgetUiState) {
 @Composable
 private fun ExpenseItem(
     expense: WeddingExpenseEntity,
-    onAddPayment: (termName: String, amount: Double, dueDate: Long) -> Unit,
-    onEdit: (category: String, title: String, estimated: Double, source: String, notes: String?) -> Unit,
-    onDelete: () -> Unit,
-    availableCategories: List<Pair<String, String>>,
-    availableSources: List<Pair<String, String>>,
-    onRequestAddCustomCategory: () -> Unit
+    terms: List<WeddingPaymentTermEntity> = emptyList(),
+    onClick: () -> Unit
 ) {
     val statusColor = when (expense.paymentStatus) {
         "FULLY_PAID" -> Color(0xFF2E7D32)
@@ -538,190 +626,476 @@ private fun ExpenseItem(
         "PARTIAL_DP" -> "Sebagian DP"
         else -> "Belum Bayar"
     }
-    var showPayDialog by remember { mutableStateOf(false) }
-    var showEditDialog by remember { mutableStateOf(false) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+    val remaining = (expense.totalEstimated - expense.totalPaid).coerceAtLeast(0.0)
+
+    Surface(
+        onClick = onClick,
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1.2f)) {
+            // Left Column: Title & Status Badge
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     text = expense.title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                Surface(
+                    color = when (expense.paymentStatus) {
+                        "FULLY_PAID" -> Color(0xFFE8F5E9)
+                        "PARTIAL_DP" -> Color(0xFFFFF3E0)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = statusLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Right Column: Total Estimated & Terbayar/Sisa info + Chevron
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = CurrencyUtils.formatRupiah(expense.totalEstimated),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = when {
+                            expense.paymentStatus == "FULLY_PAID" -> "Lunas"
+                            expense.totalPaid > 0 -> "Sisa ${CurrencyUtils.formatRupiah(remaining)}"
+                            else -> "Belum bayar"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (expense.paymentStatus == "FULLY_PAID") Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(Modifier.width(4.dp))
+
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = "Detail",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpenseDetailContent(
+    expense: WeddingExpenseEntity,
+    terms: List<WeddingPaymentTermEntity>,
+    availableCategories: List<Pair<String, String>>,
+    availableSources: List<Pair<String, String>>,
+    onAddPayment: () -> Unit,
+    onDeleteTerm: (WeddingPaymentTermEntity) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale("id")) }
+    val remaining = (expense.totalEstimated - expense.totalPaid).coerceAtLeast(0.0)
+    val progress = if (expense.totalEstimated > 0)
+        (expense.totalPaid / expense.totalEstimated).toFloat().coerceIn(0f, 1f) else 0f
+    val percentage = (progress * 100).roundToInt()
+
+    val statusColor = when (expense.paymentStatus) {
+        "FULLY_PAID" -> Color(0xFF2E7D32)
+        "PARTIAL_DP" -> Color(0xFFE65100)
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val statusLabel = when (expense.paymentStatus) {
+        "FULLY_PAID" -> "Lunas"
+        "PARTIAL_DP" -> "Sebagian DP"
+        else -> "Belum Bayar"
+    }
+
+    val catName = availableCategories.find { it.first == expense.category }?.second ?: expense.category
+    val sourceLabel = when (expense.paidBySource) {
+        "ALL" -> "Dana Bersama"
+        else -> availableSources.find { it.first == expense.paidBySource }?.second ?: expense.paidBySource
+    }
+
+    var termToDelete by remember { mutableStateOf<WeddingPaymentTermEntity?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Top Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = expense.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Kategori: $catName • Ditanggung: $sourceLabel",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Surface(
+                color = when (expense.paymentStatus) {
+                    "FULLY_PAID" -> Color(0xFFE8F5E9)
+                    "PARTIAL_DP" -> Color(0xFFFFF3E0)
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                },
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(
+                    text = statusLabel,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = statusColor,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
+        }
+
+        // Financial Overview Card (Spacious 2-Tier Layout)
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Tier 1: Hero Total Estimasi
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Total Estimasi Biaya",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = CurrencyUtils.formatRupiah(expense.totalEstimated),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                // Tier 2: Terbayar vs Sisa Tagihan (2 Spacious Columns)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Sudah Terbayar",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = CurrencyUtils.formatRupiah(expense.totalPaid),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Sisa Tagihan",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = CurrencyUtils.formatRupiah(remaining),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (remaining > 0) Color(0xFFE65100) else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Progress Bar
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Progres Pembayaran",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "$percentage%",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                }
+
+                // Sumber Dana Tag
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    val sourceLabel = FUND_SOURCES.find { it.first == expense.paidBySource }?.second ?: expense.paidBySource
                     Text(
-                        text = "Sumber: $sourceLabel",
+                        text = "Sumber Dana:",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
                     Surface(
-                        color = when (expense.paymentStatus) {
-                            "FULLY_PAID" -> Color(0xFFE8F5E9)
-                            "PARTIAL_DP" -> Color(0xFFFFF3E0)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        },
-                        shape = RoundedCornerShape(12.dp)
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = statusLabel,
+                            text = sourceLabel,
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = statusColor,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            maxLines = 1
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
                 }
             }
-            
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .weight(0.8f)
-                    .padding(start = 8.dp)
-            ) {
-                Text(
-                    text = CurrencyUtils.formatRupiah(expense.totalEstimated),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = "Terbayar: ${CurrencyUtils.formatRupiah(expense.totalPaid)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
 
+        // Catatan
         if (!expense.notes.isNullOrBlank()) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Catatan: ${expense.notes}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Catatan:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(2.dp))
+                    Text(expense.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
         }
 
-        Spacer(Modifier.height(8.dp))
+        // Histori & Jadwal Pembayaran
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Jadwal & Histori Pembayaran",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                if (terms.isNotEmpty()) {
+                    Text(
+                        text = "${terms.size} Pembayaran",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
-        // Premium soft-tint action buttons (Without icons)
-        Row(
+            if (terms.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Belum ada catatan pembayaran / cicilan",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 220.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(terms.sortedByDescending { it.paidDate ?: it.dueDate }) { term ->
+                        val isPaid = term.isPaid
+                        val dateStr = dateFormatter.format(Date(term.paidDate ?: term.dueDate))
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(term.termName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        text = if (isPaid) "Dibayar: $dateStr" else "Tenggat: $dateStr",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Column(
+                                    horizontalAlignment = Alignment.End,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                ) {
+                                    Text(
+                                        CurrencyUtils.formatRupiah(term.amount),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isPaid) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Surface(
+                                        color = if (isPaid) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isPaid) "Lunas" else "Tenggat",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (isPaid) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                IconButton(
+                                    onClick = { termToDelete = term },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.DeleteOutline,
+                                        contentDescription = "Hapus Riwayat",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Action Buttons
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // "Bayar" Pill Button
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { showPayDialog = true }
+            // Primary Button: Catat Pembayaran
+            Button(
+                onClick = onAddPayment,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text(
-                    text = "Bayar",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Catat Pembayaran", fontWeight = FontWeight.Bold)
             }
-            
-            // "Edit" Pill Button
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { showEditDialog = true }
+
+            // Secondary Row: Edit & Hapus
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "Edit",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-            
-            // "Hapus" Pill Button
-            Surface(
-                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { showDeleteConfirm = true }
-            ) {
-                Text(
-                    text = "Hapus",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit Data")
+                }
+
+                OutlinedButton(
+                    onClick = onDelete,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Hapus")
+                }
             }
         }
     }
 
-    if (showPayDialog) {
-        AddPaymentDialog(
-            onDismiss = { showPayDialog = false },
-            onAdd = { termName, amount, dueDate ->
-                onAddPayment(termName, amount, dueDate)
-                showPayDialog = false
-            }
-        )
-    }
-
-    if (showEditDialog) {
-        EditExpenseDialog(
-            expense = expense,
-            availableCategories = availableCategories,
-            availableSources = availableSources,
-            onDismiss = { showEditDialog = false },
-            onSave = { category, title, estimated, source, notes ->
-                onEdit(category, title, estimated, source, notes)
-                showEditDialog = false
-            },
-            onRequestAddCustomCategory = onRequestAddCustomCategory
-        )
-    }
-
-    if (showDeleteConfirm) {
+    if (termToDelete != null) {
         DeleteConfirmDialog(
-            title = "Hapus Pengeluaran?",
-            message = "Apakah Anda yakin ingin menghapus '${expense.title}'? Tindakan ini tidak dapat dibatalkan.",
-            onDismiss = { showDeleteConfirm = false },
+            title = "Hapus Riwayat Pembayaran?",
+            message = "Apakah Anda yakin ingin menghapus '${termToDelete?.termName}' sebesar ${termToDelete?.let { CurrencyUtils.formatRupiah(it.amount) }}?",
+            onDismiss = { termToDelete = null },
             onConfirm = {
-                onDelete()
-                showDeleteConfirm = false
+                termToDelete?.let { onDeleteTerm(it) }
+                termToDelete = null
             }
         )
     }
@@ -1065,18 +1439,22 @@ private fun AddPaymentDialog(
                     supportingText = { if (submitted && amount.isBlank()) Text("Nominal wajib diisi") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true)
                 // Date picker field
-                OutlinedTextField(
-                    value = dateFormatter.format(Date(selectedDate)),
-                    onValueChange = {},
-                    label = { Text("Tanggal Bayar / Jatuh Tempo") },
-                    readOnly = true,
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(Icons.Default.CalendarMonth, null)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = dateFormatter.format(Date(selectedDate)),
+                        onValueChange = {},
+                        label = { Text("Tanggal Bayar / Jatuh Tempo") },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Default.CalendarMonth, null)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true }
+                    )
+                }
             }
         },
         confirmButton = {

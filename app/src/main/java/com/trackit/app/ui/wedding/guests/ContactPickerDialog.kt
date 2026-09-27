@@ -129,7 +129,7 @@ fun ContactPickerDialog(
                     }
                 } else {
                     LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(filtered, key = { it.phoneNumber }) { contact ->
+                        items(filtered, key = { "${it.name}_${it.phoneNumber}" }) { contact ->
                             val isSelected = contact in selected
                             ContactPickerItem(
                                 contact = contact,

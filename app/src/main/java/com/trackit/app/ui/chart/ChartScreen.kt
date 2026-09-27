@@ -48,12 +48,12 @@ private val MONTH_LABELS = listOf("Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul
 fun ChartScreen(
     onNavigateBack: () -> Unit,
     onNavigateToCategoryDetail: (categoryId: String, month: Long, type: String) -> Unit = { _, _, _ -> },
+    onNavigateToSearch: () -> Unit = {},
     viewModel: ChartViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
     val selectedYear by viewModel.selectedYear.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Pie Chart", "Tren")
@@ -64,6 +64,15 @@ fun ChartScreen(
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                }
+            },
+            actions = {
+                IconButton(onClick = onNavigateToSearch) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Cari Transaksi",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -78,8 +87,8 @@ fun ChartScreen(
             }
         }
         when (selectedTab) {
-            0 -> PieChartTab(uiState, selectedMonth, haptic, viewModel, onNavigateToCategoryDetail)
-            1 -> TrendTab(uiState, selectedYear, searchQuery, haptic, viewModel)
+            0 -> PieChartTab(uiState, selectedMonth, haptic, viewModel, onNavigateToCategoryDetail, onNavigateToSearch)
+            1 -> TrendTab(uiState, selectedYear, haptic, viewModel)
         }
     }
 }
@@ -91,9 +100,41 @@ private fun PieChartTab(
     selectedMonth: Long,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     viewModel: ChartViewModel,
-    onNavigateToCategoryDetail: (categoryId: String, month: Long, type: String) -> Unit
+    onNavigateToCategoryDetail: (categoryId: String, month: Long, type: String) -> Unit,
+    onNavigateToSearch: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
+        // Quick Search Button Trigger
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .clickable { onNavigateToSearch() },
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Cari",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Cari transaksi...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         if (!uiState.isExpenseOnlyMode) {
             Spacer(modifier = Modifier.height(8.dp))
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -152,7 +193,6 @@ private fun PieChartTab(
 private fun TrendTab(
     uiState: ChartUiState,
     selectedYear: Int,
-    searchQuery: String,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     viewModel: ChartViewModel
 ) {
@@ -221,22 +261,6 @@ private fun TrendTab(
                         }
                     }
                 }
-            }
-        }
-        item { Text("Cari Transaksi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
-        item {
-            OutlinedTextField(value = searchQuery, onValueChange = { viewModel.updateSearchQuery(it) }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Ketik nama pengeluaran...") }, leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Cari") }, shape = RoundedCornerShape(12.dp), singleLine = true)
-        }
-        if (searchQuery.isNotEmpty()) {
-            if (uiState.searchResults.isEmpty()) {
-                item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                        Text("Tidak ada hasil pencarian", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-                    }
-                }
-            } else {
-                item { Text("${uiState.searchResults.size} transaksi ditemukan", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                items(uiState.searchResults) { tx -> TransactionItem(transactionWithCategory = tx, onClick = { }, onDelete = { }) }
             }
         }
     }

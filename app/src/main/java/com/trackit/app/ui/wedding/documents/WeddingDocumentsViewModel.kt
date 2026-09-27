@@ -1,4 +1,4 @@
-﻿package com.trackit.app.ui.wedding.documents
+package com.trackit.app.ui.wedding.documents
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -63,5 +63,9 @@ class WeddingDocumentsViewModel @Inject constructor(
                 )
             )
         }
+    }
+
+    fun updateDocument(doc: WeddingDocumentEntity) {
+        viewModelScope.launch { repo.update(doc) }
     }
 }

@@ -18,9 +18,17 @@ data class WeddingTasksUiState(
     val filtered get() = if (filterPic == "ALL") allTasks
                          else allTasks.filter { it.pic == filterPic }
 
-    // Kelompok per fase
+    // Kelompok per fase dengan tugas belum selesai di atas dan tugas selesai di paling bawah
     val grouped: Map<Int, List<WeddingTaskEntity>> get() =
-        filtered.groupBy { it.phaseMonth }.toSortedMap(compareByDescending { it })
+        filtered.groupBy { it.phaseMonth }
+            .mapValues { (_, tasks) ->
+                tasks.sortedWith(
+                    compareBy<WeddingTaskEntity> { it.isCompleted } // false di atas, true di paling bawah
+                        .thenBy { it.dueDate ?: Long.MAX_VALUE }
+                        .thenBy { it.sortOrder }
+                )
+            }
+            .toSortedMap(compareByDescending { it })
 
     val totalCount get() = allTasks.size
     val completedCount get() = allTasks.count { it.isCompleted }
@@ -70,7 +78,11 @@ class WeddingTasksViewModel @Inject constructor(
     }
 
     fun toggleCompleted(task: WeddingTaskEntity) {
-        viewModelScope.launch { repo.update(task.copy(isCompleted = !task.isCompleted)) }
+        val newCompleted = !task.isCompleted
+        val newCompletedDate = if (newCompleted) (task.completedDate ?: System.currentTimeMillis()) else null
+        viewModelScope.launch {
+            repo.update(task.copy(isCompleted = newCompleted, completedDate = newCompletedDate))
+        }
     }
 
     fun setFilter(pic: String) { _uiState.update { it.copy(filterPic = pic) } }
@@ -80,7 +92,9 @@ class WeddingTasksViewModel @Inject constructor(
         title: String,
         desc: String?,
         phaseMonth: Int,
-        pic: String
+        pic: String,
+        dueDate: Long? = null,
+        completedDate: Long? = null
     ) {
         viewModelScope.launch {
             repo.insert(
@@ -90,15 +104,37 @@ class WeddingTasksViewModel @Inject constructor(
                     title = title,
                     description = desc,
                     pic = pic,
+                    dueDate = dueDate,
+                    completedDate = completedDate,
+                    isCompleted = completedDate != null,
                     sortOrder = _uiState.value.allTasks.size
                 )
             )
         }
     }
 
-    fun updateTask(task: WeddingTaskEntity, title: String, desc: String?, phaseMonth: Int, pic: String) {
+    fun updateTask(
+        task: WeddingTaskEntity,
+        title: String,
+        desc: String?,
+        phaseMonth: Int,
+        pic: String,
+        dueDate: Long? = null,
+        completedDate: Long? = null
+    ) {
         viewModelScope.launch {
-            repo.update(task.copy(title = title, description = desc, phaseMonth = phaseMonth, pic = pic))
+            val isCompleted = completedDate != null || (task.isCompleted && completedDate == null && task.completedDate != null)
+            repo.update(
+                task.copy(
+                    title = title,
+                    description = desc,
+                    phaseMonth = phaseMonth,
+                    pic = pic,
+                    dueDate = dueDate,
+                    completedDate = completedDate,
+                    isCompleted = if (completedDate != null) true else task.isCompleted
+                )
+            )
         }
     }
 

@@ -131,7 +131,8 @@ interface TransactionDao {
 
     @Query("""
         SELECT * FROM transactions 
-        WHERE profileId = :profileId AND type = :type
+        WHERE profileId = :profileId 
+        AND (:type = 'ALL' OR type = :type)
         AND (:query = '' OR description LIKE '%' || :query || '%')
         AND (:startDate = 0 OR date >= :startDate)
         AND (:endDate = 0 OR date <= :endDate)

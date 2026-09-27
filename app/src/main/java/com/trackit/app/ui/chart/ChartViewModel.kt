@@ -22,8 +22,7 @@ data class ChartUiState(
     val isLoading: Boolean = true,
     val selectedTransactionType: String = "EXPENSE", // "EXPENSE" or "INCOME"
     val isExpenseOnlyMode: Boolean = false,
-    val monthlyTrendData: List<MonthlyTrendData> = emptyList(),
-    val searchResults: List<TransactionWithCategory> = emptyList()
+    val monthlyTrendData: List<MonthlyTrendData> = emptyList()
 )
 
 data class MonthlyTrendData(
@@ -51,15 +50,6 @@ class ChartViewModel @Inject constructor(
     private val _selectedYear = MutableStateFlow(Calendar.getInstance().get(Calendar.YEAR))
     val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    private val _searchMonth = MutableStateFlow(0)
-    val searchMonth: StateFlow<Int> = _searchMonth.asStateFlow()
-
-    private val _searchYear = MutableStateFlow(0)
-    val searchYear: StateFlow<Int> = _searchYear.asStateFlow()
-
     private val _uiState = MutableStateFlow(ChartUiState())
     val uiState: StateFlow<ChartUiState> = _uiState.asStateFlow()
 
@@ -67,7 +57,6 @@ class ChartViewModel @Inject constructor(
         loadExpenseOnlyMode()
         loadChartData()
         loadTrendData()
-        loadSearchResults()
     }
 
     private fun loadExpenseOnlyMode() {
@@ -180,45 +169,6 @@ class ChartViewModel @Inject constructor(
         }
     }
 
-    private fun loadSearchResults() {
-        viewModelScope.launch {
-            combine(
-                preferencesManager.activeProfileId,
-                _searchQuery,
-                _searchMonth,
-                _searchYear,
-                _uiState.map { it.selectedTransactionType }.distinctUntilChanged()
-            ) { profileId, query, month, year, type ->
-                var startDate = 0L
-                var endDate = 0L
-                if (year != 0 || month != 0) {
-                    val cal = Calendar.getInstance()
-                    if (year != 0) cal.set(Calendar.YEAR, year)
-                    if (month != 0) {
-                        cal.set(Calendar.MONTH, month - 1)
-                        startDate = DateUtils.getStartOfMonth(cal)
-                        endDate = DateUtils.getEndOfMonth(cal)
-                    } else {
-                        cal.set(Calendar.MONTH, Calendar.JANUARY)
-                        startDate = DateUtils.getStartOfMonth(cal)
-                        cal.set(Calendar.MONTH, Calendar.DECEMBER)
-                        endDate = DateUtils.getEndOfMonth(cal)
-                    }
-                }
-                
-                transactionRepository.searchTransactions(query, startDate, endDate, type, profileId)
-                    .combine(categoryRepository.getAllCategories(profileId)) { txs, categories ->
-                        val catMap = categories.associateBy { it.id }
-                        txs.map { tx ->
-                            TransactionWithCategory(tx, tx.categoryId?.let { catMap[it] })
-                        }
-                    }
-            }.flatMapLatest { it }.collect { results ->
-                _uiState.update { it.copy(searchResults = results) }
-            }
-        }
-    }
-
     fun navigateToPreviousYear() {
         _selectedYear.value -= 1
     }
@@ -229,14 +179,5 @@ class ChartViewModel @Inject constructor(
 
     fun isCurrentYear(): Boolean {
         return _selectedYear.value == Calendar.getInstance().get(Calendar.YEAR)
-    }
-
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
-
-    fun updateSearchFilter(month: Int, year: Int) {
-        _searchMonth.value = month
-        _searchYear.value = year
     }
 }

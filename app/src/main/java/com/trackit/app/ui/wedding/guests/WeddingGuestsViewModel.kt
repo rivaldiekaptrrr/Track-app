@@ -170,19 +170,18 @@ class WeddingGuestsViewModel @Inject constructor(
         sessionTarget: String = "KEDUANYA"
     ) {
         viewModelScope.launch {
-            contacts.forEach { contact ->
-                repo.insert(
-                    WeddingGuestEntity(
-                        weddingProfileId = weddingProfileId,
-                        guestName = contact.name,
-                        phoneNumber = contact.phoneNumber.ifBlank { null },
-                        groupAllocation = groupAllocation,
-                        sessionTarget = sessionTarget,
-                        estimatedPax = 2,
-                        rsvpStatus = "PENDING"
-                    )
+            val entities = contacts.map { contact ->
+                WeddingGuestEntity(
+                    weddingProfileId = weddingProfileId,
+                    guestName = contact.name,
+                    phoneNumber = contact.phoneNumber.ifBlank { null },
+                    groupAllocation = groupAllocation,
+                    sessionTarget = sessionTarget,
+                    estimatedPax = 2,
+                    rsvpStatus = "PENDING"
                 )
             }
+            repo.insertAll(entities)
         }
     }
 }

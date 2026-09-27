@@ -47,7 +47,10 @@ object DateUtils {
 }
 
 object CurrencyUtils {
-    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
+        maximumFractionDigits = 0
+        minimumFractionDigits = 0
+    }
 
     fun formatRupiah(amount: Double): String {
         return currencyFormat.format(amount)

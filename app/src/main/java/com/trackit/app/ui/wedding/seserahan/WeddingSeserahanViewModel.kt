@@ -77,6 +77,27 @@ class WeddingSeserahanViewModel @Inject constructor(
         viewModelScope.launch { repo.update(item.copy(status = status)) }
     }
 
+    fun updateItem(
+        item: WeddingSeserahanEntity,
+        direction: String,
+        itemName: String,
+        quantity: Int,
+        estimatedPrice: Double,
+        notes: String?
+    ) {
+        viewModelScope.launch {
+            repo.update(
+                item.copy(
+                    direction = direction,
+                    itemName = itemName,
+                    quantity = quantity,
+                    estimatedPrice = estimatedPrice,
+                    notes = notes
+                )
+            )
+        }
+    }
+
     fun deleteItem(item: WeddingSeserahanEntity) {
         viewModelScope.launch { repo.delete(item) }
     }

@@ -88,7 +88,24 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val fadeOut = android.animation.ObjectAnimator.ofFloat(
+                splashScreenViewProvider.view,
+                android.view.View.ALPHA,
+                1f,
+                0f
+            ).apply {
+                interpolator = android.view.animation.AccelerateInterpolator()
+                duration = 200L
+                addListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: android.animation.Animator) {
+                        splashScreenViewProvider.remove()
+                    }
+                })
+            }
+            fadeOut.start()
+        }
         super.onCreate(savedInstanceState)
         
         if (intent.getBooleanExtra("START_VOICE_IMMEDIATELY", false)) {

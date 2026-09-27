@@ -30,6 +30,7 @@ import com.trackit.app.ui.dashboard.DashboardViewModel
 import com.trackit.app.ui.profile.ProfileManagementScreen
 import com.trackit.app.ui.settings.CustomKeywordScreen
 import com.trackit.app.ui.settings.SettingsScreen
+import com.trackit.app.ui.search.SearchTransactionScreen
 import com.trackit.app.ui.transaction.AddEditTransactionScreen
 import com.trackit.app.ui.auth.LoginScreen
 import com.trackit.app.ui.auth.WelcomeScreen
@@ -162,6 +163,7 @@ fun TrackItNavHost(
         Screen.ProfileManagement.route.substringBefore("?"),
         Screen.CategoryBudget.route,
         Screen.CategoryDetail.route.substringBefore("?").substringBefore("/"),
+        Screen.SearchTransactions.route,
         Screen.Login.route,
         Screen.Welcome.route,
         Screen.PendingVerification.route,
@@ -248,6 +250,18 @@ fun TrackItNavHost(
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToCategoryDetail = { categoryId, month, type ->
                         navController.navigate(Screen.CategoryDetail.createRoute(categoryId, month, type))
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate(Screen.SearchTransactions.route)
+                    }
+                )
+            }
+
+            composable(Screen.SearchTransactions.route) {
+                SearchTransactionScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onEditTransaction = { transactionId ->
+                        navController.navigate(Screen.EditTransaction.createRoute(transactionId))
                     }
                 )
             }

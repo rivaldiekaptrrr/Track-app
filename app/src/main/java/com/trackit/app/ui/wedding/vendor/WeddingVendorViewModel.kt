@@ -38,6 +38,10 @@ data class WeddingVendorUiState(
                          else vendors.filter { it.category == filterCategory }
     val byCategory: Map<String, List<WeddingVendorEntity>> get() =
         vendors.groupBy { it.category }
+
+    val totalContractValue get() = vendors.sumOf { it.contractValue }
+    val dealVendorsCount get() = vendors.count { it.status == "KONTRAK" || it.status == "SELESAI" || it.status == "TANDA_JADI" }
+    val completedCount get() = vendors.count { it.status == "SELESAI" }
 }
 
 @HiltViewModel

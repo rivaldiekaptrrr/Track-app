@@ -79,6 +79,7 @@ class CategoryManagementViewModel @Inject constructor(
     }
 
     val showMigrationDialogFor = MutableStateFlow<CategoryEntity?>(null)
+    val showDeleteConfirmFor = MutableStateFlow<CategoryEntity?>(null)
     val transactionCountToMigrate = MutableStateFlow(0)
 
     fun requestDelete(category: CategoryEntity) {
@@ -88,8 +89,15 @@ class CategoryManagementViewModel @Inject constructor(
                 transactionCountToMigrate.value = count
                 showMigrationDialogFor.value = category
             } else {
-                categoryRepository.delete(category)
+                showDeleteConfirmFor.value = category
             }
+        }
+    }
+
+    fun confirmDirectDelete(category: CategoryEntity) {
+        viewModelScope.launch {
+            categoryRepository.delete(category)
+            showDeleteConfirmFor.value = null
         }
     }
 
@@ -128,6 +136,7 @@ fun CustomKeywordScreen(
 ) {
     val categories by viewModel.categories.collectAsState()
     val showMigrationDialogFor by viewModel.showMigrationDialogFor.collectAsState()
+    val showDeleteConfirmFor by viewModel.showDeleteConfirmFor.collectAsState()
     val transactionCountToMigrate by viewModel.transactionCountToMigrate.collectAsState()
     val activeProfileId by viewModel.activeProfileId.collectAsState()
     
@@ -246,6 +255,13 @@ fun CustomKeywordScreen(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            IconButton(onClick = { viewModel.requestDelete(category) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Hapus Kategori",
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                )
+                            }
                             Icon(
                                 Icons.Default.Edit,
                                 contentDescription = "Edit",
@@ -274,16 +290,53 @@ fun CustomKeywordScreen(
             )
         }
 
+        if (showDeleteConfirmFor != null) {
+            AlertDialog(
+                onDismissRequest = { viewModel.showDeleteConfirmFor.value = null },
+                icon = {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                title = { Text("Hapus Kategori?") },
+                text = {
+                    Text("Kategori \"${showDeleteConfirmFor!!.name}\" akan dihapus secara permanen.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.confirmDirectDelete(showDeleteConfirmFor!!) },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Hapus")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.showDeleteConfirmFor.value = null }) {
+                        Text("Batal")
+                    }
+                }
+            )
+        }
+
         if (showMigrationDialogFor != null) {
             val fallbackCategories = categories.filter { it.id != showMigrationDialogFor!!.id && it.type == showMigrationDialogFor!!.type }
             var selectedFallback by remember { mutableStateOf(fallbackCategories.firstOrNull()) }
 
             AlertDialog(
                 onDismissRequest = { viewModel.showMigrationDialogFor.value = null },
-                title = { Text("Hapus Kategori?") },
+                icon = {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                title = { Text("Pindahkan Transaksi & Hapus?") },
                 text = {
                     Column {
-                        Text("Ada $transactionCountToMigrate transaksi di kategori ini. Pilih kategori tujuan untuk memindahkan transaksi tersebut:")
+                        Text("Ada $transactionCountToMigrate transaksi di kategori \"${showMigrationDialogFor!!.name}\". Pilih kategori tujuan untuk memindahkan transaksi tersebut:")
                         Spacer(modifier = Modifier.height(12.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(fallbackCategories) { cat ->

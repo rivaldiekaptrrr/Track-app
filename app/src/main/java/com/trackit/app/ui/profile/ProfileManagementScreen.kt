@@ -90,7 +90,7 @@ class ProfileManagementViewModel @Inject constructor(
         }
     }
 
-    fun saveProfile(profile: ProfileEntity, weddingProfile: WeddingProfileEntity? = null) {
+    fun saveProfile(profile: ProfileEntity, weddingProfile: WeddingProfileEntity? = null, useDefaultTasksTemplate: Boolean = true) {
         viewModelScope.launch {
             if (profile.id == 0L) {
                 if (profile.mode == "WEDDING" && weddingProfile != null) {
@@ -105,13 +105,16 @@ class ProfileManagementViewModel @Inject constructor(
                         religionDetail = weddingProfile.religionDetail
                     )
                     weddingDocumentRepository.insertAll(docs)
-                    // 4. Auto-seed tugas timeline sesuai adat
-                    val tasks = WeddingTaskPresets.getPreset(
-                        weddingProfileId = weddingProfile.id,
-                        culturalPresetGroom = weddingProfile.culturalPresetGroom,
-                        culturalPresetBride = weddingProfile.culturalPresetBride
-                    )
-                    weddingTaskRepository.insertAll(tasks)
+                    // 4. Auto-seed tugas timeline sesuai adat (jika dipilih user)
+                    if (useDefaultTasksTemplate) {
+                        val tasks = WeddingTaskPresets.getPreset(
+                            weddingProfileId = weddingProfile.id,
+                            culturalPresetGroom = weddingProfile.culturalPresetGroom,
+                            culturalPresetBride = weddingProfile.culturalPresetBride,
+                            weddingDate = weddingProfile.weddingDate
+                        )
+                        weddingTaskRepository.insertAll(tasks)
+                    }
                     // 5. Jadikan profil wedding yang baru dibuat sebagai profil aktif
                     preferencesManager.setActiveProfileId(newProfileId)
                 } else {
@@ -420,9 +423,9 @@ fun ProfileManagementScreen(
             profile = selectedProfile!!,
             accessLevel = uiState.accessLevel,
             onDismiss = { showDialog = false },
-            onSave = { updated, weddingProfile ->
+            onSave = { updated, weddingProfile, useTasksTemplate ->
                 val shouldTriggerCreated = autoOpenedDialog || uiState.profiles.isEmpty() || uiState.profiles.none { it.mode == updated.mode }
-                viewModel.saveProfile(updated, weddingProfile)
+                viewModel.saveProfile(updated, weddingProfile, useTasksTemplate)
                 showDialog = false
                 if (shouldTriggerCreated) {
                     if (onProfileCreated != null) {
@@ -482,7 +485,7 @@ fun ProfileFormDialog(
     profile: ProfileEntity,
     accessLevel: String = AccessLevel.BOTH,
     onDismiss: () -> Unit,
-    onSave: (ProfileEntity, WeddingProfileEntity?) -> Unit
+    onSave: (ProfileEntity, WeddingProfileEntity?, Boolean) -> Unit
 ) {
     val defaultMode = if (profile.mode.isNotBlank()) {
         profile.mode
@@ -498,6 +501,7 @@ fun ProfileFormDialog(
     var selectedMode by remember { mutableStateOf(defaultMode) } // "EXPENSE" or "WEDDING"
     var submitted by remember { mutableStateOf(false) }
     var modeLockWarning by remember { mutableStateOf<String?>(null) }
+    var useTasksTemplate by remember { mutableStateOf(true) }
     
     // Wedding onboarding fields
     var groomName by remember { mutableStateOf("") }
@@ -832,6 +836,61 @@ fun ProfileFormDialog(
                                     }
                                 }
                             }
+
+                            // Opsi Template Timeline Tugas (hanya saat buat profil baru)
+                            if (profile.id == 0L) {
+                                Text("Opsi Timeline Tugas", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                                        .padding(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (useTasksTemplate) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                            .clickable { useTasksTemplate = true }
+                                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "Ikut Template Saran",
+                                            color = if (useTasksTemplate) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (!useTasksTemplate) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                            .clickable { useTasksTemplate = false }
+                                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "Kustom Sendiri (Kosong)",
+                                            color = if (!useTasksTemplate) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = if (useTasksTemplate)
+                                        "✓ Sistem otomatis membuat checklist timeline tugas persiapan ±35 item sesuai agama & adat."
+                                    else
+                                        "✓ Timeline tugas akan kosong. Anda dapat menyusun tugas dari awal sesuai kebutuhan.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -859,7 +918,7 @@ fun ProfileFormDialog(
                                 culturalPresetBride = culturalPresetBride
                             )
                         } else null
-                        onSave(savedProfile, weddingProfile)
+                        onSave(savedProfile, weddingProfile, useTasksTemplate)
                     }
                 }
             ) {

@@ -9,6 +9,9 @@ interface WeddingPaymentTermDao {
     @Query("SELECT * FROM wedding_payment_terms WHERE expenseId = :expenseId ORDER BY dueDate ASC")
     fun getByExpense(expenseId: String): Flow<List<WeddingPaymentTermEntity>>
 
+    @Query("SELECT * FROM wedding_payment_terms ORDER BY dueDate ASC")
+    fun getAllTerms(): Flow<List<WeddingPaymentTermEntity>>
+
     @Query("SELECT * FROM wedding_payment_terms WHERE isPaid = 0 ORDER BY dueDate ASC")
     fun getAllUnpaid(): Flow<List<WeddingPaymentTermEntity>>
 

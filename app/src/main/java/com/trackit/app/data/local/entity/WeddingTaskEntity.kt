@@ -1,4 +1,4 @@
-﻿package com.trackit.app.data.local.entity
+package com.trackit.app.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -24,5 +24,6 @@ data class WeddingTaskEntity(
     val pic: String = "BOTH", // GROOM, BRIDE, BOTH, FAMILY, WO
     val isCompleted: Boolean = false,
     val dueDate: Long? = null,
+    val completedDate: Long? = null,
     val sortOrder: Int = 0
 )

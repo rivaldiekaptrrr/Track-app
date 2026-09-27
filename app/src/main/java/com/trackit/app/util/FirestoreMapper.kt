@@ -199,6 +199,7 @@ object FirestoreMapper {
         putStr("pic", pic)
         putBool("isCompleted", isCompleted)
         putLng("dueDate", dueDate)
+        putLng("completedDate", completedDate)
         putInt("sortOrder", sortOrder)
     }
 
@@ -214,6 +215,7 @@ object FirestoreMapper {
                 pic = f.strOrNull("pic") ?: "BOTH",
                 isCompleted = f.boolOrFalse("isCompleted"),
                 dueDate = f.longOrNull("dueDate"),
+                completedDate = f.longOrNull("completedDate"),
                 sortOrder = f.intOrZero("sortOrder")
             )
         } catch (e: Exception) { null }

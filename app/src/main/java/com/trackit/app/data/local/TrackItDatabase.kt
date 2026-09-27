@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
         WeddingEventEntity::class,
         WeddingRundownItemEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -445,6 +445,12 @@ abstract class TrackItDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_categoryId` ON `transactions` (`categoryId`)")
 
                 db.execSQL("PRAGMA foreign_keys=ON")
+            }
+        }
+
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `wedding_tasks` ADD COLUMN `completedDate` INTEGER DEFAULT NULL")
             }
         }
 

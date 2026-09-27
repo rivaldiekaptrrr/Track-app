@@ -2,11 +2,13 @@ package com.trackit.app.ui.wedding.documents
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,11 +18,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trackit.app.data.local.entity.WeddingDocumentEntity
+import com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation
+import com.trackit.app.ui.wedding.common.DeleteConfirmDialog
+import com.trackit.app.ui.wedding.common.WeddingScreenGuideDialog
+import com.trackit.app.ui.wedding.common.WeddingGuideFeature
 import com.trackit.app.util.CurrencyUtils
 import kotlin.math.roundToInt
 
@@ -33,6 +41,8 @@ fun WeddingDocumentsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showGuideDialog by remember { mutableStateOf(false) }
+    var editingDoc by remember { mutableStateOf<WeddingDocumentEntity?>(null) }
 
     LaunchedEffect(weddingProfileId) {
         viewModel.loadForProfile(weddingProfileId)
@@ -54,18 +64,28 @@ fun WeddingDocumentsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, null)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, null)
+                    IconButton(onClick = { showGuideDialog = true }) {
+                        Icon(Icons.Default.Info, contentDescription = "Panduan Fitur")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tambah Berkas")
+            }
         }
     ) { padding ->
         if (uiState.isLoading) {
@@ -75,56 +95,42 @@ fun WeddingDocumentsScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.padding(padding).fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                contentPadding = PaddingValues(bottom = 88.dp)
             ) {
-                // Progress bar
+                // Hero Progress Card
                 item {
-                    val progress = if (uiState.totalCount > 0)
-                        uiState.completedCount.toFloat() / uiState.totalCount else 0f
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Kelengkapan Berkas", style = MaterialTheme.typography.labelMedium)
-                            Text(
-                                "${(progress * 100).roundToInt()}%",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Spacer(Modifier.height(6.dp))
-                        LinearProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.fillMaxWidth().height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = if (progress >= 1f) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary
-                        )
-                        if (uiState.totalAdminCost > 0) {
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                "Est. biaya administrasi: ${CurrencyUtils.formatRupiah(uiState.totalAdminCost)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    DocumentHeroCard(uiState = uiState)
                 }
 
-                // Filter chips
+                // Filter chips in LazyRow
                 item {
-                    val filters = listOf("ALL" to "Semua", "GROOM" to "CPP", "BRIDE" to "CPW", "BOTH" to "Bersama")
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                    val filters = listOf(
+                        "ALL" to "Semua",
+                        "GROOM" to "CPP",
+                        "BRIDE" to "CPW",
+                        "BOTH" to "Bersama"
+                    )
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        filters.forEach { (key, label) ->
+                        items(filters) { (key, label) ->
+                            val selected = uiState.filterOwner == key
                             FilterChip(
-                                selected = uiState.filterOwner == key,
+                                selected = selected,
                                 onClick = { viewModel.setFilter(key) },
-                                label = { Text(label) }
+                                label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                                leadingIcon = if (selected) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                } else null,
+                                shape = RoundedCornerShape(12.dp)
                             )
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(4.dp))
                 }
 
                 if (uiState.filtered.isEmpty()) {
@@ -137,10 +143,11 @@ fun WeddingDocumentsScreen(
                                 Icon(
                                     Icons.Default.FolderOpen, null,
                                     modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text("Belum ada berkas", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.height(4.dp))
                                 TextButton(onClick = { showAddDialog = true }) { Text("Tambah Berkas") }
                             }
                         }
@@ -149,6 +156,7 @@ fun WeddingDocumentsScreen(
                     items(uiState.filtered, key = { it.docId }) { doc ->
                         DocumentItem(
                             doc = doc,
+                            onClick = { editingDoc = doc },
                             onToggle = { viewModel.toggleCompleted(doc) },
                             onDelete = { viewModel.deleteDocument(doc) }
                         )
@@ -158,24 +166,157 @@ fun WeddingDocumentsScreen(
         }
     }
 
+    if (showGuideDialog) {
+        WeddingScreenGuideDialog(
+            title = "Berkas Legalitas & KUA",
+            screenPurpose = "Memastikan seluruh dokumen syarat pernikahan resmi (KUA / Catatan Sipil) lengkap dan tervalidasi sebelum batas waktu pendaftaran.",
+            features = listOf(
+                WeddingGuideFeature("Kategori Berkas Pihak", "Pisahkan checklist dokumen milik Pengantin Pria (CPP), Pengantin Wanita (CPW), atau Berkas Bersama."),
+                WeddingGuideFeature("Daftar Syarat Resmi KUA", "Catat kelengkapan surat N1, N2, N4, surat sehat puskesmas, pas foto, dan fotokopi KTP/KK."),
+                WeddingGuideFeature("Biaya Administrasi Resmi", "Catat biaya pendaftaran nikah (Rp 0 di KUA jam kerja, atau Rp 600.000 untuk nikah di luar KUA/akhir pekan)."),
+                WeddingGuideFeature("Status Kelengkapan", "Tandai dokumen yang 'Sudah Siap' atau 'Belum Diurus' dengan visual progress bar.")
+            ),
+            proTip = "Urus surat pengantar RT/RW dan kelurahan (N1-N4) minimal 1-2 bulan sebelum akad agar jadwal penghulu KUA terkunci aman.",
+            onDismiss = { showGuideDialog = false }
+        )
+    }
+
     if (showAddDialog) {
-        AddDocumentDialog(
-            weddingProfileId = weddingProfileId,
+        AddEditDocumentDialog(
+            document = null,
             onDismiss = { showAddDialog = false },
-            onAdd = { name, owner, cost ->
+            onConfirm = { name, owner, cost ->
                 viewModel.addDocument(weddingProfileId, name, owner, cost)
                 showAddDialog = false
+            }
+        )
+    }
+
+    editingDoc?.let { doc ->
+        AddEditDocumentDialog(
+            document = doc,
+            onDismiss = { editingDoc = null },
+            onConfirm = { name, owner, cost ->
+                viewModel.updateDocument(
+                    doc.copy(
+                        docName = name,
+                        ownerType = owner,
+                        adminCost = cost
+                    )
+                )
+                editingDoc = null
             }
         )
     }
 }
 
 @Composable
+private fun DocumentHeroCard(uiState: WeddingDocumentsUiState) {
+    val progress = if (uiState.totalCount > 0)
+        uiState.completedCount.toFloat() / uiState.totalCount else 0f
+
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "Kelengkapan Berkas",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "${uiState.completedCount} dari ${uiState.totalCount} dokumen selesai disiapkan",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Surface(
+                    color = if (progress >= 1f) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "${(progress * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (progress >= 1f) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = if (progress >= 1f) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+
+            if (uiState.totalAdminCost > 0) {
+                Spacer(Modifier.height(14.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.MonetizationOn,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Total Biaya Administrasi:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            CurrencyUtils.formatRupiah(uiState.totalAdminCost),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun DocumentItem(
     doc: WeddingDocumentEntity,
+    onClick: () -> Unit,
     onToggle: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
     val bgColor by animateColorAsState(
         if (doc.isCompleted) Color(0xFF1B5E20).copy(alpha = 0.08f)
         else MaterialTheme.colorScheme.surface,
@@ -193,24 +334,35 @@ private fun DocumentItem(
     }
 
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 5.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = bgColor)
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Checkbox(checked = doc.isCompleted, onCheckedChange = { onToggle() })
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(
-                    doc.docName,
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = doc.docName,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     textDecoration = if (doc.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                     color = if (doc.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant
-                            else MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Surface(
                         color = ownerColor.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(6.dp)
@@ -233,29 +385,53 @@ private fun DocumentItem(
                     }
                 }
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.Delete, null,
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp))
+            IconButton(
+                onClick = { showDeleteConfirm = true },
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.12f),
+                        RoundedCornerShape(8.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Hapus",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(14.dp)
+                )
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            title = "Hapus Berkas?",
+            message = "Berkas \"${doc.docName}\" akan dihapus dari daftar persyaratan legalitas.",
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = onDelete
+        )
     }
 }
 
 @Composable
-private fun AddDocumentDialog(
-    weddingProfileId: String,
+private fun AddEditDocumentDialog(
+    document: WeddingDocumentEntity?,
     onDismiss: () -> Unit,
-    onAdd: (String, String, Double) -> Unit
+    onConfirm: (name: String, owner: String, cost: Double) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var selectedOwner by remember { mutableStateOf("BOTH") }
-    var cost by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(document?.docName ?: "") }
+    var selectedOwner by remember { mutableStateOf(document?.ownerType ?: "BOTH") }
+    var cost by remember {
+        mutableStateOf(if (document != null && document.adminCost > 0) document.adminCost.toLong().toString() else "")
+    }
     var submitted by remember { mutableStateOf(false) }
+
+    val isEdit = document != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tambah Berkas") },
+        title = { Text(if (isEdit) "Edit Berkas" else "Tambah Berkas") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -267,13 +443,14 @@ private fun AddDocumentDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                Text("Pemilik", style = MaterialTheme.typography.labelMedium)
+                Text("Pemilik Berkas", style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("GROOM" to "CPP", "BRIDE" to "CPW", "BOTH" to "Bersama").forEach { (key, label) ->
                         FilterChip(
                             selected = selectedOwner == key,
                             onClick = { selectedOwner = key },
-                            label = { Text(label) }
+                            label = { Text(label) },
+                            shape = RoundedCornerShape(10.dp)
                         )
                     }
                 }
@@ -281,9 +458,9 @@ private fun AddDocumentDialog(
                     value = cost,
                     onValueChange = { cost = it.filter { c -> c.isDigit() } },
                     label = { Text("Biaya Admin (opsional)") },
-                    prefix = { Text("Rp") },
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                    visualTransformation = com.trackit.app.ui.transaction.ThousandSeparatorVisualTransformation(),
+                    prefix = { Text("Rp ") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    visualTransformation = ThousandSeparatorVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -294,10 +471,10 @@ private fun AddDocumentDialog(
                 onClick = {
                     submitted = true
                     if (name.isNotBlank()) {
-                        onAdd(name.trim(), selectedOwner, cost.toDoubleOrNull() ?: 0.0)
+                        onConfirm(name.trim(), selectedOwner, cost.toDoubleOrNull() ?: 0.0)
                     }
                 }
-            ) { Text("Tambah") }
+            ) { Text(if (isEdit) "Simpan" else "Tambah") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Batal") }

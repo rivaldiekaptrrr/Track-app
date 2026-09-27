@@ -21,6 +21,7 @@ data class ExpenseWithTerms(
 data class WeddingBudgetUiState(
     val expenses: List<WeddingExpenseEntity> = emptyList(),
     val filteredExpenses: List<WeddingExpenseEntity> = emptyList(),
+    val termsByExpenseId: Map<String, List<WeddingPaymentTermEntity>> = emptyMap(),
     val totalBudgetCap: Double = 0.0,
     val totalEstimated: Double = 0.0,
     val totalPaid: Double = 0.0,
@@ -89,8 +90,11 @@ class WeddingBudgetViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 expenseRepo.getAllByProfile(weddingProfileId),
+                expenseRepo.getAllTerms(),
                 _filterSource
-            ) { expenses, filterSrc ->
+            ) { expenses, allTerms, filterSrc ->
+                val termsMap = allTerms.groupBy { it.expenseId }
+
                 val defaultCatMap = EXPENSE_CATEGORIES.toMap()
                 val existingCatKeys = expenses.map { it.category }.distinct()
                 val allCatKeys = (defaultCatMap.keys + existingCatKeys).distinct()
@@ -163,6 +167,7 @@ class WeddingBudgetViewModel @Inject constructor(
                 _uiState.update { it.copy(
                     expenses = expenses,
                     filteredExpenses = filtered,
+                    termsByExpenseId = termsMap,
                     totalEstimated = totalEst,
                     totalPaid = totalPaid,
                     filterSource = filterSrc,
@@ -237,6 +242,19 @@ class WeddingBudgetViewModel @Inject constructor(
                 else -> "UNPAID"
             }
             expenseRepo.update(expense.copy(totalPaid = newPaid, paymentStatus = status))
+        }
+    }
+
+    fun deletePaymentTerm(term: WeddingPaymentTermEntity, expense: WeddingExpenseEntity) {
+        viewModelScope.launch {
+            expenseRepo.deleteTerm(term)
+            val updatedPaid = (expense.totalPaid - term.amount).coerceAtLeast(0.0)
+            val status = when {
+                updatedPaid >= expense.totalEstimated -> "FULLY_PAID"
+                updatedPaid > 0 -> "PARTIAL_DP"
+                else -> "UNPAID"
+            }
+            expenseRepo.update(expense.copy(totalPaid = updatedPaid, paymentStatus = status))
         }
     }
 

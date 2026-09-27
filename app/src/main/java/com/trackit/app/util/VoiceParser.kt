@@ -22,44 +22,10 @@ data class VoiceParseResult(
  * Supports:
  * - Numeric amounts: "50 ribu", "1,5 juta", "2 juta 500 ribu"
  * - Word amounts: "lima puluh ribu", "seratus ribu", "dua ratus lima puluh ribu"
- * - Slang: "gocap", "cepek", "seceng", "gopek", "noban", "goban", "selawe"
- * - Category matching via keyword dictionary + custom keywords
+ * - Category matching via user-trained custom keywords and category names
  * - Date detection: "kemarin" (yesterday), "kemarin lusa" (2 days ago)
  */
 object VoiceParser {
-
-    // Default keyword mapping per category (matching DB names exactly)
-    private val defaultKeywords: Map<String, List<String>> = mapOf(
-        "Makanan" to listOf(
-            "makan", "sayur", "buah", "nasi", "bakso", "mie", "kopi", "minum",
-            "jajan", "snack", "gorengan", "soto", "sate", "ayam", "ikan", "tahu",
-            "tempe", "roti", "susu", "es", "warung", "resto", "restoran", "cafe", "kantin"
-        ),
-        "Transportasi" to listOf(
-            "bensin", "parkir", "tol", "gojek", "grab", "ojek", "ojol", "bus",
-            "kereta", "angkot", "taksi", "taxi", "bbm", "solar", "pertalite"
-        ),
-        "Hiburan" to listOf(
-            "nonton", "bioskop", "netflix", "game", "main", "spotify", "youtube",
-            "konser", "wisata", "liburan", "rekreasi", "karaoke"
-        ),
-        "Tagihan" to listOf(
-            "listrik", "air", "wifi", "internet", "pulsa", "kuota", "token", "pdam",
-            "gas", "iuran", "sewa", "kos", "kontrakan", "cicilan", "kredit", "pajak", "asuransi"
-        ),
-        "Belanja" to listOf(
-            "belanja", "baju", "celana", "sepatu", "tas", "online", "shopee",
-            "tokopedia", "lazada", "fashion", "pakaian", "kosmetik", "skincare"
-        ),
-        "Kesehatan" to listOf(
-            "obat", "dokter", "rumah sakit", "apotek", "farmasi", "vitamin",
-            "klinik", "medis", "cek", "lab", "operasi"
-        ),
-        "Pendidikan" to listOf(
-            "buku", "sekolah", "kuliah", "kursus", "les", "spp", "ukt",
-            "semester", "tuition", "seminar"
-        )
-    )
 
     // Slang amounts recognized
     private val slangAmounts: Map<String, Long> = mapOf(
@@ -374,20 +340,19 @@ object VoiceParser {
     }
 
     /**
-     * Detect category from text using keyword matching.
-     * Custom keywords from user take priority over default keywords.
-     * If multiple categories match, the one whose keyword appears earliest wins.
+     * Detect category from text using user-trained custom keywords and category names.
+     * Category detection relies on user-defined custom keywords and explicit category name mentions.
+     * If multiple categories match, custom keywords take priority, then earliest position in the spoken text.
      */
     private fun detectCategory(text: String, categories: List<CategoryEntity>): String? {
         data class Match(val categoryName: String, val position: Int, val isCustom: Boolean)
 
         val matches = mutableListOf<Match>()
 
-        // Build merged keyword map: category name -> (keyword, isCustom)
         for (category in categories) {
             val categoryName = category.name
 
-            // Check custom keywords first (higher priority)
+            // 1. Check user-trained custom keywords (highest priority)
             val customKeywords = category.customKeywords
                 .split(",")
                 .map { it.trim().lowercase() }
@@ -401,17 +366,7 @@ object VoiceParser {
                 }
             }
 
-            // Check default keywords
-            val defaults = defaultKeywords[categoryName] ?: emptyList()
-            for (keyword in defaults) {
-                val regex = Regex("\\b${Regex.escape(keyword)}\\b")
-                val match = regex.find(text)
-                if (match != null) {
-                    matches.add(Match(categoryName, match.range.first, isCustom = false))
-                }
-            }
-
-            // Implicitly check the category name itself as a default keyword
+            // 2. Check the category name itself
             val categoryNameRegex = Regex("\\b${Regex.escape(categoryName.lowercase())}\\b")
             val nameMatch = categoryNameRegex.find(text)
             if (nameMatch != null) {
