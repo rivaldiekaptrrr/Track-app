@@ -89,6 +89,14 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+        
+        var isSplashAnimComplete by mutableStateOf(false)
+        lifecycleScope.launch {
+            kotlinx.coroutines.delay(1000L) // Jeda 1 detik agar animasi loop dan tiang selesai secara penuh
+            isSplashAnimComplete = true
+        }
+        splashScreen.setKeepOnScreenCondition { !isSplashAnimComplete }
+        
         splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
             val fadeOut = android.animation.ObjectAnimator.ofFloat(
                 splashScreenViewProvider.view,
@@ -96,8 +104,8 @@ class MainActivity : FragmentActivity() {
                 1f,
                 0f
             ).apply {
-                interpolator = android.view.animation.AccelerateInterpolator()
-                duration = 200L
+                interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+                duration = 250L
                 addListener(object : android.animation.AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: android.animation.Animator) {
                         splashScreenViewProvider.remove()

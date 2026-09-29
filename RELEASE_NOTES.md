@@ -1,12 +1,12 @@
-* **Impor Kontak Tamu Sekaligus (Bulk Contact Import)**:
-    * Tambah banyak tamu undangan langsung dari buku kontak telepon sekaligus dengan konfirmasi kategori (Keluarga CPP/CPW, VIP, Teman, dll.) dan estimasi pax.
-* **Kalkulator Katering & Edukasi Porsi Standar WO**:
-    * Kalkulator katering modern dengan slider buffer porsi (10% - 30%) dan simulasi alokasi Buffet vs Gubukan (Stall) 60:40.
-* **Peningkatan Splash Screen Adaptif & Transisi Halus**:
-    * Splash screen modern Android 12+ dengan dukungan otomatis Day/Night mode, ikon vektor presisi tinggi, dan transisi fade-out halus saat aplikasi terbuka.
-* **Tombol Panduan Modul (Screen Guide)**:
-    * Ikon informasi panduan (`ℹ️`) di setiap modul sub-screen pernikahan (Tamu, Anggaran, Tugas, Vendor, Rundown, Seserahan, Panitia, Berkas KUA) untuk mempermudah pengguna baru.
-* **Standardisasi Date & Time Picker**:
-    * Pemilihan tanggal dan jam di seluruh modul aplikasi kini konsisten menggunakan dialog pemilih waktu yang modern.
-* **Peningkatan Kinerja & Tampilan Antarmuka**:
-    * Perbaikan render visual kartu kalkulator katering serta dashboard pernikahan yang lebih rapi, bersih, dan optimal.
+* **Identitas Brand Baru — The Infinity Ribbon 'T'**:
+    * Pembaruan logo resmi aplikasi dengan simbol *The Infinity Ribbon 'T'* yang memadukan komitmen pernikahan abadi dan siklus finansial berkesinambungan dalam gradasi 3D Electric Sapphire (`#2563EB`) dan Ocean Cyan (`#06B6D4`).
+* **Animasi Splash Screen Modern (Animated Vector Drawable)**:
+    * Splash screen dinamis beranimasi dengan efek *Infinity Loop Spring Expansion* dan *Dual Pillar Slide-Down* pada Android 12+ API (`avd_splash_infinity_t.xml`).
+* **Penyelarasan Palet Warna & Desain Onboarding Minimalis**:
+    * Pembaruan tema Light Mode (Electric Sapphire & Soft Ice Blue) dan Dark Mode (Vibrant Sapphire & AMOLED Black) yang kini selaras 100% dengan identitas visual logo baru.
+    * Ilustrasi Onboarding & Login Screen diperbarui dengan vektor drawable murni (*Single Hero Icon*) yang bersih, modern, dan minimalis.
+* **Optimalisasi Ikon Launcher & Safe Zone**:
+    * Ikon launcher adaptif yang disempurnakan dengan gradien multi-stop presisi dan skala *padding* yang proporsional di semua antarmuka layar HP.
+* **Brand Kit & Panduan Identitas Visual**:
+    * Penambahan paket aset brand resmi (SVG, Favicon, PWA Web Manifest) dan dokumentasi panduan brand lengkap di folder `brand/` dan `docs/brand_guidelines.md`.
+

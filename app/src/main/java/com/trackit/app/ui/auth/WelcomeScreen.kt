@@ -43,17 +43,17 @@ fun WelcomeScreen(
             OnboardingPage(
                 title = "2-in-1 Tracker & Wedding Planner",
                 description = "Satu aplikasi, dua kebutuhan penting. Kelola finansial pribadi harian Anda sekaligus persiapkan anggaran & agenda pernikahan impian bersama pasangan secara terintegrasi.",
-                imageRes = R.drawable.img_onboarding_2in1
+                imageRes = R.drawable.ic_onboarding_2in1
             ),
             OnboardingPage(
                 title = "Atur Keuangan Jadi Lebih Mudah",
                 description = "Catat setiap pemasukan & pengeluaran secara cepat. Pantau sisa budget bulanan dan evaluasi kategori belanja agar impian menabung Anda berjalan maksimal.",
-                imageRes = R.drawable.img_onboarding_finance
+                imageRes = R.drawable.ic_onboarding_finance
             ),
             OnboardingPage(
                 title = "Capai Rencana Wedding Impian",
                 description = "Persiapkan detail hari bahagia bersama pasangan. Kelola anggaran vendor pernikahan, atur tugas / checklist, hitung pembayaran DP & pelunasan secara praktis.",
-                imageRes = R.drawable.img_onboarding_wedding
+                imageRes = R.drawable.ic_onboarding_wedding
             )
         )
     }
@@ -118,6 +118,7 @@ fun WelcomeScreen(
                     ) {
                         Text(
                             text = page.title,
+                            fontFamily = com.trackit.app.ui.theme.PlusJakartaSans,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onBackground,
@@ -126,6 +127,7 @@ fun WelcomeScreen(
 
                         Text(
                             text = page.description,
+                            fontFamily = com.trackit.app.ui.theme.PlusJakartaSans,
                             fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             lineHeight = 22.sp
@@ -152,10 +154,10 @@ fun WelcomeScreen(
                         Box(
                             modifier = Modifier
                                 .height(6.dp)
-                                .width(if (isSelected) 18.dp else 6.dp)
+                                .width(if (isSelected) 22.dp else 6.dp)
                                 .clip(RoundedCornerShape(3.dp))
                                 .background(
-                                    if (isSelected) primaryColor else outlineVariantColor.copy(alpha = 0.5f)
+                                    if (isSelected) primaryColor else MaterialTheme.colorScheme.surfaceVariant
                                 )
                         )
                     }
@@ -170,6 +172,7 @@ fun WelcomeScreen(
                     if (currentPage > 0) {
                         Text(
                             text = "Kembali",
+                            fontFamily = com.trackit.app.ui.theme.PlusJakartaSans,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
@@ -181,6 +184,7 @@ fun WelcomeScreen(
                         // Skip onboarding straight to login if desired
                         Text(
                             text = "Lewati",
+                            fontFamily = com.trackit.app.ui.theme.PlusJakartaSans,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
@@ -207,6 +211,7 @@ fun WelcomeScreen(
                     ) {
                         Text(
                             text = if (currentPage == pages.size - 1) "Mulai Sekarang" else "Lanjut",
+                            fontFamily = com.trackit.app.ui.theme.PlusJakartaSans,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = onPrimaryColor
@@ -226,3 +231,12 @@ fun WelcomeScreen(
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, name = "Welcome Screen Light")
+@Composable
+fun WelcomeScreenPreview() {
+    com.trackit.app.ui.theme.TrackItTheme {
+        WelcomeScreen(onContinue = {})
+    }
+}
+

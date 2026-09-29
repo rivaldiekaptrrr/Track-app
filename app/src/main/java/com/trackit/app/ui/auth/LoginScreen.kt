@@ -130,7 +130,7 @@ fun LoginScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     androidx.compose.foundation.Image(
-                        painter = painterResource(id = R.drawable.img_onboarding_2in1),
+                        painter = painterResource(id = R.drawable.ic_onboarding_2in1),
                         contentDescription = "Login Header Illustration",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = androidx.compose.ui.layout.ContentScale.Fit

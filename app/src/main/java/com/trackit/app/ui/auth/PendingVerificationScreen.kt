@@ -51,22 +51,22 @@ import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 /* ---------------------------------------------------------------- *
- *  Warna lokal untuk layar ini                                      *
+ *  Warna lokal untuk layar ini (Sapphire Brand Theme)               *
  * ---------------------------------------------------------------- */
 private object TrackColor {
-    val BgDeep    = Color(0xFFF7F9F7)  // Soft Mint Cream
-    val BgCard    = Color(0xFFFFFFFF)
-    val BgMuted   = Color(0xFFEEF2EE)  // Light sage tint
-    val Surface   = Color(0xFFADC3B7).copy(alpha = 0.25f)
-    val Stroke    = Color(0xFFBDC9BB)
-    val TextPrime = Color(0xFF191C1A)
-    val TextMuted = Color(0xFF536357)
-    val TextFaint = Color(0xFF7D8C80)
+    val BgDeep    = Color(0xFFF8FAFC)  // Clean Crisp Slate
+    val BgCard    = Color(0xFFFFFFFF)  // Pure White
+    val BgMuted   = Color(0xFFF1F5F9)  // Slate 100
+    val Surface   = Color(0xFFDBEAFE).copy(alpha = 0.4f)
+    val Stroke    = Color(0xFFE2E8F0)
+    val TextPrime = Color(0xFF0F172A)
+    val TextMuted = Color(0xFF475569)
+    val TextFaint = Color(0xFF64748B)
 
     // Per-paket accent
-    val Expense  = Color(0xFF2D5E4E)  // Deep Sage Green
-    val Wedding  = Color(0xFFC24D6E)  // Rose (dari ChartColors)
-    val Full     = Color(0xFFD4A843)  // Gold (dari ChartColors)
+    val Expense  = Color(0xFF2563EB)  // Electric Sapphire Blue
+    val Wedding  = Color(0xFFC24D6E)  // Rose
+    val Full     = Color(0xFFD97706)  // Gold
 }
 
 /* ---------------------------------------------------------------- *

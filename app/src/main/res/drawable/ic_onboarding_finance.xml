@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="240dp"
+    android:height="200dp"
+    android:viewportWidth="240"
+    android:viewportHeight="200">
+
+    <!-- 1. Soft Ambient Glow -->
+    <path
+        android:pathData="M120,100m-70,0a70,70 0,1 1,140 0a70,70 0,1 1,-140 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="120"
+                android:centerY="100"
+                android:gradientRadius="70">
+                <item android:color="#352563EB" android:offset="0.0" />
+                <item android:color="#002563EB" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 2. Clean Hero Badge Container -->
+    <path
+        android:pathData="M80,40 L160,40 C182,40 196,54 196,76 L196,124 C196,146 182,160 160,160 L80,160 C58,160 44,146 44,124 L44,76 C44,54 58,40 80,40 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="44"
+                android:startY="40"
+                android:endX="196"
+                android:endY="160">
+                <item android:color="#FFFFFF" android:offset="0.0" />
+                <item android:color="#EFF6FF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Badge Outline / Border -->
+    <path
+        android:strokeWidth="1.5"
+        android:strokeColor="#DBEAFE"
+        android:pathData="M80,40 L160,40 C182,40 196,54 196,76 L196,124 C196,146 182,160 160,160 L80,160 C58,160 44,146 44,124 L44,76 C44,54 58,40 80,40 Z" />
+
+    <!-- 3. Single Hero Icon: Modern Financial Wallet & Growth -->
+    <group
+        android:translateX="0"
+        android:translateY="0">
+
+        <!-- Top Inserted Card with Upward Growth Arrow -->
+        <path
+            android:pathData="M92,66 L148,66 C152.42,66 156,69.58 156,74 L156,84 L84,84 L84,74 C84,69.58 87.58,66 92,66 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="84"
+                    android:startY="66"
+                    android:endX="156"
+                    android:endY="84">
+                    <item android:color="#38BDF8" android:offset="0.0" />
+                    <item android:color="#06B6D4" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Upward Growth Spark on Card -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M112,74 L128,74 L128,76 L112,76 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M136,71 L142,75 L136,79 Z" />
+
+        <!-- Main Wallet Body -->
+        <path
+            android:pathData="M84,80 L156,80 C162.63,80 168,85.37 168,92 L168,124 C168,130.63 162.63,136 156,136 L84,136 C77.37,136 72,130.63 72,124 L72,92 C72,85.37 77.37,80 84,80 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="72"
+                    android:startY="80"
+                    android:endX="168"
+                    android:endY="136">
+                    <item android:color="#2563EB" android:offset="0.0" />
+                    <item android:color="#1D4ED8" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Wallet Inner Stitch / Fold Line -->
+        <path
+            android:pathData="M72,94 L168,94"
+            android:strokeWidth="1.5"
+            android:strokeColor="#3B82F6" />
+
+        <!-- Wallet Clasp Tab -->
+        <path
+            android:pathData="M136,98 L160,98 C164.42,98 168,101.58 168,106 L168,110 C168,114.42 164.42,118 160,118 L136,118 C133.79,118 132,116.21 132,114 L132,102 C132,99.79 133.79,98 136,98 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="132"
+                    android:startY="98"
+                    android:endX="168"
+                    android:endY="118">
+                    <item android:color="#06B6D4" android:offset="0.0" />
+                    <item android:color="#0891B2" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Clasp Golden/Cyan Center Lock Dot -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M148,108m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+
+    </group>
+
+</vector>

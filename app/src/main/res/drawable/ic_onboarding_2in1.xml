@@ -1,29 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
-    <!-- Background Circle/Tile -->
+    android:width="240dp"
+    android:height="200dp"
+    android:viewportWidth="240"
+    android:viewportHeight="200">
+
+    <!-- 1. Soft Ambient Glow -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+        android:pathData="M120,100m-70,0a70,70 0,1 1,140 0a70,70 0,1 1,-140 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="120"
+                android:centerY="100"
+                android:gradientRadius="70">
+                <item android:color="#352563EB" android:offset="0.0" />
+                <item android:color="#002563EB" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 2. Clean Hero Badge Container -->
+    <path
+        android:pathData="M80,40 L160,40 C182,40 196,54 196,76 L196,124 C196,146 182,160 160,160 L80,160 C58,160 44,146 44,124 L44,76 C44,54 58,40 80,40 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="44"
+                android:startY="40"
+                android:endX="196"
+                android:endY="160">
+                <item android:color="#FFFFFF" android:offset="0.0" />
+                <item android:color="#EFF6FF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Badge Outline / Border -->
+    <path
+        android:strokeWidth="1.5"
+        android:strokeColor="#DBEAFE"
+        android:pathData="M80,40 L160,40 C182,40 196,54 196,76 L196,124 C196,146 182,160 160,160 L80,160 C58,160 44,146 44,124 L44,76 C44,54 58,40 80,40 Z" />
+
+    <!-- 3. Exact Master Symbol from brand/trackit-symbol.svg -->
     <group
-        android:scaleX="0.11"
-        android:scaleY="0.11"
-        android:translateX="9.9"
-        android:translateY="9.3">
-        
+        android:translateX="62.4"
+        android:translateY="42.4"
+        android:scaleX="0.45"
+        android:scaleY="0.45">
+
         <!-- Left Stem Rail -->
         <path
-            android:pathData="M 104,124 L 118,124 L 118,214 L 104,228 Z">
+            android:pathData="M 104 124 L 118 124 L 118 214 L 104 228 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="linear"
-                    android:startX="111"
+                    android:startX="0"
                     android:startY="124"
-                    android:endX="111"
+                    android:endX="0"
                     android:endY="228">
                     <item android:color="#06B6D4" android:offset="0.0" />
                     <item android:color="#2563EB" android:offset="0.6" />
@@ -34,13 +69,13 @@
 
         <!-- Right Stem Rail -->
         <path
-            android:pathData="M 126,124 L 140,124 L 140,196 C 140,206 136,216 126,226 Z">
+            android:pathData="M 126 124 L 140 124 L 140 196 C 140 206 136 216 126 226 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="linear"
-                    android:startX="133"
+                    android:startX="0"
                     android:startY="124"
-                    android:endX="133"
+                    android:endX="0"
                     android:endY="226">
                     <item android:color="#00E5FF" android:offset="0.0" />
                     <item android:color="#06B6D4" android:offset="0.6" />
@@ -49,10 +84,10 @@
             </aapt:attr>
         </path>
 
-        <!-- Left Loop -->
+        <!-- Back Layer Left Loop -->
         <path
             android:fillType="evenOdd"
-            android:pathData="M 128,92 C 104,56 80,40 56,40 C 30,40 12,58 12,84 C 12,110 32,128 58,128 C 82,128 106,112 128,92 Z M 56,64 C 68,64 82,74 98,90 C 84,102 70,106 58,106 C 44,106 34,96 34,84 C 34,72 44,64 56,64 Z">
+            android:pathData="M 128 92 C 104 56 80 40 56 40 C 30 40 12 58 12 84 C 12 110 32 128 58 128 C 82 128 106 112 128 92 Z M 56 64 C 68 64 82 74 98 90 C 84 102 70 106 58 106 C 44 106 34 96 34 84 C 34 72 44 64 56 64 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="linear"
@@ -67,10 +102,10 @@
             </aapt:attr>
         </path>
 
-        <!-- Right Loop -->
+        <!-- Back Layer Right Loop -->
         <path
             android:fillType="evenOdd"
-            android:pathData="M 128,92 C 152,128 176,144 200,144 C 226,144 244,126 244,100 C 244,74 224,56 198,56 C 174,56 150,72 128,92 Z M 200,120 C 188,120 174,110 158,94 C 172,82 186,78 198,78 C 212,78 222,88 222,100 C 222,112 212,120 200,120 Z">
+            android:pathData="M 128 92 C 152 128 176 144 200 144 C 226 144 244 126 244 100 C 244 74 224 56 198 56 C 174 56 150 72 128 92 Z M 200 120 C 188 120 174 110 158 94 C 172 82 186 78 198 78 C 212 78 222 88 222 100 C 222 112 212 120 200 120 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="linear"
@@ -85,9 +120,9 @@
             </aapt:attr>
         </path>
 
-        <!-- Front Twist Ribbon Bridge -->
+        <!-- Front Ribbon Bridge -->
         <path
-            android:pathData="M 98,90 C 112,104 124,114 136,120 L 148,108 C 138,100 126,88 114,76 L 98,90 Z">
+            android:pathData="M 98 90 C 112 104 124 114 136 120 L 148 108 C 138 100 126 88 114 76 L 98 90 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="linear"
@@ -102,9 +137,9 @@
             </aapt:attr>
         </path>
 
-        <!-- Fold Shade for 3D Depth -->
+        <!-- Fold Shade -->
         <path
-            android:pathData="M 114,76 L 128,92 L 136,82 L 122,66 Z">
+            android:pathData="M 114 76 L 128 92 L 136 82 L 122 66 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="linear"
@@ -118,4 +153,5 @@
             </aapt:attr>
         </path>
     </group>
+
 </vector>

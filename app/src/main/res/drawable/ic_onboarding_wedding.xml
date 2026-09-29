@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="240dp"
+    android:height="200dp"
+    android:viewportWidth="240"
+    android:viewportHeight="200">
+
+    <!-- 1. Soft Ambient Glow -->
+    <path
+        android:pathData="M120,100m-70,0a70,70 0,1 1,140 0a70,70 0,1 1,-140 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="120"
+                android:centerY="100"
+                android:gradientRadius="70">
+                <item android:color="#3506B6D4" android:offset="0.0" />
+                <item android:color="#0006B6D4" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 2. Clean Hero Badge Container -->
+    <path
+        android:pathData="M80,40 L160,40 C182,40 196,54 196,76 L196,124 C196,146 182,160 160,160 L80,160 C58,160 44,146 44,124 L44,76 C44,54 58,40 80,40 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="44"
+                android:startY="40"
+                android:endX="196"
+                android:endY="160">
+                <item android:color="#FFFFFF" android:offset="0.0" />
+                <item android:color="#EFF6FF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Badge Outline / Border -->
+    <path
+        android:strokeWidth="1.5"
+        android:strokeColor="#DBEAFE"
+        android:pathData="M80,40 L160,40 C182,40 196,54 196,76 L196,124 C196,146 182,160 160,160 L80,160 C58,160 44,146 44,124 L44,76 C44,54 58,40 80,40 Z" />
+
+    <!-- 3. Single Hero Icon: Modern Interlocked Wedding Rings with Diamond Sparkle -->
+    <group
+        android:translateX="0"
+        android:translateY="0">
+
+        <!-- Left Band (Sapphire Blue) -->
+        <path
+            android:pathData="M104,112m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"
+            android:strokeWidth="6"
+            android:strokeLineCap="round">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="82"
+                    android:startY="90"
+                    android:endX="126"
+                    android:endY="134">
+                    <item android:color="#2563EB" android:offset="0.0" />
+                    <item android:color="#1D4ED8" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Right Band with Gemstone (Ocean Cyan) -->
+        <path
+            android:pathData="M136,106m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"
+            android:strokeWidth="6"
+            android:strokeLineCap="round">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="114"
+                    android:startY="84"
+                    android:endX="158"
+                    android:endY="128">
+                    <item android:color="#06B6D4" android:offset="0.0" />
+                    <item android:color="#0891B2" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Diamond Base Crown / Setting -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M130,84 L142,84 L144,80 L128,80 Z" />
+
+        <!-- Solitaire Diamond Facet -->
+        <path
+            android:pathData="M136,70 L146,78 L136,83 L126,78 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="126"
+                    android:startY="70"
+                    android:endX="146"
+                    android:endY="83">
+                    <item android:color="#FFFFFF" android:offset="0.0" />
+                    <item android:color="#38BDF8" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Diamond Top Bright Highlight -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M136,70 L141,74 L136,78 L131,74 Z" />
+
+        <!-- Pure Sparkling Star (Cyan Glow) -->
+        <path
+            android:fillColor="#06B6D4"
+            android:pathData="M152,66 L154,71 L159,73 L154,75 L152,80 L150,75 L145,73 L150,71 Z" />
+
+    </group>
+
+</vector>
