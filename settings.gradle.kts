@@ -19,5 +19,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TrackIt"
 include(":app")
-include(":composeApp")
 

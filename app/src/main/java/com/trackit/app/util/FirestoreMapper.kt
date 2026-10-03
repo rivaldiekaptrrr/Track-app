@@ -91,6 +91,8 @@ object FirestoreMapper {
         putBool("isRecurring", isRecurring)
         putStr("recurringType", recurringType)
         putInt("recurringDayOfMonth", recurringDayOfMonth ?: 0)
+        putStr("parentRecurringId", parentRecurringId)
+        putLng("lastGeneratedDate", lastGeneratedDate)
         putStr("type", type)
         putLng("profileId", profileId)
     }
@@ -108,6 +110,8 @@ object FirestoreMapper {
                 isRecurring = f.boolOrFalse("isRecurring"),
                 recurringType = f.strOrNull("recurringType"),
                 recurringDayOfMonth = f.intOrZero("recurringDayOfMonth").takeIf { it != 0 },
+                parentRecurringId = f.strOrNull("parentRecurringId"),
+                lastGeneratedDate = f.longOrNull("lastGeneratedDate"),
                 type = f.strOrNull("type") ?: "EXPENSE",
                 profileId = f.longOrNull("profileId") ?: 1L
             )

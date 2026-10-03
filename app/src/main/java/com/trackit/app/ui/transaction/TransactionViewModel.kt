@@ -26,6 +26,7 @@ data class TransactionFormState(
     val date: Long = DateUtils.todayMillis(),
     val isRecurring: Boolean = false,
     val recurringType: String? = null,
+    val parentRecurringId: String? = null,
     val type: String = "EXPENSE",
     val categories: List<CategoryEntity> = emptyList(),
     val isEditing: Boolean = false,
@@ -82,6 +83,7 @@ class TransactionViewModel @Inject constructor(
                         date = tx.date,
                         isRecurring = tx.isRecurring,
                         recurringType = tx.recurringType,
+                        parentRecurringId = tx.parentRecurringId,
                         type = tx.type,
                         isEditing = true
                     )
@@ -355,11 +357,16 @@ class TransactionViewModel @Inject constructor(
                     date = state.date,
                     isRecurring = state.isRecurring,
                     recurringType = state.recurringType,
+                    parentRecurringId = state.parentRecurringId,
                     type = state.type,
                     profileId = state.activeProfileId
                 )
 
                 if (state.isEditing) {
+                    if (!state.isRecurring) {
+                        // User turned OFF recurring toggle: disable future auto-generation across the chain
+                        transactionRepository.disableRecurringChain(transaction.id, state.parentRecurringId)
+                    }
                     transactionRepository.update(transaction)
                 } else {
                     transactionRepository.insert(transaction)

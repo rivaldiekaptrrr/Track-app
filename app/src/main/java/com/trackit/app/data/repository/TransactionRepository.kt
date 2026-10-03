@@ -67,6 +67,22 @@ class TransactionRepository @Inject constructor(
     suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity> =
         transactionDao.getRecurringTransactions(profileId)
 
+    suspend fun getAllRecurringTransactionsAllProfiles(): List<TransactionEntity> =
+        transactionDao.getAllRecurringTransactionsAllProfiles()
+
+    suspend fun disableRecurringChain(id: String, parentRecurringId: String? = null) {
+        transactionDao.disableRecurringChain(id, parentRecurringId)
+        val current = transactionDao.getById(id)
+        if (current != null) syncManager.pushTransaction(current)
+        if (!parentRecurringId.isNullOrBlank()) {
+            val parent = transactionDao.getById(parentRecurringId)
+            if (parent != null) syncManager.pushTransaction(parent)
+        }
+    }
+
+    suspend fun findGeneratedTransactionForDate(parentId: String, startOfDay: Long, endOfDay: Long): TransactionEntity? =
+        transactionDao.findGeneratedTransactionForDate(parentId, startOfDay, endOfDay)
+
     suspend fun insert(transaction: TransactionEntity): String {
         transactionDao.insert(transaction)
         syncManager.pushTransaction(transaction)

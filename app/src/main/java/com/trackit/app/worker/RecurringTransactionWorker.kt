@@ -27,34 +27,66 @@ class RecurringTransactionWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val activeProfileId = preferencesManager.activeProfileId.first()
-            val recurringTransactions = transactionRepository.getRecurringTransactions(activeProfileId)
+            val recurringTransactions = transactionRepository.getAllRecurringTransactionsAllProfiles()
             val today = Calendar.getInstance()
             val todayMillis = DateUtils.todayMillis()
 
-            for (template in recurringTransactions) {
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val startOfDay = cal.timeInMillis
+            val endOfDay = startOfDay + 86_400_000L - 1L
+
+            // Group by root parent ID so only 1 generator runs per chain
+            val templatesByRoot = recurringTransactions.groupBy { it.parentRecurringId ?: it.id }
+
+            for ((rootId, chain) in templatesByRoot) {
+                // Find root template or fallback to the earliest item
+                val template = chain.find { it.id == rootId } ?: chain.minByOrNull { it.date } ?: continue
+                if (!template.isRecurring) continue
+
+                // If template was created today, don't generate duplicate for today
+                if (template.date in startOfDay..endOfDay) continue
+
+                // Check idempotency: already generated for today?
+                val existingToday = transactionRepository.findGeneratedTransactionForDate(rootId, startOfDay, endOfDay)
+                if (existingToday != null) continue
+
                 val shouldCreate = when (template.recurringType) {
                     "DAILY" -> true
-                    "WEEKLY" -> today.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY
+                    "WEEKLY" -> {
+                        val templateCal = Calendar.getInstance().apply { timeInMillis = template.date }
+                        today.get(Calendar.DAY_OF_WEEK) == templateCal.get(Calendar.DAY_OF_WEEK)
+                    }
                     "MONTHLY" -> {
-                        val dayOfMonth = template.recurringDayOfMonth ?: 1
-                        today.get(Calendar.DAY_OF_MONTH) == dayOfMonth
+                        val templateCal = Calendar.getInstance().apply { timeInMillis = template.date }
+                        val dayOfMonth = template.recurringDayOfMonth ?: templateCal.get(Calendar.DAY_OF_MONTH)
+                        val maxDay = today.getActualMaximum(Calendar.DAY_OF_MONTH)
+                        val targetDay = dayOfMonth.coerceAtMost(maxDay)
+                        today.get(Calendar.DAY_OF_MONTH) == targetDay
                     }
                     else -> false
                 }
 
                 if (shouldCreate) {
-                    // Create a new non-recurring transaction based on the template
                     val newTransaction = TransactionEntity(
                         amount = template.amount,
                         description = template.description,
                         categoryId = template.categoryId,
                         date = todayMillis,
-                        isRecurring = false, // The created instance is not recurring itself
-                        recurringType = null,
-                        profileId = activeProfileId
+                        isRecurring = true, // Remains marked as recurring child so UI toggle stays ON
+                        recurringType = template.recurringType,
+                        recurringDayOfMonth = template.recurringDayOfMonth,
+                        parentRecurringId = rootId,
+                        lastGeneratedDate = todayMillis,
+                        type = template.type, // Preserves EXPENSE or INCOME
+                        profileId = template.profileId
                     )
                     transactionRepository.insert(newTransaction)
+                    transactionRepository.update(template.copy(lastGeneratedDate = todayMillis))
                 }
             }
 

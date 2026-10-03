@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
         WeddingEventEntity::class,
         WeddingRundownItemEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -451,6 +451,13 @@ abstract class TrackItDatabase : RoomDatabase() {
         val MIGRATION_13_14 = object : Migration(13, 14) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `wedding_tasks` ADD COLUMN `completedDate` INTEGER DEFAULT NULL")
+            }
+        }
+
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `transactions` ADD COLUMN `parentRecurringId` TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE `transactions` ADD COLUMN `lastGeneratedDate` INTEGER DEFAULT NULL")
             }
         }
 

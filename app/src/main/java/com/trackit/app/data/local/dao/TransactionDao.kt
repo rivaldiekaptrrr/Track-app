@@ -109,6 +109,28 @@ interface TransactionDao {
     suspend fun getRecurringTransactions(profileId: Long): List<TransactionEntity>
 
     @Query("""
+        SELECT * FROM transactions WHERE isRecurring = 1
+    """)
+    suspend fun getAllRecurringTransactionsAllProfiles(): List<TransactionEntity>
+
+    @Query("""
+        UPDATE transactions 
+        SET isRecurring = 0 
+        WHERE id = :id 
+           OR id = :parentRecurringId 
+           OR (parentRecurringId IS NOT NULL AND (parentRecurringId = :id OR parentRecurringId = :parentRecurringId))
+    """)
+    suspend fun disableRecurringChain(id: String, parentRecurringId: String? = null)
+
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE (id = :parentId OR parentRecurringId = :parentId) 
+          AND date >= :startOfDay AND date < :endOfDay 
+        LIMIT 1
+    """)
+    suspend fun findGeneratedTransactionForDate(parentId: String, startOfDay: Long, endOfDay: Long): TransactionEntity?
+
+    @Query("""
         SELECT * FROM transactions 
         WHERE profileId = :profileId
         ORDER BY date DESC, createdAt DESC 
