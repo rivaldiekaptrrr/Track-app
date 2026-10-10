@@ -39,13 +39,14 @@ class SearchTransactionViewModel @Inject constructor(
         preferencesManager.activeProfileId,
         _query,
         _selectedType
-    ) { profileId, query, type ->
-        Triple(profileId, query.trim(), type)
-    }.flatMapLatest { (profileId, query, type) ->
-        if (query.isEmpty()) {
+    ) { profileId, rawQuery, type ->
+        Triple(profileId, rawQuery, type)
+    }.flatMapLatest { (profileId, rawQuery, type) ->
+        val trimmedQuery = rawQuery.trim()
+        if (trimmedQuery.isEmpty()) {
             flowOf(
                 SearchUiState(
-                    query = query,
+                    query = rawQuery,
                     selectedType = type,
                     searchResults = emptyList(),
                     isSearching = false
@@ -54,7 +55,7 @@ class SearchTransactionViewModel @Inject constructor(
         } else {
             combine(
                 transactionRepository.searchTransactions(
-                    query = query,
+                    query = trimmedQuery,
                     startDate = 0L,
                     endDate = 0L,
                     type = type,
@@ -72,7 +73,7 @@ class SearchTransactionViewModel @Inject constructor(
                     .sumOf { it.transaction.amount }
 
                 SearchUiState(
-                    query = query,
+                    query = rawQuery,
                     selectedType = type,
                     searchResults = results,
                     totalExpense = expenseSum,

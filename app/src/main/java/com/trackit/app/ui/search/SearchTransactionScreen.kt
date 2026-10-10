@@ -39,6 +39,7 @@ fun SearchTransactionScreen(
     viewModel: SearchTransactionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     var transactionToDelete by remember { mutableStateOf<TransactionWithCategory?>(null) }
@@ -72,7 +73,7 @@ fun SearchTransactionScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 OutlinedTextField(
-                    value = uiState.query,
+                    value = query,
                     onValueChange = { viewModel.onQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -86,7 +87,7 @@ fun SearchTransactionScreen(
                         )
                     },
                     trailingIcon = {
-                        if (uiState.query.isNotEmpty()) {
+                        if (query.isNotEmpty()) {
                             IconButton(onClick = { viewModel.clearQuery() }) {
                                 Icon(
                                     Icons.Default.Clear,
@@ -133,13 +134,13 @@ fun SearchTransactionScreen(
 
             // Body Content
             when {
-                uiState.query.isBlank() -> {
+                query.isBlank() -> {
                     // Initial Empty State
                     InitialSearchEmptyState()
                 }
                 uiState.searchResults.isEmpty() -> {
                     // No Results Found State
-                    NoSearchResultsState(query = uiState.query)
+                    NoSearchResultsState(query = query)
                 }
                 else -> {
                     // Results List
