@@ -70,6 +70,7 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var syncManager: com.trackit.app.util.SyncManager
     @Inject lateinit var weddingExpenseRepository: WeddingExpenseRepository
     @Inject lateinit var authRepository: AuthRepository
+    @Inject lateinit var nfcReaderManager: com.trackit.app.nfc.manager.NfcReaderManager
 
     private var isAuthenticated by mutableStateOf(false)
     private var isBiometricAvailable by mutableStateOf(false)
@@ -532,6 +533,7 @@ class MainActivity : FragmentActivity() {
     override fun onResume() {
         super.onResume()
         isGoingToSystemSettings = false
+        nfcReaderManager.enableReaderMode(this)
         
         lifecycleScope.launch {
             val pendingRestore = preferencesManager.pendingRestore.first()
@@ -549,6 +551,11 @@ class MainActivity : FragmentActivity() {
                 Runtime.getRuntime().exit(0)
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcReaderManager.disableReaderMode(this)
     }
 
     override fun onStop() {

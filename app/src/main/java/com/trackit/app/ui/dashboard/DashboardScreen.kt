@@ -12,8 +12,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.trackit.app.ui.nfc.NfcViewModel
+import com.trackit.app.ui.nfc.NfcUiState
+import com.trackit.app.ui.nfc.NfcScanBottomSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,14 +53,24 @@ fun DashboardScreen(
     onEditTransaction: (String) -> Unit,
     onNavigateToProfiles: () -> Unit = {},
     onAddTransactionWithVoice: () -> Unit = {},
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: DashboardViewModel = hiltViewModel(),
+    nfcViewModel: NfcViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val nfcUiState by nfcViewModel.uiState.collectAsStateWithLifecycle()
+    var showNfcSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<String?>(null) }
     val haptic = LocalHapticFeedback.current
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+
+    // Buka bottom sheet secara otomatis saat kartu e-Money terdeteksi di latar belakang
+    LaunchedEffect(nfcUiState) {
+        if (nfcUiState is NfcUiState.Success || nfcUiState is NfcUiState.Error) {
+            showNfcSheet = true
+        }
+    }
     var hasNotificationPermission by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -208,6 +222,65 @@ fun DashboardScreen(
                     )
                 }
 
+                if (nfcViewModel.isNfcSupported(context)) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable {
+                                    showNfcSheet = true
+                                    nfcViewModel.checkAndStartScanning(context)
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Nfc,
+                                            contentDescription = "Cek Saldo e-Money",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Cek Saldo e-Money (NFC)",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "Tempelkan Mandiri, Flazz, TapCash, atau Brizzi",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Month Navigation + Recent Transactions Header
                 item {
                     Column {
@@ -318,8 +391,26 @@ fun DashboardScreen(
                         Text("Batal")
                     }
                 }
-        )
+            )
         }
+    }
+
+    if (showNfcSheet) {
+        NfcScanBottomSheet(
+            uiState = nfcUiState,
+            onDismiss = {
+                showNfcSheet = false
+                nfcViewModel.resetState()
+            },
+            onRetry = {
+                nfcViewModel.retryScanning(context)
+            },
+            onRecordExpense = { _, _ ->
+                showNfcSheet = false
+                nfcViewModel.resetState()
+                onAddTransaction()
+            }
+        )
     }
 }
 
