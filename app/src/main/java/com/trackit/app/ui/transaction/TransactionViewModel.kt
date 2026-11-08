@@ -27,6 +27,7 @@ data class TransactionFormState(
     val isRecurring: Boolean = false,
     val recurringType: String? = null,
     val parentRecurringId: String? = null,
+    val wasOriginallyRecurring: Boolean = false,
     val type: String = "EXPENSE",
     val categories: List<CategoryEntity> = emptyList(),
     val isEditing: Boolean = false,
@@ -84,6 +85,7 @@ class TransactionViewModel @Inject constructor(
                         isRecurring = tx.isRecurring,
                         recurringType = tx.recurringType,
                         parentRecurringId = tx.parentRecurringId,
+                        wasOriginallyRecurring = tx.isRecurring,
                         type = tx.type,
                         isEditing = true
                     )
