@@ -89,6 +89,82 @@ object EmoneyHistoryParser {
     }
 
     /**
+     * Parsing riwayat transaksi BCA Flazz Gen 2 (blok 64 karakter hex / 32 bytes).
+     * Dibaca melalui challenge CommandAPDU.flh3 + loop command 90 32 03 00 01 <index> 20.
+     * Format:
+     * - [0..2]   : Tipe proses (0x04 / 4 = Payment/Pengeluaran, selain itu Top Up)
+     * - [2..8]   : Nominal transaksi 24-bit. Jika Payment: 16777216 - raw (Two's complement)
+     * - [8..16]  : Timestamp dalam detik sejak 1 Jan 1980 00:00:00 (4 byte hex)
+     * - [28..44] : Location ID / Merchant ID (16 karakter hex -> 8 karakter ASCII)
+     * - [44..50] : Sisa saldo / ending balance (3 byte hex)
+     */
+    fun parseFlazzGen2History(hexData: String): List<NfcCardTransaction> {
+        val list = mutableListOf<NfcCardTransaction>()
+        val blockSize = 64
+        val count = hexData.length / blockSize
+        val seenTimestamps = mutableSetOf<Long>()
+
+        for (i in 0 until count) {
+            val block = hexData.substring(i * blockSize, (i + 1) * blockSize)
+            try {
+                // 1. Timestamp detik sejak 1980 (substring 8..16)
+                val secHex = block.substring(8, 16)
+                val secSince1980 = secHex.toLongOrNull(16) ?: 0L
+                if (secSince1980 <= 0L) continue
+                if (seenTimestamps.contains(secSince1980)) continue
+                seenTimestamps.add(secSince1980)
+
+                val cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+7:00"))
+                cal.set(1980, Calendar.JANUARY, 1, 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val timestamp = cal.timeInMillis + (secSince1980 * 1000L)
+
+                // 2. Tipe proses (substring 0..2)
+                val typeByte = block.substring(0, 2).toIntOrNull(16) ?: 0
+                val isPayment = (typeByte == 4)
+                val type = if (isPayment) NfcTransactionType.PAYMENT else NfcTransactionType.TOPUP
+
+                // 3. Nominal (substring 2..8, 24-bit integer)
+                val rawAmount = block.substring(2, 8).toLongOrNull(16) ?: 0L
+                val amount = if (isPayment) {
+                    16777216L - rawAmount
+                } else {
+                    rawAmount
+                }
+                if (amount <= 0) continue
+
+                // 4. Saldo akhir (substring 44..50)
+                val rawBalAfter = block.substring(44, 50).toLongOrNull(16)
+                val balanceAfter = if (rawBalAfter != null) {
+                    if (isPayment) (rawBalAfter - amount).coerceAtLeast(0L) else rawBalAfter + amount
+                } else null
+
+                // 5. Location ID (substring 28..44 -> 16 karakter hex = 8 karakter ASCII)
+                val locHex = block.substring(28, 44)
+                val locAscii = hexToAscii(locHex).trim { it <= ' ' || it == '\u0000' }
+                val locationId = if (locAscii.isNotBlank() && locAscii.any { it.isLetterOrDigit() }) {
+                    locAscii
+                } else {
+                    locHex
+                }
+
+                list.add(
+                    NfcCardTransaction(
+                        type = type,
+                        amount = amount,
+                        balanceAfter = balanceAfter,
+                        timestamp = timestamp,
+                        dateFormatted = formatDate(timestamp),
+                        timeFormatted = formatTime(timestamp),
+                        locationId = locationId
+                    )
+                )
+            } catch (_: Exception) {}
+        }
+        return list.sortedByDescending { it.timestamp }
+    }
+
+    /**
      * Parsing riwayat Mandiri e-Money Chip G2 dari hex log (blok 48 karakter hex / 24 bytes).
      * Format:
      * - [0..12]  : Waktu (ddMMyyHHmmss)

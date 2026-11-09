@@ -237,18 +237,79 @@ object EmoneyCardParser {
 
             if (balance == null) return null
 
-            // Baca riwayat transaksi terakhir BCA Flazz (SFI 4 loop 16 record)
+            // Baca riwayat transaksi BCA Flazz (Authentic eSaldo logic: check cccc for Gen 2 vs Gen 1)
             val lastTx = try {
-                val sb = StringBuilder()
-                val cmd = ApduCommands.FLAZZ_READ_RECORD_SFI4.copyOf()
-                for (i in 0 until 16) {
-                    cmd[3] = (i * 15).toByte()
-                    val res = isoDep.transceive(cmd)
-                    if (ApduCommands.isSuccess(res) && res.size > 2) {
-                        sb.append(ApduCommands.toHexString(res, 0, res.size - 2))
-                    } else break
+                val allTxList = mutableListOf<NfcCardTransaction>()
+
+                val checkHistoryRes = isoDep.transceive(ApduCommands.FLAZZ_CHECK_HISTORY)
+                val isGen2 = ApduCommands.isSuccess(checkHistoryRes)
+                Log.d(TAG, "parseBcaFlazz: checkHistory res=${ApduCommands.toHexString(checkHistoryRes)}, isGen2=$isGen2")
+
+                if (isGen2) {
+                    // 1. Baca SFI 4 records
+                    val sfi4Sb = StringBuilder()
+                    val cmd4 = ApduCommands.FLAZZ_READ_RECORD_SFI4.copyOf()
+                    for (i in 0 until 16) {
+                        cmd4[3] = (i * 15).toByte()
+                        val res = isoDep.transceive(cmd4)
+                        if (ApduCommands.isSuccess(res) && res.size > 2) {
+                            sfi4Sb.append(ApduCommands.toHexString(res, 0, res.size - 2))
+                        } else break
+                    }
+                    if (sfi4Sb.isNotEmpty()) {
+                        allTxList.addAll(EmoneyHistoryParser.parseFlazzHistory(sfi4Sb.toString()))
+                    }
+
+                    // 2. Baca Gen 2 log buffer via get challenge + 90 32 03 00 01 <index> 20
+                    try {
+                        val challengeRes = isoDep.transceive(ApduCommands.FLAZZ_GET_CHALLENGE)
+                        Log.d(TAG, "parseBcaFlazz: challengeRes=${ApduCommands.toHexString(challengeRes)}")
+                        if (ApduCommands.isSuccess(challengeRes)) {
+                            val gen2Sb = StringBuilder()
+                            val readCmd = byteArrayOf(
+                                0x90.toByte(), 0x32, 0x03, 0x00, 0x01, 0x00, 0x20
+                            )
+                            for (i in 0 until 256) {
+                                readCmd[5] = i.toByte()
+                                val recRes = isoDep.transceive(readCmd)
+                                if (ApduCommands.isSuccess(recRes) && recRes.size > 2) {
+                                    gen2Sb.append(ApduCommands.toHexString(recRes, 0, recRes.size - 2))
+                                } else break
+                            }
+                            if (gen2Sb.isNotEmpty()) {
+                                allTxList.addAll(EmoneyHistoryParser.parseFlazzGen2History(gen2Sb.toString()))
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "parseBcaFlazz: gen2 challenge/read exception: ${e.message}")
+                    }
+                } else {
+                    // Kartu Gen 1: Baca SFI 4 dan SFI 5
+                    val v1Sb = StringBuilder()
+                    val cmd4 = ApduCommands.FLAZZ_READ_RECORD_SFI4.copyOf()
+                    for (i in 0 until 16) {
+                        cmd4[3] = (i * 15).toByte()
+                        val res = isoDep.transceive(cmd4)
+                        if (ApduCommands.isSuccess(res) && res.size > 2) {
+                            v1Sb.append(ApduCommands.toHexString(res, 0, res.size - 2))
+                        } else break
+                    }
+                    val cmd5 = ApduCommands.FLAZZ_READ_RECORD_SFI5.copyOf()
+                    for (i in 0 until 16) {
+                        cmd5[3] = (i * 15).toByte()
+                        val res = isoDep.transceive(cmd5)
+                        if (ApduCommands.isSuccess(res) && res.size > 2) {
+                            v1Sb.append(ApduCommands.toHexString(res, 0, res.size - 2))
+                        } else break
+                    }
+                    if (v1Sb.isNotEmpty()) {
+                        allTxList.addAll(EmoneyHistoryParser.parseFlazzHistory(v1Sb.toString()))
+                    }
                 }
-                EmoneyHistoryParser.parseFlazzHistory(sb.toString()).firstOrNull()
+
+                // Urutkan riwayat dari yang TERBARU (timestamp descending)
+                allTxList.sortByDescending { it.timestamp }
+                allTxList.firstOrNull()
             } catch (e: Exception) {
                 Log.w(TAG, "parseBcaFlazz: history read error: ${e.message}")
                 null

@@ -39,6 +39,29 @@ class EmoneyHistoryParserTest {
     }
 
     @Test
+    fun testParseFlazzGen2History() {
+        // Blok Flazz Gen 2: 64 hex chars (32 bytes)
+        // 0..2: 04 (Payment)
+        // 2..8: raw 24-bit amount -> 16777216 - 4000 = 16773216 = 0xFFF060
+        // 8..16: timestamp sec hex -> 54000000
+        // 16..28: padding 12 char
+        // 28..44: ASCII "0012A4F1" dalam hex -> 3030313241344631 (16 char)
+        // 44..50: sisa saldo hex -> 000064
+        // 50..64: padding 14 char
+        val block = "04" + "FFF060" + "54000000" + "0".repeat(12) + "3030313241344631" + "000064" + "0".repeat(14)
+        assertEquals(64, block.length)
+
+        val list = EmoneyHistoryParser.parseFlazzGen2History(block)
+        assertEquals(1, list.size)
+        val tx = list[0]
+        assertEquals(4000L, tx.amount)
+        assertEquals(NfcTransactionType.PAYMENT, tx.type)
+        assertEquals("0012A4F1", tx.locationId)
+        assertTrue(tx.dateFormatted.isNotBlank())
+        assertTrue(tx.timeFormatted.isNotBlank())
+    }
+
+    @Test
     fun testParseMandiriG2History() {
         // Blok Mandiri G2: 48 hex chars
         // 0..12: ddMMyyHHmmss -> 091126083000 (09 Nov 2026 08:30:00)
