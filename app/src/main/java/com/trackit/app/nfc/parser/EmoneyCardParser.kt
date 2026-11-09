@@ -5,6 +5,7 @@ import android.nfc.tech.IsoDep
 import android.util.Log
 import com.trackit.app.nfc.model.EmoneyCardResult
 import com.trackit.app.nfc.model.EmoneyCardType
+import com.trackit.app.nfc.model.NfcCardTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
