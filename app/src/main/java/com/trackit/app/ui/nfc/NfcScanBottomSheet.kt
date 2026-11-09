@@ -2,11 +2,20 @@ package com.trackit.app.ui.nfc
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -21,20 +30,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.trackit.app.data.local.entity.CategoryEntity
 import com.trackit.app.nfc.model.EmoneyCardResult
+import com.trackit.app.nfc.model.NfcTransactionType
+import com.trackit.app.util.CategoryIconMapper
+import com.trackit.app.util.CurrencyUtils
+import kotlinx.coroutines.delay
 
 /**
- * Modal Bottom Sheet interaktif untuk pemindaian dan penampil saldo kartu e-Money via NFC.
+ * Modal Bottom Sheet interaktif untuk pemindaian, penampil saldo, serta riwayat transaksi terakhir kartu e-Money via NFC.
  * Mematuhi antislop-ui, humanizer-indonesia, dan aturan no-emoji-icons.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NfcScanBottomSheet(
     uiState: NfcUiState,
+    categories: List<CategoryEntity> = emptyList(),
     onDismiss: () -> Unit,
     onRetry: () -> Unit,
     onRecordExpense: (amount: Long, cardName: String) -> Unit,
+    onRecordLastTransaction: (category: CategoryEntity, keywordToLearn: String?, customLocationName: String?) -> Unit = { _, _, _ -> },
+    recordSuccessMessage: String? = null,
+    onClearRecordSuccessMessage: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -45,6 +64,14 @@ fun NfcScanBottomSheet(
     LaunchedEffect(uiState) {
         if (uiState is NfcUiState.Success) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
+    // Auto-dismiss pesan sukses transaksi setelah 3.5 detik
+    LaunchedEffect(recordSuccessMessage) {
+        if (recordSuccessMessage != null) {
+            delay(3500)
+            onClearRecordSuccessMessage()
         }
     }
 
@@ -60,9 +87,47 @@ fun NfcScanBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp, top = 8.dp),
+                .padding(bottom = 32.dp, top = 8.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Banner Pesan Sukses Catat Transaksi
+            AnimatedVisibility(
+                visible = recordSuccessMessage != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Surface(
+                    color = Color(0xFFE8F5E9),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = recordSuccessMessage.orEmpty(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF2E7D32),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
             when (uiState) {
                 is NfcUiState.Idle, is NfcUiState.Scanning -> {
                     ScanningStateView()
@@ -71,7 +136,10 @@ fun NfcScanBottomSheet(
                 is NfcUiState.Success -> {
                     SuccessStateView(
                         card = uiState.card,
+                        lastTransactionState = uiState.lastTransactionState,
+                        categories = categories,
                         onRecordExpense = { onRecordExpense(uiState.card.balance, uiState.card.cardType.displayName) },
+                        onRecordLastTransaction = onRecordLastTransaction,
                         onClose = onDismiss
                     )
                 }
@@ -183,9 +251,14 @@ private fun ScanningStateView() {
 @Composable
 private fun SuccessStateView(
     card: EmoneyCardResult,
+    lastTransactionState: ResolvedLastTransaction?,
+    categories: List<CategoryEntity>,
     onRecordExpense: () -> Unit,
+    onRecordLastTransaction: (category: CategoryEntity, keywordToLearn: String?, customLocationName: String?) -> Unit,
     onClose: () -> Unit
 ) {
+    var showCategoryDialog by remember { mutableStateOf(false) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -214,14 +287,29 @@ private fun SuccessStateView(
         modifier = Modifier.fillMaxWidth()
     )
 
-    Spacer(modifier = Modifier.height(24.dp))
+    // Kartu Transaksi Terakhir (jika tersedia)
+    if (lastTransactionState != null) {
+        Spacer(modifier = Modifier.height(16.dp))
+        LastTransactionCard(
+            lastTx = lastTransactionState,
+            onRecordClicked = {
+                if (lastTransactionState.matchedCategory != null) {
+                    onRecordLastTransaction(lastTransactionState.matchedCategory, null, null)
+                } else {
+                    showCategoryDialog = true
+                }
+            }
+        )
+    }
 
-    // Tombol Aksi
+    Spacer(modifier = Modifier.height(20.dp))
+
+    // Tombol Aksi Manual & Tutup
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Button(
+        OutlinedButton(
             onClick = onRecordExpense,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
@@ -234,13 +322,13 @@ private fun SuccessStateView(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Catat Transaksi Kartu Ini",
+                text = "Catat Transaksi Manual",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
-        OutlinedButton(
+        FilledTonalButton(
             onClick = onClose,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
@@ -252,6 +340,378 @@ private fun SuccessStateView(
             )
         }
     }
+
+    // Dialog Pemilihan Kategori & Pembelajaran Kata Kunci
+    if (showCategoryDialog && lastTransactionState != null) {
+        CategoryPickerDialog(
+            lastTx = lastTransactionState,
+            categories = categories,
+            onDismiss = { showCategoryDialog = false },
+            onConfirm = { selectedCategory, keyword, customLoc ->
+                showCategoryDialog = false
+                onRecordLastTransaction(selectedCategory, keyword, customLoc)
+            }
+        )
+    }
+}
+
+/**
+ * Kartu Ringkasan Transaksi Terakhir dari NFC Chip
+ */
+@Composable
+private fun LastTransactionCard(
+    lastTx: ResolvedLastTransaction,
+    onRecordClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header Transaksi Terakhir
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.ReceiptLong,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Transaksi Terakhir",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = when (lastTx.transaction.type) {
+                        NfcTransactionType.PAYMENT -> MaterialTheme.colorScheme.errorContainer
+                        NfcTransactionType.TOPUP -> Color(0xFFE8F5E9)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+                ) {
+                    Text(
+                        text = when (lastTx.transaction.type) {
+                            NfcTransactionType.PAYMENT -> "Pembayaran"
+                            NfcTransactionType.TOPUP -> "Top Up"
+                            else -> "Transaksi"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = when (lastTx.transaction.type) {
+                            NfcTransactionType.PAYMENT -> MaterialTheme.colorScheme.onErrorContainer
+                            NfcTransactionType.TOPUP -> Color(0xFF2E7D32)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Nominal & Tanggal
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column {
+                    Text(
+                        text = "Nominal",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "- ${CurrencyUtils.formatRupiah(lastTx.transaction.amount.toDouble())}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = lastTx.transaction.dateFormatted,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = lastTx.transaction.timeFormatted,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Lokasi
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                if (lastTx.isResolvingLocation) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(12.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Mencari lokasi...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    Text(
+                        text = lastTx.locationName ?: if (lastTx.transaction.locationId.isNotBlank()) "Terminal ${lastTx.transaction.locationId}" else "Lokasi Tidak Diketahui",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Kategori Terdeteksi
+            if (lastTx.matchedCategory != null) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = CategoryIconMapper.getIcon(lastTx.matchedCategory.iconName),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Kategori: ${lastTx.matchedCategory.name} (Otomatis)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Tombol Catat
+            if (lastTx.isRecorded) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFFE8F5E9)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Transaksi Berhasil Dicatat",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
+                }
+            } else {
+                Button(
+                    onClick = onRecordClicked,
+                    enabled = !lastTx.isRecording && !lastTx.isResolvingLocation,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (lastTx.isRecording) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.BookmarkAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (lastTx.matchedCategory != null) "Catat Transaksi Ini" else "Pilih Kategori & Catat",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Modal / Dialog untuk memilih kategori dan mempelajari kata kunci baru
+ */
+@Composable
+private fun CategoryPickerDialog(
+    lastTx: ResolvedLastTransaction,
+    categories: List<CategoryEntity>,
+    onDismiss: () -> Unit,
+    onConfirm: (category: CategoryEntity, keyword: String?, customLocationName: String?) -> Unit
+) {
+    val expenseCategories = remember(categories) {
+        categories.filter { it.type == "EXPENSE" && !it.isHidden }
+    }
+
+    var selectedCategory by remember { mutableStateOf(expenseCategories.firstOrNull()) }
+    var keywordInput by remember { mutableStateOf(lastTx.suggestedKeyword) }
+    var customLocationInput by remember { mutableStateOf(lastTx.locationName ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Pilih Kategori Transaksi",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Info Transaksi Singkat
+                Text(
+                    text = "Pengeluaran sebesar ${CurrencyUtils.formatRupiah(lastTx.transaction.amount.toDouble())}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // Input Nama Lokasi Manual (jika belum terpetakan)
+                if (lastTx.locationName == null) {
+                    OutlinedTextField(
+                        value = customLocationInput,
+                        onValueChange = { customLocationInput = it },
+                        label = { Text("Nama Lokasi") },
+                        placeholder = { Text("Contoh: Stasiun KRL Tangerang") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Input Kata Kunci Pembelajaran Otomatis
+                Column {
+                    OutlinedTextField(
+                        value = keywordInput,
+                        onValueChange = { keywordInput = it },
+                        label = { Text("Kata Kunci Pengingat") },
+                        placeholder = { Text("Contoh: Stasiun") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "TrackIt akan otomatis mengingat kata kunci ini untuk transaksi berikutnya.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Pemilihan Kategori
+                Text(
+                    text = "Daftar Kategori",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(expenseCategories) { category ->
+                        val isSelected = category.id == selectedCategory?.id
+                        val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                        val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = containerColor,
+                            modifier = Modifier
+                                .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                                .clickable { selectedCategory = category }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconMapper.getIcon(category.iconName),
+                                    contentDescription = null,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = category.name,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val cat = selectedCategory ?: return@Button
+                    val kw = keywordInput.trim().takeIf { it.isNotBlank() }
+                    val loc = customLocationInput.trim().takeIf { it.isNotBlank() }
+                    onConfirm(cat, kw, loc)
+                },
+                enabled = selectedCategory != null
+            ) {
+                Text("Simpan Transaksi")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
 }
 
 /**
@@ -422,4 +882,3 @@ private fun NotSupportedStateView(
         Text("Tutup")
     }
 }
-

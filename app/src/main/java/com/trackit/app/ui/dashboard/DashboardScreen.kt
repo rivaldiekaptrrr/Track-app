@@ -58,6 +58,8 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val nfcUiState by nfcViewModel.uiState.collectAsStateWithLifecycle()
+    val nfcCategories by nfcViewModel.categories.collectAsStateWithLifecycle()
+    val recordSuccessMessage by nfcViewModel.recordSuccessMessage.collectAsStateWithLifecycle()
     var showNfcSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<String?>(null) }
     val haptic = LocalHapticFeedback.current
@@ -398,6 +400,9 @@ fun DashboardScreen(
     if (showNfcSheet) {
         NfcScanBottomSheet(
             uiState = nfcUiState,
+            categories = nfcCategories,
+            recordSuccessMessage = recordSuccessMessage,
+            onClearRecordSuccessMessage = { nfcViewModel.clearRecordSuccessMessage() },
             onDismiss = {
                 showNfcSheet = false
                 nfcViewModel.resetState()
@@ -409,6 +414,9 @@ fun DashboardScreen(
                 showNfcSheet = false
                 nfcViewModel.resetState()
                 onAddTransaction()
+            },
+            onRecordLastTransaction = { category, keyword, customLoc ->
+                nfcViewModel.recordLastTransaction(category, keyword, customLoc)
             }
         )
     }
