@@ -37,6 +37,8 @@ class ApduCommandsTest {
         assertEquals("00B300003F", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_INFO_RECORD))
         assertEquals("00B0000004", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_BALANCE))
         assertEquals("00B500000A", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_BALANCE_SV))
+        assertEquals("00B200001E", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_HISTORY_G1))
+        assertEquals("00D1000000", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_HISTORY_G2))
     }
 
     @Test
@@ -44,6 +46,7 @@ class ApduCommandsTest {
         assertEquals("00A4040008A000424E49100001", ApduCommands.toHexString(ApduCommands.TAPCASH_SELECT_AID_ISO))
         assertEquals("905A00000399999900", ApduCommands.toHexString(ApduCommands.TAPCASH_SELECT_APP))
         assertEquals("90BD0000070100000029000000", ApduCommands.toHexString(ApduCommands.TAPCASH_READ_FILE))
+        assertEquals("9032030001", ApduCommands.toHexString(ApduCommands.TAPCASH_READ_HISTORY_HEADER))
     }
 
     @Test
@@ -51,6 +54,16 @@ class ApduCommandsTest {
         assertEquals("905A00000301000000", ApduCommands.toHexString(ApduCommands.BRIZZI_SELECT_APP))
         assertEquals("90BD0000070100000016000000", ApduCommands.toHexString(ApduCommands.BRIZZI_READ_INFO))
         assertEquals("906C0000000000", ApduCommands.toHexString(ApduCommands.BRIZZI_READ_BALANCE_GET_VALUE))
+        assertEquals("90BB0000070100000000000000", ApduCommands.toHexString(ApduCommands.BRIZZI_READ_HISTORY_INIT))
+        assertEquals("90AF000000", ApduCommands.toHexString(ApduCommands.BRIZZI_READ_HISTORY_NEXT))
+    }
+
+    @Test
+    fun testFlazzHistoryCommands() {
+        assertEquals("00B0810000", ApduCommands.toHexString(ApduCommands.FLAZZ_CHECK_HISTORY))
+        assertEquals("0084000008", ApduCommands.toHexString(ApduCommands.FLAZZ_GET_CHALLENGE))
+        assertEquals("00B084003C", ApduCommands.toHexString(ApduCommands.FLAZZ_READ_RECORD_SFI4))
+        assertEquals("00B085003C", ApduCommands.toHexString(ApduCommands.FLAZZ_READ_RECORD_SFI5))
     }
 
     @Test

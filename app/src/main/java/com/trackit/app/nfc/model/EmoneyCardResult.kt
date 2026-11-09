@@ -5,7 +5,8 @@ data class EmoneyCardResult(
     val cardNumber: String,
     val balance: Long,
     val isChipG2: Boolean = false,
-    val readTimestamp: Long = System.currentTimeMillis()
+    val readTimestamp: Long = System.currentTimeMillis(),
+    val lastTransaction: NfcCardTransaction? = null
 ) {
     /**
      * Memformat nomor kartu dengan masking: 6032 •••• •••• 1234
@@ -18,4 +19,3 @@ data class EmoneyCardResult(
         return "$prefix •••• •••• $suffix"
     }
 }
-

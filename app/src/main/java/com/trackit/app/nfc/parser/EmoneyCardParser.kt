@@ -112,12 +112,30 @@ object EmoneyCardParser {
                 balance += ((balRes[i].toLong() and 0xFFL) shl (i * 8))
             }
 
-            Log.i(TAG, "parseMandiriEmoney: success! card=$cardNumber, balance=$balance, isG2=$isG2")
+            // Baca riwayat transaksi terakhir Mandiri e-Money
+            val lastTx = try {
+                val sb = StringBuilder()
+                val cmd = if (isG2) ApduCommands.MANDIRI_READ_HISTORY_G2.copyOf() else ApduCommands.MANDIRI_READ_HISTORY_G1.copyOf()
+                for (i in 1..10) {
+                    cmd[2] = i.toByte()
+                    val res = isoDep.transceive(cmd)
+                    if (ApduCommands.isSuccess(res) && res.size > 2) {
+                        sb.append(ApduCommands.toHexString(res, 0, res.size - 2))
+                    } else break
+                }
+                EmoneyHistoryParser.parseMandiriG2History(sb.toString()).firstOrNull()
+            } catch (e: Exception) {
+                Log.w(TAG, "parseMandiriEmoney: history read error: ${e.message}")
+                null
+            }
+
+            Log.i(TAG, "parseMandiriEmoney: success! card=$cardNumber, balance=$balance, isG2=$isG2, lastTx=$lastTx")
             EmoneyCardResult(
                 cardType = EmoneyCardType.MANDIRI_EMONEY,
                 cardNumber = cardNumber,
                 balance = balance,
-                isChipG2 = isG2
+                isChipG2 = isG2,
+                lastTransaction = lastTx
             )
         } catch (e: Exception) {
             Log.w(TAG, "parseMandiriEmoney: exception: ${e.message}")
@@ -219,11 +237,29 @@ object EmoneyCardParser {
 
             if (balance == null) return null
 
-            Log.i(TAG, "parseBcaFlazz: success! card=$cardNumber, balance=$balance")
+            // Baca riwayat transaksi terakhir BCA Flazz (SFI 4 loop 16 record)
+            val lastTx = try {
+                val sb = StringBuilder()
+                val cmd = ApduCommands.FLAZZ_READ_RECORD_SFI4.copyOf()
+                for (i in 0 until 16) {
+                    cmd[3] = (i * 15).toByte()
+                    val res = isoDep.transceive(cmd)
+                    if (ApduCommands.isSuccess(res) && res.size > 2) {
+                        sb.append(ApduCommands.toHexString(res, 0, res.size - 2))
+                    } else break
+                }
+                EmoneyHistoryParser.parseFlazzHistory(sb.toString()).firstOrNull()
+            } catch (e: Exception) {
+                Log.w(TAG, "parseBcaFlazz: history read error: ${e.message}")
+                null
+            }
+
+            Log.i(TAG, "parseBcaFlazz: success! card=$cardNumber, balance=$balance, lastTx=$lastTx")
             EmoneyCardResult(
                 cardType = EmoneyCardType.BCA_FLAZZ,
                 cardNumber = cardNumber,
-                balance = balance
+                balance = balance,
+                lastTransaction = lastTx
             )
         } catch (e: Exception) {
             Log.w(TAG, "parseBcaFlazz: exception: ${e.message}")
@@ -259,11 +295,28 @@ object EmoneyCardParser {
 
             val cardNumber = ApduCommands.toHexString(fileRes, 8, 8)
 
-            Log.i(TAG, "parseBniTapcash: success! card=$cardNumber, balance=$balance")
+            // Baca riwayat transaksi terakhir BNI TapCash
+            val lastTx = try {
+                val txCount = if (fileRes.size > 40) fileRes[40].toInt() and 0xFF else 0
+                if (txCount > 0) {
+                    val countToRead = txCount.coerceAtMost(10)
+                    val req = ApduCommands.TAPCASH_READ_HISTORY_HEADER + byteArrayOf(0x00, countToRead.toByte())
+                    val res = isoDep.transceive(req)
+                    if (ApduCommands.isSuccess(res) && res.size > 2) {
+                        EmoneyHistoryParser.parseTapcashHistory(res.copyOfRange(0, res.size - 2)).firstOrNull()
+                    } else null
+                } else null
+            } catch (e: Exception) {
+                Log.w(TAG, "parseBniTapcash: history read error: ${e.message}")
+                null
+            }
+
+            Log.i(TAG, "parseBniTapcash: success! card=$cardNumber, balance=$balance, lastTx=$lastTx")
             EmoneyCardResult(
                 cardType = EmoneyCardType.BNI_TAPCASH,
                 cardNumber = cardNumber,
-                balance = balance
+                balance = balance,
+                lastTransaction = lastTx
             )
         } catch (e: Exception) {
             Log.w(TAG, "parseBniTapcash: exception: ${e.message}")
@@ -331,11 +384,35 @@ object EmoneyCardParser {
 
             if (balance == null) return null
 
-            Log.i(TAG, "parseBriBrizzi: success! card=$cardNumber, balance=$balance")
+            // Baca riwayat transaksi terakhir BRI Brizzi
+            val lastTx = try {
+                val sb = StringBuilder()
+                var res = isoDep.transceive(ApduCommands.BRIZZI_READ_HISTORY_INIT)
+                var hex = ApduCommands.toHexString(res)
+                if (hex.length >= 4) {
+                    sb.append(hex.substring(0, hex.length - 4))
+                }
+                var attempts = 0
+                while (hex.endsWith("91AF", ignoreCase = true) && attempts < 10) {
+                    attempts++
+                    res = isoDep.transceive(ApduCommands.BRIZZI_READ_HISTORY_NEXT)
+                    hex = ApduCommands.toHexString(res)
+                    if (hex.length >= 4) {
+                        sb.append(hex.substring(0, hex.length - 4))
+                    }
+                }
+                EmoneyHistoryParser.parseBrizziHistory(sb.toString()).firstOrNull()
+            } catch (e: Exception) {
+                Log.w(TAG, "parseBriBrizzi: history read error: ${e.message}")
+                null
+            }
+
+            Log.i(TAG, "parseBriBrizzi: success! card=$cardNumber, balance=$balance, lastTx=$lastTx")
             EmoneyCardResult(
                 cardType = EmoneyCardType.BRI_BRIZZI,
                 cardNumber = cardNumber,
-                balance = balance
+                balance = balance,
+                lastTransaction = lastTx
             )
         } catch (e: Exception) {
             Log.w(TAG, "parseBriBrizzi: exception: ${e.message}")

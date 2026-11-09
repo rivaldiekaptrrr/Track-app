@@ -16,6 +16,9 @@ object ApduCommands {
     val MANDIRI_READ_INFO_RECORD = byteArrayOf(0x00, 0xB3.toByte(), 0x00, 0x00, 0x3F)
     val MANDIRI_READ_BALANCE = byteArrayOf(0x00, 0xB0.toByte(), 0x00, 0x00, 0x04)
     val MANDIRI_READ_BALANCE_SV = byteArrayOf(0x00, 0xB5.toByte(), 0x00, 0x00, 0x0A)
+    // Mandiri e-Money History commands
+    val MANDIRI_READ_HISTORY_G1 = byteArrayOf(0x00, 0xB2.toByte(), 0x00, 0x00, 0x1E)
+    val MANDIRI_READ_HISTORY_G2 = byteArrayOf(0x00, 0xD1.toByte(), 0x00, 0x00, 0x00)
 
     // -------------------------------------------------------------
     // 2. BCA Flazz (ISO 7816 / PBOC / Flazz Gen 2)
@@ -38,6 +41,14 @@ object ApduCommands {
     val FLAZZ_GET_BALANCE = byteArrayOf(
         0x80.toByte(), 0x32, 0x00, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00
     )
+    // Check history support: CommandAPDU.cccc (00 B0 81 00 00)
+    val FLAZZ_CHECK_HISTORY = byteArrayOf(0x00, 0xB0.toByte(), 0x81.toByte(), 0x00, 0x00)
+    // Get Challenge: CommandAPDU.flh3 (00 84 00 00 08)
+    val FLAZZ_GET_CHALLENGE = byteArrayOf(0x00, 0x84.toByte(), 0x00, 0x00, 0x08)
+    // Read Record SFI 4: CommandAPDU.flh4 (00 B0 84 (offset) 3C)
+    val FLAZZ_READ_RECORD_SFI4 = byteArrayOf(0x00, 0xB0.toByte(), 0x84.toByte(), 0x00, 0x3C)
+    // Read Record SFI 5: CommandAPDU.flh5 (00 B0 85 (offset) 3C)
+    val FLAZZ_READ_RECORD_SFI5 = byteArrayOf(0x00, 0xB0.toByte(), 0x85.toByte(), 0x00, 0x3C)
 
     // Fallback Flazz commands (Gen 1 / CAT / PBOC)
     val FLAZZ_SELECT_AID_CAT = byteArrayOf(
@@ -72,6 +83,8 @@ object ApduCommands {
         0x90.toByte(), 0xBD.toByte(), 0x00, 0x00, 0x07,
         0x01, 0x00, 0x00, 0x00, 0x29, 0x00, 0x00, 0x00
     )
+    // TapCash read history command header: 90 32 03 00 01 (followed by [0, count] or [-112, (count-15)*16])
+    val TAPCASH_READ_HISTORY_HEADER = byteArrayOf(0x90.toByte(), 0x32, 0x03, 0x00, 0x01)
 
     // -------------------------------------------------------------
     // 4. BRI Brizzi (MIFARE DESFire EV1)
@@ -96,6 +109,15 @@ object ApduCommands {
     val BRIZZI_READ_BALANCE = byteArrayOf(
         0x90.toByte(), 0xBD.toByte(), 0x00, 0x00, 0x07,
         0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00
+    )
+    // Read Records: CommandAPDU.hbz (90 BB 00 00 07 01 00 00 00 00 00 00 00)
+    val BRIZZI_READ_HISTORY_INIT = byteArrayOf(
+        0x90.toByte(), 0xBB.toByte(), 0x00, 0x00, 0x07,
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    )
+    // Additional frame: CommandAPDU.nextbz (90 AF 00 00 00)
+    val BRIZZI_READ_HISTORY_NEXT = byteArrayOf(
+        0x90.toByte(), 0xAF.toByte(), 0x00, 0x00, 0x00
     )
 
     // -------------------------------------------------------------
