@@ -80,16 +80,31 @@ object EmoneyCardParser {
     private fun parseMandiriEmoney(isoDep: IsoDep): EmoneyCardResult? {
         if (!isoDep.isConnected) return null
         return try {
-            val selectRes = isoDep.transceive(ApduCommands.MANDIRI_SELECT_AID)
+            var selectRes = isoDep.transceive(ApduCommands.MANDIRI_SELECT_AID)
+            Log.d(TAG, "parseMandiriEmoney: selectRes=${ApduCommands.toHexString(selectRes)}")
+            if (!ApduCommands.isSuccess(selectRes)) {
+                selectRes = isoDep.transceive(ApduCommands.MANDIRI_SELECT_AID_ALT)
+                Log.d(TAG, "parseMandiriEmoney: selectResAlt=${ApduCommands.toHexString(selectRes)}")
+            }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
-            val infoRes = isoDep.transceive(ApduCommands.MANDIRI_READ_INFO)
+            var infoRes = isoDep.transceive(ApduCommands.MANDIRI_READ_INFO)
+            Log.d(TAG, "parseMandiriEmoney: infoRes=${ApduCommands.toHexString(infoRes)}")
+            if (!ApduCommands.isSuccess(infoRes) || infoRes.size < 8) {
+                infoRes = isoDep.transceive(ApduCommands.MANDIRI_READ_INFO_RECORD)
+                Log.d(TAG, "parseMandiriEmoney: infoResRecord=${ApduCommands.toHexString(infoRes)}")
+            }
             if (!ApduCommands.isSuccess(infoRes) || infoRes.size < 8) return null
 
             val cardNumber = ApduCommands.toHexString(infoRes, 0, 8)
             val isG2 = if (infoRes.size > 18) (infoRes[18].toInt() and 0xFF) == 0x83 else false
 
-            val balRes = isoDep.transceive(ApduCommands.MANDIRI_READ_BALANCE)
+            var balRes = isoDep.transceive(ApduCommands.MANDIRI_READ_BALANCE)
+            Log.d(TAG, "parseMandiriEmoney: balRes=${ApduCommands.toHexString(balRes)}")
+            if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) {
+                balRes = isoDep.transceive(ApduCommands.MANDIRI_READ_BALANCE_SV)
+                Log.d(TAG, "parseMandiriEmoney: balResSV=${ApduCommands.toHexString(balRes)}")
+            }
             if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) return null
 
             var balance = 0L
@@ -97,6 +112,7 @@ object EmoneyCardParser {
                 balance += ((balRes[i].toLong() and 0xFFL) shl (i * 8))
             }
 
+            Log.i(TAG, "parseMandiriEmoney: success! card=$cardNumber, balance=$balance, isG2=$isG2")
             EmoneyCardResult(
                 cardType = EmoneyCardType.MANDIRI_EMONEY,
                 cardNumber = cardNumber,
@@ -104,6 +120,7 @@ object EmoneyCardParser {
                 isChipG2 = isG2
             )
         } catch (e: Exception) {
+            Log.w(TAG, "parseMandiriEmoney: exception: ${e.message}")
             if (!isoDep.isConnected) throw e
             null
         }
@@ -216,11 +233,23 @@ object EmoneyCardParser {
     }
 
     private fun parseBniTapcash(isoDep: IsoDep): EmoneyCardResult? {
+        if (!isoDep.isConnected) return null
         return try {
-            val selectRes = isoDep.transceive(ApduCommands.TAPCASH_SELECT_APP)
+            // Coba AID ISO (CommandAPDU.qw BNI) terlebih dahulu, lalu DESFire 999999, lalu ALT
+            var selectRes = isoDep.transceive(ApduCommands.TAPCASH_SELECT_AID_ISO)
+            Log.d(TAG, "parseBniTapcash: select ISO res=${ApduCommands.toHexString(selectRes)}")
+            if (!ApduCommands.isSuccess(selectRes)) {
+                selectRes = isoDep.transceive(ApduCommands.TAPCASH_SELECT_APP)
+                Log.d(TAG, "parseBniTapcash: select APP res=${ApduCommands.toHexString(selectRes)}")
+                if (!ApduCommands.isSuccess(selectRes)) {
+                    selectRes = isoDep.transceive(ApduCommands.TAPCASH_SELECT_AID_ISO_ALT)
+                    Log.d(TAG, "parseBniTapcash: select ISO ALT res=${ApduCommands.toHexString(selectRes)}")
+                }
+            }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
             val fileRes = isoDep.transceive(ApduCommands.TAPCASH_READ_FILE)
+            Log.d(TAG, "parseBniTapcash: fileRes=${ApduCommands.toHexString(fileRes)}")
             if (!ApduCommands.isSuccess(fileRes) || fileRes.size < 16) return null
 
             val b2 = fileRes[2].toLong() and 0xFFL
@@ -230,12 +259,14 @@ object EmoneyCardParser {
 
             val cardNumber = ApduCommands.toHexString(fileRes, 8, 8)
 
+            Log.i(TAG, "parseBniTapcash: success! card=$cardNumber, balance=$balance")
             EmoneyCardResult(
                 cardType = EmoneyCardType.BNI_TAPCASH,
                 cardNumber = cardNumber,
                 balance = balance
             )
         } catch (e: Exception) {
+            Log.w(TAG, "parseBniTapcash: exception: ${e.message}")
             if (!isoDep.isConnected) throw e
             null
         }
@@ -244,31 +275,70 @@ object EmoneyCardParser {
     private fun parseBriBrizzi(isoDep: IsoDep): EmoneyCardResult? {
         if (!isoDep.isConnected) return null
         return try {
-            val selectRes = isoDep.transceive(ApduCommands.BRIZZI_SELECT_APP)
+            // Coba App ID autentik 010000 (CommandAPDU.uu), lalu 100001, lalu legacy 112233
+            var selectRes = isoDep.transceive(ApduCommands.BRIZZI_SELECT_APP)
+            Log.d(TAG, "parseBriBrizzi: select APP res=${ApduCommands.toHexString(selectRes)}")
+            if (!ApduCommands.isSuccess(selectRes)) {
+                selectRes = isoDep.transceive(ApduCommands.BRIZZI_SELECT_APP_ALT)
+                Log.d(TAG, "parseBriBrizzi: select APP ALT res=${ApduCommands.toHexString(selectRes)}")
+                if (!ApduCommands.isSuccess(selectRes)) {
+                    selectRes = isoDep.transceive(ApduCommands.BRIZZI_SELECT_APP_LEGACY)
+                    Log.d(TAG, "parseBriBrizzi: select APP LEGACY res=${ApduCommands.toHexString(selectRes)}")
+                }
+            }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
             var cardNumber = ""
             try {
                 val infoRes = isoDep.transceive(ApduCommands.BRIZZI_READ_INFO)
-                if (ApduCommands.isSuccess(infoRes) && infoRes.size >= 11) {
-                    cardNumber = ApduCommands.toHexString(infoRes, 3, 8)
+                Log.d(TAG, "parseBriBrizzi: infoRes=${ApduCommands.toHexString(infoRes)}")
+                if (ApduCommands.isSuccess(infoRes)) {
+                    val hexInfo = ApduCommands.toHexString(infoRes)
+                    if (hexInfo.length >= 22) {
+                        cardNumber = hexInfo.substring(6, 22)
+                    } else if (infoRes.size >= 11) {
+                        cardNumber = ApduCommands.toHexString(infoRes, 3, 8)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "parseBriBrizzi: read info exception: ${e.message}")
+            }
+
+            var balance: Long? = null
+            try {
+                val balRes = isoDep.transceive(ApduCommands.BRIZZI_READ_BALANCE_GET_VALUE)
+                Log.d(TAG, "parseBriBrizzi: balRes getValue=${ApduCommands.toHexString(balRes)}")
+                if (ApduCommands.isSuccess(balRes) && balRes.size >= 4) {
+                    var bal = 0L
+                    for (i in 0 until 4) {
+                        bal += ((balRes[i].toLong() and 0xFFL) shl (i * 8))
+                    }
+                    balance = bal
                 }
             } catch (_: Exception) {}
 
-            val balRes = isoDep.transceive(ApduCommands.BRIZZI_READ_BALANCE)
-            if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) return null
-
-            var balance = 0L
-            for (i in 0 until 4) {
-                balance += ((balRes[i].toLong() and 0xFFL) shl (i * 8))
+            if (balance == null) {
+                val balRes = isoDep.transceive(ApduCommands.BRIZZI_READ_BALANCE)
+                Log.d(TAG, "parseBriBrizzi: balRes readData=${ApduCommands.toHexString(balRes)}")
+                if (ApduCommands.isSuccess(balRes) && balRes.size >= 4) {
+                    var bal = 0L
+                    for (i in 0 until 4) {
+                        bal += ((balRes[i].toLong() and 0xFFL) shl (i * 8))
+                    }
+                    balance = bal
+                }
             }
 
+            if (balance == null) return null
+
+            Log.i(TAG, "parseBriBrizzi: success! card=$cardNumber, balance=$balance")
             EmoneyCardResult(
                 cardType = EmoneyCardType.BRI_BRIZZI,
                 cardNumber = cardNumber,
                 balance = balance
             )
         } catch (e: Exception) {
+            Log.w(TAG, "parseBriBrizzi: exception: ${e.message}")
             if (!isoDep.isConnected) throw e
             null
         }
@@ -277,29 +347,61 @@ object EmoneyCardParser {
     private fun parseDkiJakcard(isoDep: IsoDep): EmoneyCardResult? {
         if (!isoDep.isConnected) return null
         return try {
-            val selectRes = isoDep.transceive(ApduCommands.JAKCARD_SELECT_APP)
+            // Coba AID autentik (CommandAPDU.bttt A0000005714E4A43), jika gagal coba fallback ALT
+            var isAuthentic = true
+            var selectRes = isoDep.transceive(ApduCommands.JAKCARD_SELECT_APP)
+            Log.d(TAG, "parseDkiJakcard: select authentic res=${ApduCommands.toHexString(selectRes)}")
+            if (!ApduCommands.isSuccess(selectRes)) {
+                isAuthentic = false
+                selectRes = isoDep.transceive(ApduCommands.JAKCARD_SELECT_APP_ALT)
+                Log.d(TAG, "parseDkiJakcard: select ALT res=${ApduCommands.toHexString(selectRes)}")
+            }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
             var cardNumber = ""
-            if (selectRes.size >= 16) {
+            val selectHex = ApduCommands.toHexString(selectRes)
+            if (selectHex.length >= 32) {
+                // Di Jcard.java eSaldo: strA.substring(16, 32) adalah nomor kartu
+                cardNumber = selectHex.substring(16, 32)
+            } else if (selectRes.size >= 16) {
                 cardNumber = ApduCommands.toHexString(selectRes, 8, 8)
             }
 
-            val balRes = isoDep.transceive(ApduCommands.JAKCARD_READ_BALANCE)
-            if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) return null
+            var balance: Long? = null
+            if (isAuthentic) {
+                // CommandAPDU.hhhh: 90 4C 00 00 04
+                val balRes = isoDep.transceive(ApduCommands.JAKCARD_READ_BALANCE)
+                Log.d(TAG, "parseDkiJakcard: balRes hhhh=${ApduCommands.toHexString(balRes)}")
+                if (ApduCommands.isSuccess(balRes)) {
+                    val hexBal = ApduCommands.toHexString(balRes)
+                    if (hexBal.length >= 8) {
+                        balance = hexBal.substring(0, 8).toLongOrNull(16)
+                    }
+                }
+            }
 
-            val b0 = balRes[0].toLong() and 0xFFL
-            val b1 = balRes[1].toLong() and 0xFFL
-            val b2 = balRes[2].toLong() and 0xFFL
-            val b3 = balRes[3].toLong() and 0xFFL
-            val balance = (b0 shl 24) or (b1 shl 16) or (b2 shl 8) or b3
+            if (balance == null) {
+                val balRes = isoDep.transceive(ApduCommands.JAKCARD_READ_BALANCE_ISO)
+                Log.d(TAG, "parseDkiJakcard: balRes ISO=${ApduCommands.toHexString(balRes)}")
+                if (ApduCommands.isSuccess(balRes) && balRes.size >= 4) {
+                    val b0 = balRes[0].toLong() and 0xFFL
+                    val b1 = balRes[1].toLong() and 0xFFL
+                    val b2 = balRes[2].toLong() and 0xFFL
+                    val b3 = balRes[3].toLong() and 0xFFL
+                    balance = (b0 shl 24) or (b1 shl 16) or (b2 shl 8) or b3
+                }
+            }
 
+            if (balance == null) return null
+
+            Log.i(TAG, "parseDkiJakcard: success! card=$cardNumber, balance=$balance")
             EmoneyCardResult(
                 cardType = EmoneyCardType.DKI_JAKCARD,
                 cardNumber = cardNumber,
                 balance = balance
             )
         } catch (e: Exception) {
+            Log.w(TAG, "parseDkiJakcard: exception: ${e.message}")
             if (!isoDep.isConnected) throw e
             null
         }
@@ -308,24 +410,77 @@ object EmoneyCardParser {
     private fun parseMegaCash(isoDep: IsoDep): EmoneyCardResult? {
         if (!isoDep.isConnected) return null
         return try {
-            val selectRes = isoDep.transceive(ApduCommands.MEGACASH_SELECT_AID)
+            // Coba DESFire Select App autentik (CommandAPDU.mgaa 008800), lalu fallback ISO AID
+            var isDesfire = true
+            var selectRes = isoDep.transceive(ApduCommands.MEGACASH_SELECT_APP)
+            Log.d(TAG, "parseMegaCash: select DESFire res=${ApduCommands.toHexString(selectRes)}")
+            if (!ApduCommands.isSuccess(selectRes)) {
+                isDesfire = false
+                selectRes = isoDep.transceive(ApduCommands.MEGACASH_SELECT_AID_ISO)
+                Log.d(TAG, "parseMegaCash: select ISO res=${ApduCommands.toHexString(selectRes)}")
+            }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
-            val balRes = isoDep.transceive(ApduCommands.MEGACASH_READ_BALANCE)
-            if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) return null
+            var cardNumber = ""
+            var balance: Long? = null
 
-            val b0 = balRes[0].toLong() and 0xFFL
-            val b1 = balRes[1].toLong() and 0xFFL
-            val b2 = balRes[2].toLong() and 0xFFL
-            val b3 = balRes[3].toLong() and 0xFFL
-            val balance = (b0 shl 24) or (b1 shl 16) or (b2 shl 8) or b3
+            if (isDesfire) {
+                // CommandAPDU.mgbb (Read Info: 10 bytes)
+                try {
+                    val infoRes = isoDep.transceive(ApduCommands.MEGACASH_READ_INFO)
+                    Log.d(TAG, "parseMegaCash: infoRes mgbb=${ApduCommands.toHexString(infoRes)}")
+                    if (ApduCommands.isSuccess(infoRes)) {
+                        val hexInfo = ApduCommands.toHexString(infoRes)
+                        if (hexInfo.length > 8) {
+                            cardNumber = hexInfo.substring(4, hexInfo.length - 4)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseMegaCash: read info exception: ${e.message}")
+                }
 
+                // CommandAPDU.mgcc (Get Value)
+                try {
+                    val balRes = isoDep.transceive(ApduCommands.MEGACASH_READ_BALANCE)
+                    Log.d(TAG, "parseMegaCash: balRes mgcc=${ApduCommands.toHexString(balRes)}")
+                    if (ApduCommands.isSuccess(balRes) && balRes.size > 2) {
+                        // Sesuai MegaCash.java: bytes sebelum status word di-reverse (little-endian ke big-endian)
+                        val payloadLen = balRes.size - 2
+                        val reversed = ByteArray(payloadLen)
+                        val startIdx = balRes.size - 3
+                        for (i in 0 until payloadLen) {
+                            reversed[i] = balRes[startIdx - i]
+                        }
+                        val hexRev = ApduCommands.toHexString(reversed)
+                        balance = hexRev.toLongOrNull(16)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseMegaCash: get balance exception: ${e.message}")
+                }
+            }
+
+            if (balance == null) {
+                val balRes = isoDep.transceive(ApduCommands.MEGACASH_READ_BALANCE_ISO)
+                Log.d(TAG, "parseMegaCash: balRes ISO=${ApduCommands.toHexString(balRes)}")
+                if (ApduCommands.isSuccess(balRes) && balRes.size >= 4) {
+                    val b0 = balRes[0].toLong() and 0xFFL
+                    val b1 = balRes[1].toLong() and 0xFFL
+                    val b2 = balRes[2].toLong() and 0xFFL
+                    val b3 = balRes[3].toLong() and 0xFFL
+                    balance = (b0 shl 24) or (b1 shl 16) or (b2 shl 8) or b3
+                }
+            }
+
+            if (balance == null) return null
+
+            Log.i(TAG, "parseMegaCash: success! card=$cardNumber, balance=$balance")
             EmoneyCardResult(
                 cardType = EmoneyCardType.MEGA_CASH,
-                cardNumber = "",
+                cardNumber = cardNumber,
                 balance = balance
             )
         } catch (e: Exception) {
+            Log.w(TAG, "parseMegaCash: exception: ${e.message}")
             if (!isoDep.isConnected) throw e
             null
         }

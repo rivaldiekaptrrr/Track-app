@@ -31,6 +31,42 @@ class ApduCommandsTest {
     }
 
     @Test
+    fun testMandiriCommands() {
+        assertEquals("00A4040008A000000003000000", ApduCommands.toHexString(ApduCommands.MANDIRI_SELECT_AID))
+        assertEquals("00B000001D", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_INFO))
+        assertEquals("00B300003F", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_INFO_RECORD))
+        assertEquals("00B0000004", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_BALANCE))
+        assertEquals("00B500000A", ApduCommands.toHexString(ApduCommands.MANDIRI_READ_BALANCE_SV))
+    }
+
+    @Test
+    fun testTapcashCommands() {
+        assertEquals("00A4040008A000424E49100001", ApduCommands.toHexString(ApduCommands.TAPCASH_SELECT_AID_ISO))
+        assertEquals("905A00000399999900", ApduCommands.toHexString(ApduCommands.TAPCASH_SELECT_APP))
+        assertEquals("90BD0000070100000029000000", ApduCommands.toHexString(ApduCommands.TAPCASH_READ_FILE))
+    }
+
+    @Test
+    fun testBrizziCommands() {
+        assertEquals("905A00000301000000", ApduCommands.toHexString(ApduCommands.BRIZZI_SELECT_APP))
+        assertEquals("90BD0000070100000016000000", ApduCommands.toHexString(ApduCommands.BRIZZI_READ_INFO))
+        assertEquals("906C0000000000", ApduCommands.toHexString(ApduCommands.BRIZZI_READ_BALANCE_GET_VALUE))
+    }
+
+    @Test
+    fun testJakcardCommands() {
+        assertEquals("00A4040008A0000005714E4A43", ApduCommands.toHexString(ApduCommands.JAKCARD_SELECT_APP))
+        assertEquals("904C000004", ApduCommands.toHexString(ApduCommands.JAKCARD_READ_BALANCE))
+    }
+
+    @Test
+    fun testMegacashCommands() {
+        assertEquals("905A00000300880000", ApduCommands.toHexString(ApduCommands.MEGACASH_SELECT_APP))
+        assertEquals("90BD000007010000000A000000", ApduCommands.toHexString(ApduCommands.MEGACASH_READ_INFO))
+        assertEquals("906C0000000000", ApduCommands.toHexString(ApduCommands.MEGACASH_READ_BALANCE))
+    }
+
+    @Test
     fun testFlazzCommands() {
         // Authentic Flazz Gen 2 AID: 11 bytes A0000000180F0000018001
         assertEquals("00A404000BA0000000180F0000018001", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID))
