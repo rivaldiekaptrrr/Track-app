@@ -112,38 +112,95 @@ object EmoneyCardParser {
     private fun parseBcaFlazz(isoDep: IsoDep): EmoneyCardResult? {
         if (!isoDep.isConnected) return null
         return try {
-            // Coba AID 1 (CAT) terlebih dahulu, jika gagal coba AID 2 (PBOC)
-            var selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID_CAT)
-            Log.d(TAG, "parseBcaFlazz: select CAT res=${ApduCommands.toHexString(selectRes)}")
+            // Coba AID autentik (Gen 2) terlebih dahulu, jika gagal coba fallback AID CAT & PBOC
+            var isGen2 = true
+            var selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID)
+            Log.d(TAG, "parseBcaFlazz: select AID Gen 2 res=${ApduCommands.toHexString(selectRes)}")
             if (!ApduCommands.isSuccess(selectRes)) {
-                selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID_PBOC)
-                Log.d(TAG, "parseBcaFlazz: select PBOC res=${ApduCommands.toHexString(selectRes)}")
+                isGen2 = false
+                selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID_CAT)
+                Log.d(TAG, "parseBcaFlazz: select CAT res=${ApduCommands.toHexString(selectRes)}")
+                if (!ApduCommands.isSuccess(selectRes)) {
+                    selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID_PBOC)
+                    Log.d(TAG, "parseBcaFlazz: select PBOC res=${ApduCommands.toHexString(selectRes)}")
+                }
             }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
             var cardNumber = ""
-            try {
-                val track2Res = isoDep.transceive(ApduCommands.FLAZZ_READ_TRACK2)
-                Log.d(TAG, "parseBcaFlazz: track2Res=${ApduCommands.toHexString(track2Res)}")
-                if (ApduCommands.isSuccess(track2Res)) {
-                    val ascii = String(track2Res, Charsets.US_ASCII)
-                    val start = ascii.indexOf(';')
-                    val end = ascii.indexOf('=')
-                    if (start != -1 && end != -1 && end > start) {
-                        cardNumber = ascii.substring(start + 1, end)
-                    }
+            var balance: Long? = null
+
+            if (isGen2) {
+                // Urutan APDU Gen 2 autentik (dari native card-lib eSaldo Info):
+                // 1. Select EF 0200
+                try {
+                    val selectFileRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_FILE)
+                    Log.d(TAG, "parseBcaFlazz: select File res=${ApduCommands.toHexString(selectFileRes)}")
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseBcaFlazz: select file exception: ${e.message}")
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "parseBcaFlazz: read track2 exception: ${e.message}")
+
+                // 2. Read Binary / Record untuk nomor kartu (Track 2)
+                try {
+                    val readRecordRes = isoDep.transceive(ApduCommands.FLAZZ_READ_RECORD)
+                    Log.d(TAG, "parseBcaFlazz: read Record res=${ApduCommands.toHexString(readRecordRes)}")
+                    if (ApduCommands.isSuccess(readRecordRes)) {
+                        val ascii = String(readRecordRes, Charsets.US_ASCII)
+                        val start = ascii.indexOf(';')
+                        val end = ascii.indexOf('=')
+                        if (start != -1 && end != -1 && end > start) {
+                            cardNumber = ascii.substring(start + 1, end)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseBcaFlazz: read record exception: ${e.message}")
+                }
+
+                // 3. Read Balance
+                try {
+                    val balRes = isoDep.transceive(ApduCommands.FLAZZ_GET_BALANCE)
+                    Log.d(TAG, "parseBcaFlazz: balRes=${ApduCommands.toHexString(balRes)}")
+                    if (ApduCommands.isSuccess(balRes)) {
+                        val hex = ApduCommands.toHexString(balRes)
+                        if (hex.length >= 8) {
+                            balance = hex.substring(2, 8).toLongOrNull(16)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseBcaFlazz: get balance exception: ${e.message}")
+                }
+            } else {
+                // Fallback untuk kartu legacy (Gen 1 / CAT / PBOC)
+                try {
+                    val track2Res = isoDep.transceive(ApduCommands.FLAZZ_LEGACY_READ_TRACK2)
+                    Log.d(TAG, "parseBcaFlazz: legacy track2Res=${ApduCommands.toHexString(track2Res)}")
+                    if (ApduCommands.isSuccess(track2Res)) {
+                        val ascii = String(track2Res, Charsets.US_ASCII)
+                        val start = ascii.indexOf(';')
+                        val end = ascii.indexOf('=')
+                        if (start != -1 && end != -1 && end > start) {
+                            cardNumber = ascii.substring(start + 1, end)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseBcaFlazz: legacy read track2 exception: ${e.message}")
+                }
+
+                try {
+                    val balRes = isoDep.transceive(ApduCommands.FLAZZ_LEGACY_GET_BALANCE)
+                    Log.d(TAG, "parseBcaFlazz: legacy balRes=${ApduCommands.toHexString(balRes)}")
+                    if (ApduCommands.isSuccess(balRes) && balRes.size >= 4) {
+                        val hex = ApduCommands.toHexString(balRes)
+                        if (hex.length >= 8) {
+                            balance = hex.substring(2, 8).toLongOrNull(16)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "parseBcaFlazz: legacy get balance exception: ${e.message}")
+                }
             }
 
-            val balRes = isoDep.transceive(ApduCommands.FLAZZ_GET_BALANCE)
-            Log.d(TAG, "parseBcaFlazz: balRes=${ApduCommands.toHexString(balRes)}")
-            if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) return null
-
-            val hex = ApduCommands.toHexString(balRes)
-            if (hex.length < 8) return null
-            val balance = hex.substring(2, 8).toLong(16)
+            if (balance == null) return null
 
             Log.i(TAG, "parseBcaFlazz: success! card=$cardNumber, balance=$balance")
             EmoneyCardResult(

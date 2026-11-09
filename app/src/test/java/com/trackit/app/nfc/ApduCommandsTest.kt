@@ -31,13 +31,19 @@ class ApduCommandsTest {
     }
 
     @Test
-    fun testFlazzAids() {
-        // AID 1 (CAT): 8 bytes A000000018434154
+    fun testFlazzCommands() {
+        // Authentic Flazz Gen 2 AID: 11 bytes A0000000180F0000018001
+        assertEquals("00A404000BA0000000180F0000018001", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID))
+        // Select File EF 0200
+        assertEquals("00A40100020200", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_FILE))
+        // Read Record
+        assertEquals("00B081008E", ApduCommands.toHexString(ApduCommands.FLAZZ_READ_RECORD))
+        // Get Balance
+        assertEquals("803200030400000000", ApduCommands.toHexString(ApduCommands.FLAZZ_GET_BALANCE))
+
+        // Fallback AIDs
         assertEquals("00A4040008A000000018434154", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID_CAT))
-        // AID 2 (PBOC): 7 bytes A0000000031010
         assertEquals("00A4040007A0000000031010", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID_PBOC))
-        // Default FLAZZ_SELECT_AID pointing to CAT
-        assertEquals(ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID_CAT), ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID))
     }
 
     @Test

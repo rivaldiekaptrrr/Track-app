@@ -10,19 +10,36 @@ object ApduCommands {
     val MANDIRI_READ_BALANCE = byteArrayOf(0x00, 0xB0.toByte(), 0x00, 0x00, 0x04)
 
     // BCA Flazz
-    // AID 1 (Proprietary / CAT): A0 00 00 00 18 43 41 54
+    // Authentic APDU sequence from eSaldo Info native card-lib (Flazz Gen 2):
+    // AID: A0 00 00 00 18 0F 00 00 01 80 01 (11 bytes, CLA=00 INS=A4 P1=04 P2=00 Lc=0B)
+    val FLAZZ_SELECT_AID = byteArrayOf(
+        0x00, 0xA4.toByte(), 0x04, 0x00, 0x0B,
+        0xA0.toByte(), 0x00, 0x00, 0x00, 0x18, 0x0F, 0x00, 0x00, 0x01, 0x80.toByte(), 0x01
+    )
+    // Select Elementary File 0200 (CLA=00 INS=A4 P1=01 P2=00 Lc=02 Data=02 00)
+    val FLAZZ_SELECT_FILE = byteArrayOf(
+        0x00, 0xA4.toByte(), 0x01, 0x00, 0x02, 0x02, 0x00
+    )
+    // Read Binary / Record (CLA=00 INS=B0 P1=81 P2=00 Le=8E) -> returns ASCII with ';' and '='
+    val FLAZZ_READ_RECORD = byteArrayOf(
+        0x00, 0xB0.toByte(), 0x81.toByte(), 0x00, 0x8E.toByte()
+    )
+    // Get Balance (CLA=80 INS=32 P1=00 P2=03 Lc=04 Data=00 00 00 00) -> returns balance at substring(2, 8)
+    val FLAZZ_GET_BALANCE = byteArrayOf(
+        0x80.toByte(), 0x32, 0x00, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00
+    )
+
+    // Fallback Flazz commands (Gen 1 / CAT / PBOC)
     val FLAZZ_SELECT_AID_CAT = byteArrayOf(
         0x00, 0xA4.toByte(), 0x04, 0x00, 0x08,
         0xA0.toByte(), 0x00, 0x00, 0x00, 0x18, 0x43, 0x41, 0x54
     )
-    // AID 2 (Standard PBOC/EMV): A0 00 00 00 03 10 10 (sebagaimana tercatat pada analisis eSaldo reverse)
     val FLAZZ_SELECT_AID_PBOC = byteArrayOf(
         0x00, 0xA4.toByte(), 0x04, 0x00, 0x07,
         0xA0.toByte(), 0x00, 0x00, 0x00, 0x03, 0x10, 0x10
     )
-    val FLAZZ_SELECT_AID = FLAZZ_SELECT_AID_CAT
-    val FLAZZ_READ_TRACK2 = byteArrayOf(0x00, 0xB2.toByte(), 0x01, 0x0C, 0x00)
-    val FLAZZ_GET_BALANCE = byteArrayOf(0x80.toByte(), 0x5C, 0x00, 0x02, 0x04)
+    val FLAZZ_LEGACY_READ_TRACK2 = byteArrayOf(0x00, 0xB2.toByte(), 0x01, 0x0C, 0x00)
+    val FLAZZ_LEGACY_GET_BALANCE = byteArrayOf(0x80.toByte(), 0x5C, 0x00, 0x02, 0x04)
 
     // BNI TapCash
     val TAPCASH_SELECT_APP = byteArrayOf(
