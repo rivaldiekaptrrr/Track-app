@@ -10,10 +10,17 @@ object ApduCommands {
     val MANDIRI_READ_BALANCE = byteArrayOf(0x00, 0xB0.toByte(), 0x00, 0x00, 0x04)
 
     // BCA Flazz
-    val FLAZZ_SELECT_AID = byteArrayOf(
+    // AID 1 (Proprietary / CAT): A0 00 00 00 18 43 41 54
+    val FLAZZ_SELECT_AID_CAT = byteArrayOf(
         0x00, 0xA4.toByte(), 0x04, 0x00, 0x08,
         0xA0.toByte(), 0x00, 0x00, 0x00, 0x18, 0x43, 0x41, 0x54
     )
+    // AID 2 (Standard PBOC/EMV): A0 00 00 00 03 10 10 (sebagaimana tercatat pada analisis eSaldo reverse)
+    val FLAZZ_SELECT_AID_PBOC = byteArrayOf(
+        0x00, 0xA4.toByte(), 0x04, 0x00, 0x07,
+        0xA0.toByte(), 0x00, 0x00, 0x00, 0x03, 0x10, 0x10
+    )
+    val FLAZZ_SELECT_AID = FLAZZ_SELECT_AID_CAT
     val FLAZZ_READ_TRACK2 = byteArrayOf(0x00, 0xB2.toByte(), 0x01, 0x0C, 0x00)
     val FLAZZ_GET_BALANCE = byteArrayOf(0x80.toByte(), 0x5C, 0x00, 0x02, 0x04)
 
@@ -55,13 +62,16 @@ object ApduCommands {
     val MEGACASH_READ_BALANCE = byteArrayOf(0x00, 0xB0.toByte(), 0x00, 0x00, 0x04)
 
     /**
-     * Mengecek apakah respon APDU berstatus sukses (90 00 atau 91 00 pada DESFire)
+     * Mengecek apakah respon APDU berstatus sukses:
+     * - 90 00 (Standard ISO 7816-4 Success)
+     * - 91 00 (NXP MIFARE DESFire Success)
+     * - 61 XX (ISO 7816-4 Normal: Command completed successfully, XX bytes available)
      */
     fun isSuccess(response: ByteArray?): Boolean {
         if (response == null || response.size < 2) return false
         val sw1 = response[response.size - 2].toInt() and 0xFF
         val sw2 = response[response.size - 1].toInt() and 0xFF
-        return (sw1 == 0x90 && sw2 == 0x00) || (sw1 == 0x91 && sw2 == 0x00)
+        return (sw1 == 0x90 && sw2 == 0x00) || (sw1 == 0x91 && sw2 == 0x00) || (sw1 == 0x61)
     }
 
     /**

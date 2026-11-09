@@ -38,7 +38,9 @@ class NfcViewModel @Inject constructor(
                     },
                     onFailure = { error ->
                         val friendlyMessage = when {
-                            error.message?.contains("Tag was lost", ignoreCase = true) == true ->
+                            error.message?.contains("Tag was lost", ignoreCase = true) == true ||
+                            error.message?.contains("Tag lost", ignoreCase = true) == true ||
+                            error.message?.contains("closed", ignoreCase = true) == true ->
                                 "Kartu terlepas terlalu cepat. Tahan posisi kartu sebentar hingga ponsel bergetar."
                             error.message?.contains("tidak mendukung", ignoreCase = true) == true ->
                                 "Kartu ini tidak menggunakan chip standar ISO 14443-4."

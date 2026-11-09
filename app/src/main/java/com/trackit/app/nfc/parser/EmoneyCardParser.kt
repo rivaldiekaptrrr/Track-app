@@ -2,12 +2,15 @@ package com.trackit.app.nfc.parser
 
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import android.util.Log
 import com.trackit.app.nfc.model.EmoneyCardResult
 import com.trackit.app.nfc.model.EmoneyCardType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object EmoneyCardParser {
+
+    private const val TAG = "EmoneyCardParser"
 
     /**
      * Membaca kartu uang elektronik dari Android Tag secara otomatis menggunakan Sequential Probing.
@@ -18,30 +21,54 @@ object EmoneyCardParser {
             IllegalStateException("Kartu tidak mendukung protokol ISO-DEP (ISO 14443-4).")
         )
 
+        Log.d(TAG, "readCard: Tag detected, techList=${tag.techList.joinToString()}")
+
         try {
             isoDep.connect()
-            isoDep.timeout = 2000 // 2000 ms timeout per transceive
+            isoDep.timeout = 10000 // 10000 ms timeout per transceive untuk keandalan pembacaan
+
+            Log.d(TAG, "readCard: IsoDep connected, starting sequential probing...")
 
             // 1. Coba Mandiri e-Money
-            parseMandiriEmoney(isoDep)?.let { return@withContext Result.success(it) }
+            parseMandiriEmoney(isoDep)?.let {
+                Log.i(TAG, "readCard: Mandiri e-Money detected")
+                return@withContext Result.success(it)
+            }
 
-            // 2. Coba BCA Flazz
-            parseBcaFlazz(isoDep)?.let { return@withContext Result.success(it) }
+            // 2. Coba BCA Flazz (Mendukung Flazz Gen 2 CAT & PBOC AID)
+            parseBcaFlazz(isoDep)?.let {
+                Log.i(TAG, "readCard: BCA Flazz detected")
+                return@withContext Result.success(it)
+            }
 
             // 3. Coba BNI TapCash
-            parseBniTapcash(isoDep)?.let { return@withContext Result.success(it) }
+            parseBniTapcash(isoDep)?.let {
+                Log.i(TAG, "readCard: BNI TapCash detected")
+                return@withContext Result.success(it)
+            }
 
             // 4. Coba BRI Brizzi
-            parseBriBrizzi(isoDep)?.let { return@withContext Result.success(it) }
+            parseBriBrizzi(isoDep)?.let {
+                Log.i(TAG, "readCard: BRI Brizzi detected")
+                return@withContext Result.success(it)
+            }
 
             // 5. Coba Bank DKI JakCard
-            parseDkiJakcard(isoDep)?.let { return@withContext Result.success(it) }
+            parseDkiJakcard(isoDep)?.let {
+                Log.i(TAG, "readCard: DKI JakCard detected")
+                return@withContext Result.success(it)
+            }
 
             // 6. Coba Bank Mega MegaCash
-            parseMegaCash(isoDep)?.let { return@withContext Result.success(it) }
+            parseMegaCash(isoDep)?.let {
+                Log.i(TAG, "readCard: Mega Cash detected")
+                return@withContext Result.success(it)
+            }
 
+            Log.w(TAG, "readCard: All card parsers returned null. Card not recognized.")
             Result.failure(Exception("Kartu terdeteksi namun jenisnya belum didukung."))
         } catch (e: Exception) {
+            Log.e(TAG, "readCard error: ${e.message}", e)
             Result.failure(e)
         } finally {
             try {
@@ -51,6 +78,7 @@ object EmoneyCardParser {
     }
 
     private fun parseMandiriEmoney(isoDep: IsoDep): EmoneyCardResult? {
+        if (!isoDep.isConnected) return null
         return try {
             val selectRes = isoDep.transceive(ApduCommands.MANDIRI_SELECT_AID)
             if (!ApduCommands.isSuccess(selectRes)) return null
@@ -75,19 +103,28 @@ object EmoneyCardParser {
                 balance = balance,
                 isChipG2 = isG2
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (!isoDep.isConnected) throw e
             null
         }
     }
 
     private fun parseBcaFlazz(isoDep: IsoDep): EmoneyCardResult? {
+        if (!isoDep.isConnected) return null
         return try {
-            val selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID)
+            // Coba AID 1 (CAT) terlebih dahulu, jika gagal coba AID 2 (PBOC)
+            var selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID_CAT)
+            Log.d(TAG, "parseBcaFlazz: select CAT res=${ApduCommands.toHexString(selectRes)}")
+            if (!ApduCommands.isSuccess(selectRes)) {
+                selectRes = isoDep.transceive(ApduCommands.FLAZZ_SELECT_AID_PBOC)
+                Log.d(TAG, "parseBcaFlazz: select PBOC res=${ApduCommands.toHexString(selectRes)}")
+            }
             if (!ApduCommands.isSuccess(selectRes)) return null
 
             var cardNumber = ""
             try {
                 val track2Res = isoDep.transceive(ApduCommands.FLAZZ_READ_TRACK2)
+                Log.d(TAG, "parseBcaFlazz: track2Res=${ApduCommands.toHexString(track2Res)}")
                 if (ApduCommands.isSuccess(track2Res)) {
                     val ascii = String(track2Res, Charsets.US_ASCII)
                     val start = ascii.indexOf(';')
@@ -96,21 +133,27 @@ object EmoneyCardParser {
                         cardNumber = ascii.substring(start + 1, end)
                     }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.w(TAG, "parseBcaFlazz: read track2 exception: ${e.message}")
+            }
 
             val balRes = isoDep.transceive(ApduCommands.FLAZZ_GET_BALANCE)
+            Log.d(TAG, "parseBcaFlazz: balRes=${ApduCommands.toHexString(balRes)}")
             if (!ApduCommands.isSuccess(balRes) || balRes.size < 4) return null
 
             val hex = ApduCommands.toHexString(balRes)
             if (hex.length < 8) return null
             val balance = hex.substring(2, 8).toLong(16)
 
+            Log.i(TAG, "parseBcaFlazz: success! card=$cardNumber, balance=$balance")
             EmoneyCardResult(
                 cardType = EmoneyCardType.BCA_FLAZZ,
                 cardNumber = cardNumber,
                 balance = balance
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "parseBcaFlazz: exception: ${e.message}")
+            if (!isoDep.isConnected) throw e
             null
         }
     }
@@ -135,12 +178,14 @@ object EmoneyCardParser {
                 cardNumber = cardNumber,
                 balance = balance
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (!isoDep.isConnected) throw e
             null
         }
     }
 
     private fun parseBriBrizzi(isoDep: IsoDep): EmoneyCardResult? {
+        if (!isoDep.isConnected) return null
         return try {
             val selectRes = isoDep.transceive(ApduCommands.BRIZZI_SELECT_APP)
             if (!ApduCommands.isSuccess(selectRes)) return null
@@ -166,12 +211,14 @@ object EmoneyCardParser {
                 cardNumber = cardNumber,
                 balance = balance
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (!isoDep.isConnected) throw e
             null
         }
     }
 
     private fun parseDkiJakcard(isoDep: IsoDep): EmoneyCardResult? {
+        if (!isoDep.isConnected) return null
         return try {
             val selectRes = isoDep.transceive(ApduCommands.JAKCARD_SELECT_APP)
             if (!ApduCommands.isSuccess(selectRes)) return null
@@ -195,12 +242,14 @@ object EmoneyCardParser {
                 cardNumber = cardNumber,
                 balance = balance
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (!isoDep.isConnected) throw e
             null
         }
     }
 
     private fun parseMegaCash(isoDep: IsoDep): EmoneyCardResult? {
+        if (!isoDep.isConnected) return null
         return try {
             val selectRes = isoDep.transceive(ApduCommands.MEGACASH_SELECT_AID)
             if (!ApduCommands.isSuccess(selectRes)) return null
@@ -219,7 +268,8 @@ object EmoneyCardParser {
                 cardNumber = "",
                 balance = balance
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (!isoDep.isConnected) throw e
             null
         }
     }

@@ -21,6 +21,26 @@ class ApduCommandsTest {
     }
 
     @Test
+    fun testIsSuccess_iso7816_61xx() {
+        // Status code 61 XX berarti perintah sukses dieksekusi dan terdapat XX byte respon tersedia
+        val response6118 = byteArrayOf(0x61.toByte(), 0x18)
+        assertTrue(ApduCommands.isSuccess(response6118))
+
+        val responsePayloadWith6120 = byteArrayOf(0x01, 0x02, 0x61.toByte(), 0x20)
+        assertTrue(ApduCommands.isSuccess(responsePayloadWith6120))
+    }
+
+    @Test
+    fun testFlazzAids() {
+        // AID 1 (CAT): 8 bytes A000000018434154
+        assertEquals("00A4040008A000000018434154", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID_CAT))
+        // AID 2 (PBOC): 7 bytes A0000000031010
+        assertEquals("00A4040007A0000000031010", ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID_PBOC))
+        // Default FLAZZ_SELECT_AID pointing to CAT
+        assertEquals(ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID_CAT), ApduCommands.toHexString(ApduCommands.FLAZZ_SELECT_AID))
+    }
+
+    @Test
     fun testIsSuccess_errorCodes() {
         val error1 = byteArrayOf(0x6A.toByte(), 0x82.toByte())
         assertFalse(ApduCommands.isSuccess(error1))

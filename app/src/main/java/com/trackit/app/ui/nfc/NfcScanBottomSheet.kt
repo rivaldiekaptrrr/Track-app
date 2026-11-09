@@ -281,8 +281,16 @@ private fun ErrorStateView(
 
     Spacer(modifier = Modifier.height(20.dp))
 
+    val errorTitle = when {
+        errorMessage.contains("belum didukung", ignoreCase = true) ||
+        errorMessage.contains("tidak mendukung", ignoreCase = true) ->
+            "Kartu Belum Didukung"
+        else ->
+            "Pembacaan Terputus"
+    }
+
     Text(
-        text = "Pembacaan Terputus",
+        text = errorTitle,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold
     )

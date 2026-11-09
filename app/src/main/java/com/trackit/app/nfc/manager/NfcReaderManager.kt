@@ -38,8 +38,14 @@ class NfcReaderManager @Inject constructor() {
         if (!adapter.isEnabled) return
 
         val flags = NfcAdapter.FLAG_READER_NFC_A or
+                NfcAdapter.FLAG_READER_NFC_B or
                 NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
                 NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS
+
+        val options = Bundle().apply {
+            // Menunda polling presence check internal Android agar transceive APDU tidak terinterupsi tiba-tiba
+            putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
+        }
 
         adapter.enableReaderMode(
             activity,
@@ -50,7 +56,7 @@ class NfcReaderManager @Inject constructor() {
                 }
             },
             flags,
-            Bundle()
+            options
         )
     }
 
