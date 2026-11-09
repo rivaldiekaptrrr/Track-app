@@ -32,8 +32,10 @@ import com.trackit.app.data.local.entity.WeddingSeserahanEntity
 import com.trackit.app.data.local.entity.WeddingCommitteeEntity
 import com.trackit.app.data.local.entity.WeddingEventEntity
 import com.trackit.app.data.local.entity.WeddingRundownItemEntity
+import com.trackit.app.data.local.dao.NfcLocationDao
 import com.trackit.app.data.local.dao.WeddingEventDao
 import com.trackit.app.data.local.dao.WeddingRundownItemDao
+import com.trackit.app.data.local.entity.NfcLocationEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,9 +57,10 @@ import kotlinx.coroutines.launch
         WeddingSeserahanEntity::class,
         WeddingCommitteeEntity::class,
         WeddingEventEntity::class,
-        WeddingRundownItemEntity::class
+        WeddingRundownItemEntity::class,
+        NfcLocationEntity::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = false
 )
 abstract class TrackItDatabase : RoomDatabase() {
@@ -78,6 +81,7 @@ abstract class TrackItDatabase : RoomDatabase() {
     abstract fun weddingCommitteeDao(): WeddingCommitteeDao
     abstract fun weddingEventDao(): WeddingEventDao
     abstract fun weddingRundownItemDao(): WeddingRundownItemDao
+    abstract fun nfcLocationDao(): NfcLocationDao
 
     companion object {
         /**
@@ -458,6 +462,20 @@ abstract class TrackItDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `transactions` ADD COLUMN `parentRecurringId` TEXT DEFAULT NULL")
                 db.execSQL("ALTER TABLE `transactions` ADD COLUMN `lastGeneratedDate` INTEGER DEFAULT NULL")
+            }
+        }
+
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nfc_locations` (
+                        `locationId` TEXT NOT NULL,
+                        `locationName` TEXT NOT NULL,
+                        `isUserCustom` INTEGER NOT NULL DEFAULT 0,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`locationId`)
+                    )
+                """.trimIndent())
             }
         }
 

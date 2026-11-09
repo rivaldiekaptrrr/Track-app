@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.trackit.app.data.local.TrackItDatabase
 import com.trackit.app.data.local.dao.BudgetSettingDao
 import com.trackit.app.data.local.dao.CategoryDao
+import com.trackit.app.data.local.dao.NfcLocationDao
 import com.trackit.app.data.local.dao.TransactionDao
 import com.trackit.app.data.local.dao.WeddingDocumentDao
 import com.trackit.app.data.local.dao.WeddingExpenseDao
@@ -50,7 +51,8 @@ object DatabaseModule {
             TrackItDatabase.MIGRATION_11_12,
             TrackItDatabase.MIGRATION_12_13,
             TrackItDatabase.MIGRATION_13_14,
-            TrackItDatabase.MIGRATION_14_15
+            TrackItDatabase.MIGRATION_14_15,
+            TrackItDatabase.MIGRATION_15_16
         )
         .build()
     }
@@ -118,5 +120,9 @@ object DatabaseModule {
     @Provides
     fun provideWeddingRundownItemDao(database: TrackItDatabase): WeddingRundownItemDao =
         database.weddingRundownItemDao()
+
+    @Provides
+    fun provideNfcLocationDao(database: TrackItDatabase): NfcLocationDao =
+        database.nfcLocationDao()
 }
 
