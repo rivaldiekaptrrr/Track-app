@@ -23,19 +23,34 @@ class NfcLocationRepository @Inject constructor(
      */
     suspend fun resolveLocation(locationId: String): String? = withContext(Dispatchers.IO) {
         if (locationId.isBlank()) return@withContext null
+        val cleanId = locationId.trim()
 
         // 1. Cek cache lokal
-        val local = nfcLocationDao.getLocationById(locationId)
+        val local = nfcLocationDao.getLocationById(cleanId)
         if (local != null && local.locationName.isNotBlank()) {
             return@withContext local.locationName
         }
 
+        // Cek varian lokal (misal EP74560 <-> EPT74560)
+        val variantId = if (cleanId.startsWith("EP", ignoreCase = true) && cleanId.length == 7) {
+            "EPT" + cleanId.substring(2)
+        } else if (cleanId.startsWith("EPT", ignoreCase = true) && cleanId.length == 8) {
+            "EP" + cleanId.substring(3)
+        } else null
+
+        if (variantId != null) {
+            val localVariant = nfcLocationDao.getLocationById(variantId)
+            if (localVariant != null && localVariant.locationName.isNotBlank()) {
+                return@withContext localVariant.locationName
+            }
+        }
+
         // 2. Query Remote API
-        val remoteName = apiClient.fetchLocationName(locationId)
+        val remoteName = apiClient.fetchLocationName(cleanId)
         if (!remoteName.isNullOrBlank()) {
             nfcLocationDao.insertOrUpdate(
                 NfcLocationEntity(
-                    locationId = locationId,
+                    locationId = cleanId,
                     locationName = remoteName,
                     isUserCustom = false,
                     updatedAt = System.currentTimeMillis()
@@ -52,13 +67,17 @@ class NfcLocationRepository @Inject constructor(
      */
     suspend fun saveCustomLocation(locationId: String, customName: String) = withContext(Dispatchers.IO) {
         if (locationId.isBlank() || customName.isBlank()) return@withContext
+        val cleanCustom = customName.trim()
+        val cleanId = locationId.trim()
         nfcLocationDao.insertOrUpdate(
             NfcLocationEntity(
-                locationId = locationId,
-                locationName = customName.trim(),
+                locationId = cleanId,
+                locationName = cleanCustom,
                 isUserCustom = true,
                 updatedAt = System.currentTimeMillis()
             )
         )
+        // Kontribusi juga ke crowd-sourced API
+        apiClient.submitLocation(cleanId, cleanCustom)
     }
 }

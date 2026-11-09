@@ -28,7 +28,12 @@ class NfcLocationRepositoryTest {
     }
 
     private class FakeApiClient(private val responses: Map<String, String>) : NfcLocationApiClient() {
+        val submitted = mutableMapOf<String, String>()
         override suspend fun fetchLocationName(locationId: String): String? = responses[locationId]
+        override suspend fun submitLocation(locationId: String, locationName: String): Boolean {
+            submitted[locationId] = locationName
+            return true
+        }
     }
 
     @Test
@@ -59,6 +64,19 @@ class NfcLocationRepositoryTest {
     }
 
     @Test
+    fun testResolveLocation_fromLocalDatabase_variantMatched() = runBlocking {
+        val dao = FakeNfcLocationDao()
+        // Database menyimpan EPT74560, kartu mengirim EP74560
+        dao.insertOrUpdate(NfcLocationEntity(locationId = "EPT74560", locationName = "Stasiun KRL Tangerang"))
+
+        val apiClient = FakeApiClient(emptyMap())
+        val repo = NfcLocationRepository(dao, apiClient)
+
+        val result = repo.resolveLocation("EP74560")
+        assertEquals("Stasiun KRL Tangerang", result)
+    }
+
+    @Test
     fun testResolveLocation_notFoundReturnsNull() = runBlocking {
         val dao = FakeNfcLocationDao()
         val apiClient = FakeApiClient(emptyMap())
@@ -78,5 +96,6 @@ class NfcLocationRepositoryTest {
         val saved = dao.getLocationById("0099FFFF")
         assertEquals("Gerbang Tol Cilandak", saved?.locationName)
         assertTrue(saved?.isUserCustom == true)
+        assertEquals("Gerbang Tol Cilandak", apiClient.submitted["0099FFFF"])
     }
 }
