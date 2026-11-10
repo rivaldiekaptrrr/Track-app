@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -173,6 +175,12 @@ fun NfcScanBottomSheet(
  */
 @Composable
 private fun ScanningStateView() {
+    var showSupportedCardsDialog by remember { mutableStateOf(false) }
+
+    if (showSupportedCardsDialog) {
+        SupportedCardsDialog(onDismiss = { showSupportedCardsDialog = false })
+    }
+
     val infiniteTransition = rememberInfiniteTransition(label = "nfc_radar")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -223,7 +231,7 @@ private fun ScanningStateView() {
         }
     }
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(20.dp))
 
     Text(
         text = "Tempelkan Kartu di Belakang Ponsel",
@@ -232,17 +240,167 @@ private fun ScanningStateView() {
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     Text(
-        text = "Mendukung Mandiri e-Money, BCA Flazz, BNI TapCash, BRI Brizzi, dan Bank DKI JakCard. Tahan posisi kartu sebentar hingga bergetar.",
+        text = "Posisikan kartu di dekat sensor NFC hingga ponsel bergetar",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
-        modifier = Modifier.padding(horizontal = 12.dp)
+        modifier = Modifier.padding(horizontal = 16.dp)
     )
 
     Spacer(modifier = Modifier.height(16.dp))
+
+    // Tombol info kecil dan elegan (Progressive Disclosure)
+    Surface(
+        onClick = { showSupportedCardsDialog = true },
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = "Informasi Kartu",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "Lihat kartu yang didukung",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+}
+
+private data class SupportedCardInfo(
+    val name: String,
+    val features: String,
+    val brandColor: Color
+)
+
+@Composable
+private fun SupportedCardsDialog(
+    onDismiss: () -> Unit
+) {
+    val supportedCards = remember {
+        listOf(
+            SupportedCardInfo("BCA Flazz (Gen 1 & 2)", "Saldo & riwayat transaksi (Tol, Parkir, Belanja)", Color(0xFF005BAC)),
+            SupportedCardInfo("Mandiri e-Money (G1 & G2)", "Saldo & riwayat transaksi (Tol, Parkir, Belanja)", Color(0xFFF3B329)),
+            SupportedCardInfo("BNI TapCash", "Saldo & riwayat transaksi", Color(0xFFEA5A00)),
+            SupportedCardInfo("BRI Brizzi", "Saldo & riwayat transaksi", Color(0xFF00529C)),
+            SupportedCardInfo("KAI Commuter KMT", "Saldo & log stasiun gerbang KRL (Sony FeliCa)", Color(0xFFB71C1C)),
+            SupportedCardInfo("Bank DKI JakCard", "Saldo & nomor kartu", Color(0xFFC62828)),
+            SupportedCardInfo("Bank Mega MegaCash", "Saldo & nomor kartu", Color(0xFFFF9800))
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+        },
+        title = {
+            Text(
+                text = "Kartu yang Didukung",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "TrackIt mendukung pembacaan saldo dan riwayat mutasi untuk 7 jenis kartu e-money contactless:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                supportedCards.forEach { card ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(card.brandColor)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = card.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = card.features,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Nfc,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Tempelkan kartu langsung tanpa terhalang dompet atau casing logam tebal.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Mengerti",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    )
 }
 
 /**

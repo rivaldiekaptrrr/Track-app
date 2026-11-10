@@ -267,7 +267,7 @@ fun DashboardScreen(
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = "Tempelkan Mandiri, Flazz, TapCash, atau Brizzi",
+                                        text = "Tempel kartu untuk cek saldo & mutasi instan",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
