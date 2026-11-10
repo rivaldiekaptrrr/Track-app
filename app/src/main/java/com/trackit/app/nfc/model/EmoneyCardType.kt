@@ -51,6 +51,13 @@ enum class EmoneyCardType(
         secondaryColor = Color(0xFF102027),  // Deep Slate
         accentColor = Color(0xFFFF9800)     // Orange Accent
     ),
+    KAI_KMT(
+        displayName = "Kartu Multi Trip (KMT)",
+        bankName = "KAI Commuter",
+        primaryColor = Color(0xFFB71C1C),    // KAI Commuter Crimson Red
+        secondaryColor = Color(0xFF7F0000),  // Deep Crimson
+        accentColor = Color(0xFFFFD700)     // Bright Gold
+    ),
     UNKNOWN(
         displayName = "Kartu Tidak Dikenal",
         bankName = "Tidak Teridentifikasi",

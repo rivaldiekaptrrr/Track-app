@@ -48,6 +48,8 @@ class EmoneyCardResultTest {
         assertEquals("BNI TapCash", EmoneyCardType.BNI_TAPCASH.displayName)
         assertEquals("BRI Brizzi", EmoneyCardType.BRI_BRIZZI.displayName)
         assertEquals("JakCard", EmoneyCardType.DKI_JAKCARD.displayName)
+        assertEquals("Kartu Multi Trip (KMT)", EmoneyCardType.KAI_KMT.displayName)
+        assertEquals("KAI Commuter", EmoneyCardType.KAI_KMT.bankName)
     }
 }
 

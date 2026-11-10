@@ -6,14 +6,17 @@ Dokumen ini mencatat temuan teknis dari hasil *reverse engineering* kartu smartc
 
 ## 1. Ikhtisar Smartcard E-Money Indonesia
 
-Kartu e-money di Indonesia menggunakan protokol contactless smartcard berbasis **ISO/IEC 14443-4 (Type A)** dengan komunikasi APDU (*Application Protocol Data Unit*):
+Kartu e-money di Indonesia menggunakan protokol contactless smartcard berbasis **ISO/IEC 14443-4 (Type A)** dengan komunikasi APDU (*Application Protocol Data Unit*), serta **Sony FeliCa (NFC-F / JIS X 6319-4)** khusus untuk Kartu Multi Trip (KMT) KAI Commuter:
 
-| Kartu | Protokol | AID (Application Identifier) | Log Transaksi |
+| Kartu | Protokol | AID / Service Code | Log Transaksi |
 |---|---|---|---|
 | **BCA Flazz (Gen 1 & 2)** | ISO-DEP (Type A) | `D3 60 00 00 01 00 00 00` | Tersedia (Gen 1: blok 120 hex, Gen 2: blok 64 hex) |
 | **Mandiri e-Money (G1 & G2)** | ISO-DEP (Type A) | `A0 00 00 00 03 00 00 00` / `00 01` | Tersedia (blok 48 hex per transaksi) |
 | **BNI TapCash** | ISO-DEP (Type A) | `90 5A 00 00 03 01 00 00` | Tersedia pada sektor riwayat |
 | **BRI Brizzi** | ISO-DEP (Type A) | `A0 00 00 00 03 00 00 00` | Tersedia pada file log |
+| **Bank DKI JakCard** | ISO-DEP (Type A) | ISO 14443-4 APDU | Saldo & Nomor Kartu |
+| **Bank Mega MegaCash** | ISO-DEP (Type A) | ISO 14443-4 APDU | Saldo & Nomor Kartu |
+| **KAI Commuter (KMT)** | **Sony FeliCa (NFC-F)** | Service Code: `0x90B7` (37047) | Tersedia (Blok 2..N, nominal, stasiun gate, waktu) |
 
 ---
 
@@ -61,9 +64,65 @@ Setiap blok 64 karakter hex mewakili 1 transaksi dengan rincian offset:
 
 ---
 
-## 3. Resolusi Nama Lokasi & Terminal ID (Reverse Engineering API)
+## 3. Bedah Teknis KAI Commuter Kartu Multi Trip (KMT)
 
-### 3.1 Identifikasi Endpoint & Kredensial
+### 3.1 Protokol Sony FeliCa (NFC-F)
+Berbeda dengan kartu perbankan yang menggunakan ISO-DEP (ISO 14443-4 APDU), Kartu Multi Trip (KMT) KRL Commuter Line menggunakan chip **Sony FeliCa (JIS X 6319-4 / ISO/IEC 18092)** yang diakses melalui teknologi Android `android.nfc.tech.NfcF`.
+
+* **Polling Tag**: Wildcard System Code `0xFFFF` atau `0x00FE` / `0x88B4`
+* **Layanan (Service Code)**: `0x90B7` (37047 dalam desimal)
+* **Perintah Baca**: `Read Without Encryption` (Kode Perintah: `0x06`)
+
+### 3.2 Struktur Paket Perintah Read Without Encryption
+Untuk membaca 1 blok data dari kartu KMT:
+```
+[Len (1B)] [CMD (1B)] [IDm (8B)] [NumServices (1B)] [ServiceCode (2B Little-Endian)] [NumBlocks (1B)] [BlockElement (2B)]
+```
+* **Contoh Blok 0**:
+  `10 06 <IDm_8_BYTES> 01 B7 90 01 80 00`
+  - `0x10` = 16 bytes total panjang paket
+  - `0x06` = Perintah Read Without Encryption
+  - `0x01` = 1 Service
+  - `0xB7, 0x90` = Service `0x90B7` dalam format Little-Endian
+  - `0x01` = 1 Block
+  - `0x80, 0x00` = Blok nomor 0 (service index 0, 2-byte block list element)
+
+### 3.3 Struktur Data Blok KMT (16 Byte per Blok)
+Kartu KMT menyimpan data dalam blok berukuran 16 byte:
+
+| Nomor Blok | Keterangan | Format / Rumus Parsing |
+|---|---|---|
+| **Blok 0** | **Nomor Kartu KMT** | 16 byte string ASCII (contoh: `"1001567890123456"`) |
+| **Blok 1** | **Saldo Kartu** | 4 byte integer **Little-Endian** pada byte `[0..3]`: `b[0] + (b[1]<<8) + (b[2]<<16) + (b[3]<<24)` |
+| **Blok 2 s/d 9** | **Log Riwayat Transaksi** | Blok riwayat transaksi perjalanan dan top-up (maksimal 8 transaksi terakhir) |
+
+#### Detail Struktur Blok Riwayat (Blok 2..N):
+* **Byte `[12]` (Tipe Transaksi)**:
+  - `0` = Top Up Saldo
+  - `1` = Payment / Tap Gate Masuk/Keluar Stasiun
+* **Byte `[4..7]` (Nominal)**:
+  - 4 byte integer **Big-Endian**: `((b[4]<<24) | (b[5]<<16) | (b[6]<<8) | b[7])`
+* **Byte `[0..3]` (Waktu Transaksi)**:
+  - 4 byte integer **Big-Endian** menyatakan jumlah detik sejak **1 Januari 2000 07:00:00 WIB** (`946684800000L` ms):
+    $$\text{Timestamp} = 946684800000 + (\text{seconds} \times 1000)$$
+* **Byte `[8..9]` (Kode Stasiun)**:
+  - 2 byte integer **Big-Endian**: `((b[8]<<8) | b[9])`
+  - Dipetakan langsung ke nama stasiun KRL Commuter Line:
+    - `1` / `329`: Stasiun KRL Tanah Abang
+    - `257`: Stasiun KRL Bogor
+    - `279`: Stasiun KRL Manggarai
+    - `282`: Stasiun KRL Juanda
+    - `286`: Stasiun KRL Jakarta Kota
+    - `287`: Stasiun KRL Bekasi
+    - `306` / `313`: Stasiun KRL Tangerang
+    - `376`: Stasiun KRL Cikarang
+    - *(Dan seluruh 54 kode stasiun Jabodetabek lainnya)*
+
+---
+
+## 4. Resolusi Nama Lokasi & Terminal ID (Reverse Engineering API)
+
+### 4.1 Identifikasi Endpoint & Kredensial
 Dari pembongkaran pustaka native C/C++ `libcard-lib.so`:
 * **Base URL**: `https://robycohen.pythonanywhere.com/`
 * **Query Endpoint**: `POST https://robycohen.pythonanywhere.com/api/location/list`
@@ -78,7 +137,7 @@ Dari pembongkaran pustaka native C/C++ `libcard-lib.so`:
 
 ---
 
-### 3.2 Format Payload & Respons API
+### 4.2 Format Payload & Respons API
 
 #### A. Query Lokasi (`/api/location/list`)
 * **Method**: `POST`
@@ -130,7 +189,7 @@ Dari pembongkaran pustaka native C/C++ `libcard-lib.so`:
 
 ---
 
-### 3.3 Standarisasi Prefix Terminal ID (Database 27.958 Lokasi)
+### 4.3 Standarisasi Prefix Terminal ID (Database 27.958 Lokasi)
 
 Database remote memuat lebih dari **27.000 lokasi** di seluruh Indonesia dengan format kode:
 
@@ -144,7 +203,7 @@ Database remote memuat lebih dari **27.000 lokasi** di seluruh Indonesia dengan 
 
 ---
 
-### 3.4 Penanganan Varian Terminal ID (`EP` vs `EPT`)
+### 4.4 Penanganan Varian Terminal ID (`EP` vs `EPT`)
 Pada beberapa kartu atau pembacaan terminal, kode gerbang yang ditangkap dapat berupa 7 karakter (misal `EP74560`) karena karakter 'T' tidak terbaca atau format terminal yang berbeda.
 
 Aplikasi mengimplementasikan **Smart Variant Resolution**:
@@ -153,7 +212,7 @@ Aplikasi mengimplementasikan **Smart Variant Resolution**:
 
 ---
 
-## 4. Arsitektur Caching Lokal (Offline-First)
+## 5. Arsitektur Caching Lokal (Offline-First)
 
 Untuk meminimalkan latensi dan menghemat kuota internet pengguna, TrackIt menerapkan arsitektur caching berjenjang:
 
@@ -191,9 +250,9 @@ CREATE TABLE IF NOT EXISTS nfc_locations (
 
 ---
 
-## 5. Script Pengujian Mandiri (Developer Tooling)
+## 6. Script Pengujian Mandiri (Developer Tooling)
 
-### 5.1 Python Script (`test_location_api.py`)
+### 6.1 Python Script (`test_location_api.py`)
 ```python
 import json
 import urllib.request

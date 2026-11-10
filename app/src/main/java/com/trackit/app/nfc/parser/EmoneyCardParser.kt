@@ -2,6 +2,7 @@ package com.trackit.app.nfc.parser
 
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import android.nfc.tech.NfcF
 import android.util.Log
 import com.trackit.app.nfc.model.EmoneyCardResult
 import com.trackit.app.nfc.model.EmoneyCardType
@@ -18,11 +19,31 @@ object EmoneyCardParser {
      * Dijalankan pada Dispatchers.IO agar tidak memblokir UI thread.
      */
     suspend fun readCard(tag: Tag): Result<EmoneyCardResult> = withContext(Dispatchers.IO) {
-        val isoDep = IsoDep.get(tag) ?: return@withContext Result.failure(
-            IllegalStateException("Kartu tidak mendukung protokol ISO-DEP (ISO 14443-4).")
-        )
-
         Log.d(TAG, "readCard: Tag detected, techList=${tag.techList.joinToString()}")
+
+        // 1. Cek apakah kartu mendukung Sony FeliCa (NFC-F) -> KAI Commuter KMT
+        val nfcF = NfcF.get(tag)
+        if (nfcF != null) {
+            try {
+                Log.d(TAG, "readCard: NfcF tag detected, attempting KMT parsing...")
+                val kmtResult = KmtCardParser.parseKmtCard(nfcF)
+                if (kmtResult != null) {
+                    Log.i(TAG, "readCard: KAI Commuter KMT detected and parsed successfully")
+                    return@withContext Result.success(kmtResult)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "readCard: NfcF KMT probe failed: ${e.message}")
+            } finally {
+                try {
+                    if (nfcF.isConnected) nfcF.close()
+                } catch (_: Exception) {}
+            }
+        }
+
+        // 2. Cek apakah kartu mendukung ISO-DEP (ISO 14443-4)
+        val isoDep = IsoDep.get(tag) ?: return@withContext Result.failure(
+            IllegalStateException("Kartu tidak mendukung protokol ISO-DEP atau FeliCa.")
+        )
 
         try {
             isoDep.connect()
